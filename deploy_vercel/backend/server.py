@@ -79,20 +79,8 @@ def storefront():
 @app.route("/download", methods=["GET"])
 def download_installer():
     """Serve the single standalone Windows setup installer or redirect to cloud CDN."""
-    cloud_url = os.environ.get("INSTALLER_DOWNLOAD_URL")
-    if cloud_url:
-        return redirect(cloud_url, code=302)
-
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    candidates = [
-        os.path.join(base_dir, "public", "MediaDownloaderPro_Setup.exe"),
-        os.path.join(base_dir, "Setup", "MediaDownloaderPro_Setup.exe"),
-        os.path.join(base_dir, "MediaDownloaderPro_Setup.exe"),
-    ]
-    for c in candidates:
-        if os.path.isfile(c):
-            return send_file(c, as_attachment=True, download_name="MediaDownloaderPro_Setup.exe")
-    return redirect("/MediaDownloaderPro_Setup.exe", code=302)
+    direct_url = "https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe"
+    return redirect(direct_url, code=302)
 
 
 @app.route("/api/v1/checkout", methods=["POST"])

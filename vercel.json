@@ -1,7 +1,10 @@
 {
+  "redirects": [
+    { "source": "/download", "destination": "https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe", "permanent": false },
+    { "source": "/Setup.exe", "destination": "https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe", "permanent": false },
+    { "source": "/MediaDownloaderPro_Setup.exe", "destination": "https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/download", "destination": "/MediaDownloaderPro_Setup.exe" },
-    { "source": "/Setup.exe", "destination": "/MediaDownloaderPro_Setup.exe" },
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/admin", "destination": "/api/index.py" },
     { "source": "/(.*)", "destination": "/index.html" }
