@@ -914,3 +914,57 @@ class YouTubeDownloader:
                 continue
 
         return downloaded_files
+
+    def search_youtube(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        Search YouTube directly for videos and return parsed results with titles,
+        channels, duration, views, thumbnails, and URLs.
+        """
+        query = query.strip()
+        if not query:
+            return []
+
+        ydl_opts: Dict[str, Any] = {
+            'quiet': True,
+            'extract_flat': 'in_playlist',
+            'skip_download': True,
+        }
+        if self.ffmpeg_dir:
+            ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
+
+        search_spec = f"ytsearch{limit}:{query}"
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            res = ydl.extract_info(search_spec, download=False)
+            raw_entries = res.get('entries', []) if res else []
+            results = []
+            for idx, e in enumerate(raw_entries, start=1):
+                if not e:
+                    continue
+                v_id = e.get('id', '')
+                v_url = e.get('url') or ''
+                if not v_url.startswith('http') and v_id:
+                    v_url = f"https://www.youtube.com/watch?v={v_id}"
+
+                thumb = ''
+                thumbs = e.get('thumbnails', [])
+                if thumbs and isinstance(thumbs, list):
+                    thumb = thumbs[-1].get('url', '')
+                elif v_id:
+                    thumb = f"https://i.ytimg.com/vi/{v_id}/hqdefault.jpg"
+
+                dur = e.get('duration') or 0
+                views = e.get('view_count')
+
+                results.append({
+                    'index': idx,
+                    'id': v_id,
+                    'title': e.get('title') or f"Video {idx}",
+                    'uploader': e.get('uploader') or e.get('channel') or 'YouTube Creator',
+                    'duration': dur,
+                    'duration_str': format_duration(dur),
+                    'views_str': format_views(views),
+                    'thumbnail': thumb,
+                    'url': v_url
+                })
+            return results
+

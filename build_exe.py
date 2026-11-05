@@ -46,6 +46,7 @@ def build():
         "--hidden-import=bs4",
         "--hidden-import=requests",
         "--hidden-import=licensing",
+        "--hidden-import=queue_manager",
         "--hidden-import=backend",
         "--hidden-import=backend.keygen",
         "--hidden-import=backend.database",

@@ -32,6 +32,7 @@ from downloader import (
     get_ffmpeg_dir
 )
 from licensing import LicenseManager, get_hardware_id
+from queue_manager import DownloadQueueManager, QueueItem
 
 # ----------------- App Metadata & Paths -----------------
 APP_NAME = "Media Downloader Pro"
@@ -224,6 +225,18 @@ class YouTubeDownloaderApp(ctk.CTk):
         self._resize_timer: Optional[str] = None
         self.active_tab = "downloader"
 
+        # Queue Manager & Browse Search State
+        self.queue_mgr = DownloadQueueManager(
+            downloader=self.downloader,
+            on_queue_updated=self._on_queue_updated_threadsafe,
+            on_item_finished=self._on_queue_item_finished_threadsafe,
+            max_concurrent=3
+        )
+        self.browse_search_results = []
+        self.browse_item_vars = {}
+        self.browse_thumb_images = {}
+        self.is_searching_browse = False
+
         # Apply Appearance & Scaling
         initial_theme = self.config.get("theme", "Dark")
         ctk.set_appearance_mode(initial_theme)
@@ -361,6 +374,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         # Build Views
         self._build_downloader_view()
+        self._build_browse_view()
         self._build_history_view()
         self._build_settings_view()
 
@@ -436,6 +450,13 @@ class YouTubeDownloaderApp(ctk.CTk):
             command=lambda: self._switch_tab("downloader")
         )
         self.nav_btn_downloader.pack(fill="x", pady=4)
+
+        self.nav_btn_browse = self._create_nav_button(
+            self.nav_btns_frame,
+            text="  🌐  Browse & Search",
+            command=lambda: self._switch_tab("browse")
+        )
+        self.nav_btn_browse.pack(fill="x", pady=4)
 
         self.nav_btn_history = self._create_nav_button(
             self.nav_btns_frame,
@@ -551,6 +572,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         nav_map = {
             "downloader": self.nav_btn_downloader,
+            "browse": self.nav_btn_browse,
             "history": self.nav_btn_history,
             "settings": self.nav_btn_settings
         }
@@ -570,11 +592,16 @@ class YouTubeDownloaderApp(ctk.CTk):
                 )
 
         self.view_downloader.grid_forget()
+        if hasattr(self, "view_browse") and self.view_browse.winfo_exists():
+            self.view_browse.grid_forget()
         self.view_history.grid_forget()
         self.view_settings.grid_forget()
 
         if tab_name == "downloader":
             self.view_downloader.grid(row=0, column=0, sticky="nsew")
+        elif tab_name == "browse":
+            if hasattr(self, "view_browse"):
+                self.view_browse.grid(row=0, column=0, sticky="nsew")
         elif tab_name == "history":
             self._refresh_history_ui()
             self.view_history.grid(row=0, column=0, sticky="nsew")
@@ -1444,7 +1471,23 @@ class YouTubeDownloaderApp(ctk.CTk):
             height=50,
             command=self._on_download_clicked
         )
-        self.download_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.download_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+
+        self.turbo_queue_btn = ctk.CTkButton(
+            action_row,
+            text="➕ Add to Queue",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            fg_color=BG_CARD_SUBTLE,
+            hover_color=BG_CARD_HOVER,
+            border_width=1,
+            border_color="#00F2FE",
+            text_color="#00F2FE",
+            corner_radius=12,
+            width=135,
+            height=50,
+            command=self._on_turbo_add_to_queue
+        )
+        self.turbo_queue_btn.pack(side="left", padx=(0, 8))
 
         self.cancel_btn = ctk.CTkButton(
             action_row,
@@ -1558,6 +1601,925 @@ class YouTubeDownloaderApp(ctk.CTk):
         )
         self.show_file_btn.pack(side="right", padx=4, pady=8)
         self.show_file_btn.pack(side="right", padx=4, pady=8)
+
+
+    # ---------------- 1.5 Browse & Direct Stream Search View ----------------
+
+    def _build_browse_view(self):
+        """Construct the YouTube Browse, Search & Concurrent Queue Workspace."""
+        self.view_browse = ctk.CTkFrame(self.content_container, corner_radius=0, fg_color="transparent")
+
+        # Top Header
+        header = ctk.CTkFrame(self.view_browse, fg_color="transparent")
+        header.pack(fill="x", padx=20, pady=(18, 10))
+
+        top_row = ctk.CTkFrame(header, fg_color="transparent")
+        top_row.pack(fill="x")
+
+        title_box = ctk.CTkFrame(top_row, fg_color="transparent")
+        title_box.pack(side="left")
+
+        title_badge_row = ctk.CTkFrame(title_box, fg_color="transparent")
+        title_badge_row.pack(anchor="w")
+
+        ctk.CTkLabel(
+            title_badge_row,
+            text="🌐 YOUTUBE BROWSE & QUEUE",
+            font=ctk.CTkFont(size=19, weight="bold"),
+            text_color=TEXT_PRIMARY
+        ).pack(side="left", padx=(0, 10))
+
+        ctk.CTkLabel(
+            title_badge_row,
+            text="● MULTI-STREAM ACTIVE",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="#00F2FE",
+            fg_color=BG_CARD_SUBTLE,
+            corner_radius=6,
+            height=20,
+            padx=8
+        ).pack(side="left")
+
+        ctk.CTkLabel(
+            title_box,
+            text="Search YouTube in real-time, select multiple videos (2-3 simultaneously), and queue parallel downloads",
+            font=ctk.CTkFont(size=11),
+            text_color=TEXT_MUTED
+        ).pack(anchor="w", pady=(2, 0))
+
+        # Top Right Actions: Concurrency selector & Queue switch button
+        right_box = ctk.CTkFrame(top_row, fg_color="transparent")
+        right_box.pack(side="right")
+
+        self.concurrency_seg = ctk.CTkSegmentedButton(
+            right_box,
+            values=["⚡ 2 Parallel", "⚡ 3 Parallel"],
+            command=self._on_concurrency_changed,
+            height=32,
+            selected_color="#0284C7",
+            selected_hover_color="#0369A1",
+            unselected_color=BG_CARD_SUBTLE,
+            text_color=TEXT_PRIMARY
+        )
+        self.concurrency_seg.set("⚡ 3 Parallel")
+        self.concurrency_seg.pack(side="left", padx=(0, 8))
+
+        self.browse_queue_pill = ctk.CTkButton(
+            right_box,
+            text="📥 Queue: 0 Active",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=32,
+            fg_color=BG_CARD_SUBTLE,
+            border_width=1,
+            border_color="#00F2FE",
+            text_color="#00F2FE",
+            hover_color=BG_CARD_HOVER,
+            command=lambda: self._set_browse_subtab("queue")
+        )
+        self.browse_queue_pill.pack(side="left")
+
+        # 2. Search & Category Card
+        search_card = ctk.CTkFrame(
+            self.view_browse,
+            corner_radius=12,
+            fg_color=BG_CARD,
+            border_width=1,
+            border_color=BORDER_COLOR
+        )
+        search_card.pack(fill="x", padx=20, pady=(0, 10), ipady=2)
+
+        search_input_row = ctk.CTkFrame(search_card, fg_color="transparent")
+        search_input_row.pack(fill="x", padx=14, pady=(10, 6))
+
+        self.browse_search_var = ctk.StringVar()
+        self.browse_search_entry = ctk.CTkEntry(
+            search_input_row,
+            textvariable=self.browse_search_var,
+            placeholder_text="🔍 Search YouTube for videos, music, tutorials, shorts (e.g. 'lofi chill', '4k nature', 'python tutorial')...",
+            font=ctk.CTkFont(size=13),
+            height=40,
+            border_width=1,
+            border_color=BORDER_COLOR,
+            fg_color=BG_CARD_SUBTLE
+        )
+        self.browse_search_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.browse_search_entry.bind("<Return>", lambda e: self._execute_youtube_search())
+
+        self.browse_search_btn = ctk.CTkButton(
+            search_input_row,
+            text="🔍 Search YouTube",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            height=40,
+            width=140,
+            fg_color=COLOR_PRIMARY,
+            hover_color=COLOR_PRIMARY_HOVER,
+            command=self._execute_youtube_search
+        )
+        self.browse_search_btn.pack(side="left")
+
+        # Tags Row (Quick Search Categories)
+        tags_row = ctk.CTkFrame(search_card, fg_color="transparent")
+        tags_row.pack(fill="x", padx=14, pady=(0, 8))
+
+        ctk.CTkLabel(
+            tags_row,
+            text="Quick Categories:",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color=TEXT_MUTED
+        ).pack(side="left", padx=(0, 6))
+
+        quick_tags = [
+            ("🎵 Trending Music", "top music hits 2026"),
+            ("🌟 4K HDR Nature", "4k hdr nature relaxation"),
+            ("🎧 Lo-Fi Chill", "chill lofi hip hop beats"),
+            ("🎮 Gaming", "top gaming highlights"),
+            ("💻 Coding & AI", "python programming tutorial"),
+            ("🎙 Podcasts", "popular podcasts")
+        ]
+        for tag_label, tag_query in quick_tags:
+            t_btn = ctk.CTkButton(
+                tags_row,
+                text=tag_label,
+                font=ctk.CTkFont(size=10, weight="bold"),
+                height=24,
+                fg_color=BG_CARD_SUBTLE,
+                hover_color=BG_CARD_HOVER,
+                text_color=TEXT_SECONDARY,
+                corner_radius=6,
+                command=lambda q=tag_query: self._quick_search_tag(q)
+            )
+            t_btn.pack(side="left", padx=3)
+
+        # 3. Subtab Segmented Switcher (Search Results vs Download Queue)
+        mode_row = ctk.CTkFrame(self.view_browse, fg_color="transparent")
+        mode_row.pack(fill="x", padx=20, pady=(2, 6))
+
+        self.browse_subtab_seg = ctk.CTkSegmentedButton(
+            mode_row,
+            values=["🌐 Search Results", "📥 Download Queue (0)"],
+            command=self._on_browse_subtab_changed,
+            height=34,
+            selected_color=COLOR_PRIMARY,
+            selected_hover_color=COLOR_PRIMARY_HOVER,
+            unselected_color=BG_CARD_SUBTLE,
+            text_color=TEXT_PRIMARY,
+            corner_radius=10
+        )
+        self.browse_subtab_seg.set("🌐 Search Results")
+        self.browse_subtab_seg.pack(side="left")
+
+        # 4. Containers
+        self.browse_search_container = ctk.CTkFrame(self.view_browse, fg_color="transparent")
+        self.browse_search_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+
+        self.browse_queue_container = ctk.CTkFrame(self.view_browse, fg_color="transparent")
+
+        # Build Sub-Sections
+        self._build_browse_search_results_section()
+        self._build_browse_queue_section()
+
+    def _build_browse_search_results_section(self):
+        """Construct the search results list with batch multi-selection."""
+        # Batch Action Toolbar
+        toolbar = ctk.CTkFrame(self.browse_search_container, fg_color=BG_CARD_SUBTLE, corner_radius=10, height=44)
+        toolbar.pack(fill="x", pady=(0, 8))
+
+        tb_left = ctk.CTkFrame(toolbar, fg_color="transparent")
+        tb_left.pack(side="left", padx=10, pady=6)
+
+        ctk.CTkButton(
+            tb_left,
+            text="✓ Select All",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=28,
+            width=85,
+            fg_color=BG_CARD,
+            hover_color=BG_CARD_HOVER,
+            text_color=TEXT_PRIMARY,
+            corner_radius=6,
+            command=self._select_all_browse_results
+        ).pack(side="left", padx=(0, 4))
+
+        ctk.CTkButton(
+            tb_left,
+            text="✕ Deselect",
+            font=ctk.CTkFont(size=11),
+            height=28,
+            width=75,
+            fg_color=BG_CARD,
+            hover_color=BG_CARD_HOVER,
+            text_color=TEXT_SECONDARY,
+            corner_radius=6,
+            command=self._deselect_all_browse_results
+        ).pack(side="left", padx=(0, 8))
+
+        self.browse_sel_count_lbl = ctk.CTkLabel(
+            tb_left,
+            text="0 videos selected",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color=COLOR_ACCENT
+        )
+        self.browse_sel_count_lbl.pack(side="left")
+
+        tb_right = ctk.CTkFrame(toolbar, fg_color="transparent")
+        tb_right.pack(side="right", padx=10, pady=6)
+
+        self.browse_batch_format_seg = ctk.CTkSegmentedButton(
+            tb_right,
+            values=["🎥 MP4 Video", "🎵 MP3 Audio"],
+            height=28,
+            selected_color=COLOR_PRIMARY,
+            selected_hover_color=COLOR_PRIMARY_HOVER,
+            unselected_color=BG_CARD,
+            text_color=TEXT_PRIMARY,
+            corner_radius=6
+        )
+        self.browse_batch_format_seg.set("🎥 MP4 Video")
+        self.browse_batch_format_seg.pack(side="left", padx=(0, 8))
+
+        self.browse_batch_quality_menu = ctk.CTkOptionMenu(
+            tb_right,
+            values=["🌟 Best (Free: 720p)", "720p (HD)", "480p", "360p"],
+            height=28,
+            width=140,
+            fg_color=BG_CARD,
+            button_color=COLOR_PRIMARY,
+            text_color=TEXT_PRIMARY,
+            corner_radius=6
+        )
+        self.browse_batch_quality_menu.set("🌟 Best (Free: 720p)")
+        self.browse_batch_quality_menu.pack(side="left", padx=(0, 8))
+
+        self.browse_batch_dl_btn = ctk.CTkButton(
+            tb_right,
+            text="⚡ Download Selected to Queue",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=28,
+            fg_color="#0284C7",
+            hover_color="#0369A1",
+            text_color="#FFFFFF",
+            corner_radius=6,
+            command=self._on_download_selected_browse_clicked
+        )
+        self.browse_batch_dl_btn.pack(side="left")
+
+        # Scrollable Results Frame
+        self.browse_results_scroll = ctk.CTkScrollableFrame(
+            self.browse_search_container,
+            corner_radius=12,
+            fg_color=BG_CARD,
+            border_width=1,
+            border_color=BORDER_COLOR
+        )
+        self.browse_results_scroll.pack(fill="both", expand=True)
+
+        self.browse_placeholder_lbl = ctk.CTkLabel(
+            self.browse_results_scroll,
+            text="🔍 Enter a search topic above or click any Quick Category to browse & download YouTube videos!",
+            font=ctk.CTkFont(size=13),
+            text_color=TEXT_MUTED
+        )
+        self.browse_placeholder_lbl.pack(pady=40)
+
+    def _build_browse_queue_section(self):
+        """Construct the Download Queue panel with parallel progress and controls."""
+        # Queue Controls Bar
+        q_bar = ctk.CTkFrame(self.browse_queue_container, fg_color=BG_CARD_SUBTLE, corner_radius=10, height=44)
+        q_bar.pack(fill="x", pady=(0, 8))
+
+        q_left = ctk.CTkFrame(q_bar, fg_color="transparent")
+        q_left.pack(side="left", padx=10, pady=6)
+
+        self.q_active_lbl = ctk.CTkLabel(
+            q_left,
+            text="⚡ Active: 0",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="#00F2FE",
+            fg_color=BG_CARD,
+            corner_radius=6,
+            height=24,
+            padx=8
+        )
+        self.q_active_lbl.pack(side="left", padx=(0, 6))
+
+        self.q_waiting_lbl = ctk.CTkLabel(
+            q_left,
+            text="⏳ Queued: 0",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="#A855F7",
+            fg_color=BG_CARD,
+            corner_radius=6,
+            height=24,
+            padx=8
+        )
+        self.q_waiting_lbl.pack(side="left", padx=(0, 6))
+
+        self.q_finished_lbl = ctk.CTkLabel(
+            q_left,
+            text="✔ Finished: 0",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="#10B981",
+            fg_color=BG_CARD,
+            corner_radius=6,
+            height=24,
+            padx=8
+        )
+        self.q_finished_lbl.pack(side="left")
+
+        q_right = ctk.CTkFrame(q_bar, fg_color="transparent")
+        q_right.pack(side="right", padx=10, pady=6)
+
+        self.q_pause_btn = ctk.CTkButton(
+            q_right,
+            text="⏸ Pause Queue",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=28,
+            width=95,
+            fg_color=BG_CARD,
+            hover_color=BG_CARD_HOVER,
+            text_color=COLOR_WARNING,
+            corner_radius=6,
+            command=self._on_toggle_queue_pause
+        )
+        self.q_pause_btn.pack(side="left", padx=(0, 6))
+
+        ctk.CTkButton(
+            q_right,
+            text="🗑 Clear Finished",
+            font=ctk.CTkFont(size=11),
+            height=28,
+            width=95,
+            fg_color=BG_CARD,
+            hover_color=BG_CARD_HOVER,
+            text_color=TEXT_SECONDARY,
+            corner_radius=6,
+            command=self._on_clear_finished_queue
+        ).pack(side="left")
+
+        # Scrollable Queue Items Frame
+        self.browse_queue_scroll = ctk.CTkScrollableFrame(
+            self.browse_queue_container,
+            corner_radius=12,
+            fg_color=BG_CARD,
+            border_width=1,
+            border_color=BORDER_COLOR
+        )
+        self.browse_queue_scroll.pack(fill="both", expand=True)
+
+        self.queue_empty_lbl = ctk.CTkLabel(
+            self.browse_queue_scroll,
+            text="📥 Download Queue is currently empty.\nSelect videos from Browse & Search or click 'Add to Queue' in Turbo Downloader!",
+            font=ctk.CTkFont(size=12),
+            text_color=TEXT_MUTED
+        )
+        self.queue_empty_lbl.pack(pady=40)
+
+    # ---------------- Browse & Queue Event Handlers ----------------
+
+    def _execute_youtube_search(self):
+        """Execute real-time YouTube search across ydl backend."""
+        query = self.browse_search_var.get().strip()
+        if not query or self.is_searching_browse:
+            return
+
+        self.is_searching_browse = True
+        self.browse_search_btn.configure(state="disabled", text="Searching...")
+
+        # Switch to Search Results tab if in queue
+        self._set_browse_subtab("search")
+
+        # Show searching placeholder
+        for w in self.browse_results_scroll.winfo_children():
+            w.destroy()
+        loading_lbl = ctk.CTkLabel(
+            self.browse_results_scroll,
+            text=f"⏳ Searching YouTube for '{query}' with high-speed parser...",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            text_color=COLOR_ACCENT
+        )
+        loading_lbl.pack(pady=40)
+
+        def task():
+            try:
+                results = self.downloader.search_youtube(query, limit=20)
+                self.after(0, self._on_search_results_loaded, results)
+            except Exception as e:
+                err_text = str(e)
+                self.after(0, self._on_search_error, err_text)
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def _quick_search_tag(self, query: str):
+        self.browse_search_var.set(query)
+        self._execute_youtube_search()
+
+    def _on_search_error(self, err: str):
+        self.is_searching_browse = False
+        self.browse_search_btn.configure(state="normal", text="🔍 Search YouTube")
+        for w in self.browse_results_scroll.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(
+            self.browse_results_scroll,
+            text=f"⚠ Search failed: {err}",
+            font=ctk.CTkFont(size=12),
+            text_color=COLOR_DANGER
+        ).pack(pady=40)
+
+    def _on_search_results_loaded(self, results: List[Dict[str, Any]]):
+        self.is_searching_browse = False
+        self.browse_search_btn.configure(state="normal", text="🔍 Search YouTube")
+        self.browse_search_results = results
+        self.browse_item_vars.clear()
+
+        for w in self.browse_results_scroll.winfo_children():
+            w.destroy()
+
+        if not results:
+            ctk.CTkLabel(
+                self.browse_results_scroll,
+                text="No video results found. Try searching with different keywords.",
+                font=ctk.CTkFont(size=13),
+                text_color=TEXT_MUTED
+            ).pack(pady=40)
+            return
+
+        self._update_browse_selection_counter()
+
+        # Populate Results Cards
+        for item in results:
+            v_id = item["id"]
+            var = ctk.BooleanVar(value=False)
+            self.browse_item_vars[v_id] = var
+
+            card = ctk.CTkFrame(
+                self.browse_results_scroll,
+                fg_color=BG_CARD_SUBTLE,
+                border_width=1,
+                border_color=BORDER_COLOR,
+                corner_radius=10
+            )
+            card.pack(fill="x", pady=4, padx=4)
+
+            # Left: Checkbox
+            cb = ctk.CTkCheckBox(
+                card,
+                text="",
+                variable=var,
+                width=24,
+                checkmark_color="#FFFFFF",
+                fg_color=COLOR_PRIMARY,
+                hover_color=COLOR_PRIMARY_HOVER,
+                command=self._update_browse_selection_counter
+            )
+            cb.pack(side="left", padx=(10, 6), pady=8)
+
+            # Thumbnail box
+            thumb_box = ctk.CTkFrame(card, fg_color=BG_WINDOW, width=120, height=68, corner_radius=8)
+            thumb_box.pack(side="left", padx=4, pady=8)
+            thumb_box.pack_propagate(False)
+
+            thumb_lbl = ctk.CTkLabel(thumb_box, text="▶", font=ctk.CTkFont(size=18), text_color=TEXT_MUTED)
+            thumb_lbl.pack(expand=True)
+
+            # Load thumbnail async
+            thumb_url = item.get("thumbnail")
+            if thumb_url:
+                self._load_browse_thumb_async(thumb_url, thumb_lbl)
+
+            # Middle: Metadata
+            mid = ctk.CTkFrame(card, fg_color="transparent")
+            mid.pack(side="left", fill="both", expand=True, padx=10, pady=8)
+
+            title_lbl = ctk.CTkLabel(
+                mid,
+                text=item["title"],
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color=TEXT_PRIMARY,
+                anchor="w",
+                justify="left",
+                wraplength=480
+            )
+            title_lbl.pack(anchor="w")
+
+            meta_row = ctk.CTkFrame(mid, fg_color="transparent")
+            meta_row.pack(anchor="w", pady=(2, 0))
+
+            ctk.CTkLabel(
+                meta_row,
+                text=f"👤 {item.get('uploader', 'YouTube')}",
+                font=ctk.CTkFont(size=11),
+                text_color=TEXT_MUTED
+            ).pack(side="left", padx=(0, 10))
+
+            ctk.CTkLabel(
+                meta_row,
+                text=f"⏱ {item.get('duration_str', 'N/A')}",
+                font=ctk.CTkFont(size=10, weight="bold"),
+                text_color=COLOR_GOLD,
+                fg_color=BG_WINDOW,
+                corner_radius=4,
+                padx=6
+            ).pack(side="left", padx=(0, 6))
+
+            ctk.CTkLabel(
+                meta_row,
+                text=f"👁 {item.get('views_str', '')}",
+                font=ctk.CTkFont(size=11),
+                text_color=TEXT_MUTED
+            ).pack(side="left")
+
+            # Right: Action Buttons
+            right_btns = ctk.CTkFrame(card, fg_color="transparent")
+            right_btns.pack(side="right", padx=10, pady=8)
+
+            # 1-Click MP4 Download
+            ctk.CTkButton(
+                right_btns,
+                text="⚡ MP4",
+                font=ctk.CTkFont(size=11, weight="bold"),
+                width=65,
+                height=30,
+                fg_color=COLOR_PRIMARY,
+                hover_color=COLOR_PRIMARY_HOVER,
+                corner_radius=6,
+                command=lambda it=item: self._queue_single_browse_video(it, format_type="video")
+            ).pack(side="left", padx=2)
+
+            # 1-Click MP3 Download
+            ctk.CTkButton(
+                right_btns,
+                text="🎵 MP3",
+                font=ctk.CTkFont(size=11, weight="bold"),
+                width=65,
+                height=30,
+                fg_color="#0284C7",
+                hover_color="#0369A1",
+                corner_radius=6,
+                command=lambda it=item: self._queue_single_browse_video(it, format_type="audio_mp3")
+            ).pack(side="left", padx=2)
+
+            # Copy link button
+            ctk.CTkButton(
+                right_btns,
+                text="📋",
+                font=ctk.CTkFont(size=11),
+                width=32,
+                height=30,
+                fg_color=BG_CARD,
+                hover_color=BG_CARD_HOVER,
+                text_color=TEXT_SECONDARY,
+                corner_radius=6,
+                command=lambda u=item["url"]: self._copy_text(u, "Video URL copied!")
+            ).pack(side="left", padx=2)
+
+    def _load_browse_thumb_async(self, thumb_url: str, label_widget: ctk.CTkLabel):
+        def task():
+            try:
+                resp = requests.get(thumb_url, timeout=6)
+                if resp.status_code == 200:
+                    img = Image.open(BytesIO(resp.content))
+                    img.thumbnail((120, 68), Image.Resampling.LANCZOS)
+                    ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=img.size)
+                    def update():
+                        if label_widget.winfo_exists():
+                            label_widget.configure(image=ctk_img, text="")
+                    self.after(0, update)
+            except Exception:
+                pass
+        threading.Thread(target=task, daemon=True).start()
+
+    def _update_browse_selection_counter(self):
+        selected_count = sum(1 for v in self.browse_item_vars.values() if v.get())
+        total = len(self.browse_item_vars)
+        self.browse_sel_count_lbl.configure(text=f"{selected_count} of {total} selected")
+        if selected_count > 0:
+            self.browse_batch_dl_btn.configure(text=f"⚡ Download {selected_count} Selected (Queue Parallel)")
+        else:
+            self.browse_batch_dl_btn.configure(text="⚡ Download Selected to Queue")
+
+    def _select_all_browse_results(self):
+        for v in self.browse_item_vars.values():
+            v.set(True)
+        self._update_browse_selection_counter()
+
+    def _deselect_all_browse_results(self):
+        for v in self.browse_item_vars.values():
+            v.set(False)
+        self._update_browse_selection_counter()
+
+    def _queue_single_browse_video(self, video_data: Dict[str, Any], format_type: str = "video"):
+        """Queue a single video directly from browse results."""
+        # Quality check for Free users
+        quality = "best"
+        if not self.license_mgr.is_pro() and format_type == "video":
+            quality = "720p"
+
+        self.queue_mgr.add_to_queue(
+            url=video_data["url"],
+            title=video_data["title"],
+            uploader=video_data.get("uploader", ""),
+            thumbnail=video_data.get("thumbnail", ""),
+            duration_str=video_data.get("duration_str", ""),
+            format_type=format_type,
+            quality=quality,
+            download_dir=self.download_dir
+        )
+        self._update_queue_badge()
+        # Switch to queue tab to show downloading item
+        self._set_browse_subtab("queue")
+
+    def _on_download_selected_browse_clicked(self):
+        """Batch queue all checked search result videos."""
+        selected_ids = [vid for vid, v in self.browse_item_vars.items() if v.get()]
+        if not selected_ids:
+            self.browse_sel_count_lbl.configure(text="⚠️ Please check at least 1 video first!", text_color=COLOR_WARNING)
+            return
+
+        fmt_choice = self.browse_batch_format_seg.get()
+        format_type = "audio_mp3" if "MP3" in fmt_choice else "video"
+
+        q_choice = self.browse_batch_quality_menu.get()
+        if "720p" in q_choice:
+            quality = "720p"
+        elif "480p" in q_choice:
+            quality = "480p"
+        elif "360p" in q_choice:
+            quality = "360p"
+        else:
+            quality = "best"
+
+        # Check Free tier quality limit
+        if not self.license_mgr.is_pro() and format_type == "video":
+            quality = "720p"
+
+        items_to_add = []
+        for it in self.browse_search_results:
+            if it["id"] in selected_ids:
+                items_to_add.append({
+                    "url": it["url"],
+                    "title": it["title"],
+                    "uploader": it.get("uploader", ""),
+                    "thumbnail": it.get("thumbnail", ""),
+                    "duration_str": it.get("duration_str", ""),
+                    "format_type": format_type,
+                    "quality": quality
+                })
+
+        self.queue_mgr.add_batch(items_to_add, download_dir=self.download_dir)
+        self._deselect_all_browse_results()
+        self._update_queue_badge()
+
+        # Switch to queue tab so user sees their 2 or 3 parallel downloads in action
+        self._set_browse_subtab("queue")
+
+    def _on_concurrency_changed(self, value: str):
+        if "2" in value:
+            self.queue_mgr.set_concurrency(2)
+        elif "3" in value:
+            self.queue_mgr.set_concurrency(3)
+
+    def _on_browse_subtab_changed(self, value: str):
+        if "Queue" in value:
+            self._set_browse_subtab("queue")
+        else:
+            self._set_browse_subtab("search")
+
+    def _set_browse_subtab(self, subtab: str):
+        if subtab == "queue":
+            self.browse_search_container.pack_forget()
+            self.browse_queue_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+            self.browse_subtab_seg.set(f"📥 Download Queue ({len(self.queue_mgr.items)})")
+            self._refresh_queue_ui()
+        else:
+            self.browse_queue_container.pack_forget()
+            self.browse_search_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+            self.browse_subtab_seg.set("🌐 Search Results")
+
+    def _on_toggle_queue_pause(self):
+        if self.queue_mgr.is_paused:
+            self.queue_mgr.resume_queue()
+            self.q_pause_btn.configure(text="⏸ Pause Queue", text_color=COLOR_WARNING)
+        else:
+            self.queue_mgr.pause_queue()
+            self.q_pause_btn.configure(text="▶ Resume Queue", text_color=COLOR_SUCCESS)
+
+    def _on_clear_finished_queue(self):
+        self.queue_mgr.clear_completed()
+        self._refresh_queue_ui()
+
+    def _on_queue_updated_threadsafe(self):
+        self.after(0, self._refresh_queue_ui)
+
+    def _on_queue_item_finished_threadsafe(self, item: QueueItem):
+        def on_done():
+            self.history_mgr.add(
+                title=item.title,
+                file_path=item.output_file,
+                format_type=item.format_type,
+                quality=item.quality
+            )
+            self._update_telemetry_ui()
+            self._update_queue_badge()
+        self.after(0, on_done)
+
+    def _update_queue_badge(self):
+        stats = self.queue_mgr.get_stats()
+        active = stats["active"]
+        queued = stats["queued"]
+        total = stats["total"]
+
+        if hasattr(self, "browse_queue_pill") and self.browse_queue_pill.winfo_exists():
+            self.browse_queue_pill.configure(text=f"📥 Queue: {active} Active, {queued} Queued")
+
+        if hasattr(self, "browse_subtab_seg") and self.browse_subtab_seg.winfo_exists():
+            # Only update label text while preserving active tab
+            pass
+
+    def _refresh_queue_ui(self):
+        """Render active and queued items in the queue panel."""
+        stats = self.queue_mgr.get_stats()
+        active = stats["active"]
+        queued = stats["queued"]
+        finished = stats["finished"]
+        total = stats["total"]
+
+        if hasattr(self, "q_active_lbl") and self.q_active_lbl.winfo_exists():
+            self.q_active_lbl.configure(text=f"⚡ Active: {active}")
+        if hasattr(self, "q_waiting_lbl") and self.q_waiting_lbl.winfo_exists():
+            self.q_waiting_lbl.configure(text=f"⏳ Queued: {queued}")
+        if hasattr(self, "q_finished_lbl") and self.q_finished_lbl.winfo_exists():
+            self.q_finished_lbl.configure(text=f"✔ Finished: {finished}")
+
+        self._update_queue_badge()
+
+        if not hasattr(self, "browse_queue_scroll") or not self.browse_queue_scroll.winfo_exists():
+            return
+
+        for w in self.browse_queue_scroll.winfo_children():
+            w.destroy()
+
+        if not self.queue_mgr.items:
+            ctk.CTkLabel(
+                self.browse_queue_scroll,
+                text="📥 Download Queue is currently empty.\nAdd videos from Browse & Search or click 'Add to Queue' in Turbo Downloader!",
+                font=ctk.CTkFont(size=12),
+                text_color=TEXT_MUTED
+            ).pack(pady=40)
+            return
+
+        for it in self.queue_mgr.items:
+            q_card = ctk.CTkFrame(
+                self.browse_queue_scroll,
+                fg_color=BG_CARD_SUBTLE,
+                border_width=1,
+                border_color=BORDER_COLOR,
+                corner_radius=10
+            )
+            q_card.pack(fill="x", pady=4, padx=4)
+
+            # Top row: format badge + title + status
+            r1 = ctk.CTkFrame(q_card, fg_color="transparent")
+            r1.pack(fill="x", padx=12, pady=(8, 2))
+
+            fmt_badge = "🎵 MP3" if it.format_type == "audio_mp3" else "🎥 MP4"
+            fmt_col = COLOR_GOLD if it.format_type == "audio_mp3" else COLOR_PRIMARY
+            ctk.CTkLabel(
+                r1,
+                text=fmt_badge,
+                font=ctk.CTkFont(size=10, weight="bold"),
+                text_color=fmt_col,
+                fg_color=BG_WINDOW,
+                corner_radius=4,
+                padx=6,
+                height=20
+            ).pack(side="left", padx=(0, 8))
+
+            ctk.CTkLabel(
+                r1,
+                text=it.title,
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color=TEXT_PRIMARY,
+                anchor="w",
+                wraplength=480
+            ).pack(side="left", fill="x", expand=True)
+
+            # Status pill
+            if it.status == "downloading":
+                st_text = f"⚡ DOWNLOADING ({int(it.percent)}% • {it.speed})"
+                st_col = COLOR_CYAN
+            elif it.status == "queued":
+                st_text = "⏳ QUEUED (Waiting slot)"
+                st_col = "#A855F7"
+            elif it.status == "finished":
+                st_text = "✔ COMPLETED"
+                st_col = COLOR_SUCCESS
+            elif it.status == "cancelled":
+                st_text = "✖ CANCELLED"
+                st_col = TEXT_MUTED
+            else:
+                st_text = "✖ ERROR"
+                st_col = COLOR_DANGER
+
+            ctk.CTkLabel(
+                r1,
+                text=st_text,
+                font=ctk.CTkFont(size=10, weight="bold"),
+                text_color=st_col,
+                fg_color=BG_WINDOW,
+                corner_radius=4,
+                padx=6,
+                height=20
+            ).pack(side="right")
+
+            # Middle row: Progress Bar
+            p_bar = ctk.CTkProgressBar(
+                q_card,
+                orientation="horizontal",
+                mode="determinate",
+                progress_color=COLOR_PRIMARY if it.status != "finished" else COLOR_SUCCESS,
+                fg_color=BG_WINDOW,
+                height=8,
+                corner_radius=4
+            )
+            p_bar.set(it.percent / 100.0)
+            p_bar.pack(fill="x", padx=12, pady=4)
+
+            # Bottom row: stats (downloaded/total, eta) + actions
+            r2 = ctk.CTkFrame(q_card, fg_color="transparent")
+            r2.pack(fill="x", padx=12, pady=(0, 8))
+
+            info_text = f"ETA: {it.eta} • Transferred: {it.downloaded} / {it.total}" if it.status == "downloading" else (it.uploader or "")
+            ctk.CTkLabel(
+                r2,
+                text=info_text,
+                font=ctk.CTkFont(size=10),
+                text_color=TEXT_MUTED
+            ).pack(side="left")
+
+            act_box = ctk.CTkFrame(r2, fg_color="transparent")
+            act_box.pack(side="right")
+
+            if it.status == "finished" and it.output_file and os.path.exists(it.output_file):
+                ctk.CTkButton(
+                    act_box,
+                    text="📂 Open File",
+                    font=ctk.CTkFont(size=10, weight="bold"),
+                    height=22,
+                    width=75,
+                    fg_color=BG_WINDOW,
+                    hover_color=BG_CARD_HOVER,
+                    text_color=COLOR_SUCCESS,
+                    corner_radius=4,
+                    command=lambda p=it.output_file: os.startfile(p)
+                ).pack(side="left", padx=2)
+
+            if it.status in ("queued", "downloading"):
+                ctk.CTkButton(
+                    act_box,
+                    text="✖ Cancel",
+                    font=ctk.CTkFont(size=10, weight="bold"),
+                    height=22,
+                    width=65,
+                    fg_color=BG_WINDOW,
+                    hover_color=COLOR_DANGER_HOVER,
+                    text_color=COLOR_DANGER,
+                    corner_radius=4,
+                    command=lambda i_id=it.item_id: self.queue_mgr.cancel_item(i_id)
+                ).pack(side="left", padx=2)
+
+    def _on_turbo_add_to_queue(self):
+        """Add media from Turbo Downloader URL input into Download Queue."""
+        url = self.url_var.get().strip()
+        if not url:
+            self.input_msg_lbl.configure(text="Please enter a valid video or media link first.", text_color=COLOR_WARNING)
+            return
+
+        fmt_choice = self.format_seg.get()
+        format_type = "audio_mp3" if "MP3" in fmt_choice else ("audio_m4a" if "M4A" in fmt_choice else "video")
+        quality = "best"
+        q_val = self.quality_menu.get()
+        for q_tag in ["2160p", "1440p", "1080p", "720p", "480p", "360p", "320"]:
+            if q_tag in q_val:
+                quality = q_tag
+                break
+
+        title = self.current_video_info.get("title", "Video") if self.current_video_info else "Queued Stream"
+        uploader = self.current_video_info.get("uploader", "") if self.current_video_info else ""
+        thumb = self.current_video_info.get("thumbnail", "") if self.current_video_info else ""
+        dur = self.current_video_info.get("duration_str", "") if self.current_video_info else ""
+
+        self.queue_mgr.add_to_queue(
+            url=url,
+            title=title,
+            uploader=uploader,
+            thumbnail=thumb,
+            duration_str=dur,
+            format_type=format_type,
+            quality=quality,
+            download_dir=self.download_dir
+        )
+        self.input_msg_lbl.configure(text="✔ Video added to Download Queue!", text_color=COLOR_SUCCESS)
+        self._update_queue_badge()
 
     # ---------------- 2. History & Library View ----------------
 
