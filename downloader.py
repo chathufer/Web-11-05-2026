@@ -48,18 +48,16 @@ def get_ffmpeg_dir() -> Optional[str]:
     if ffmpeg_system:
         return os.path.dirname(ffmpeg_system)
 
-    # Try imageio_ffmpeg if installed
-    try:
-        import imageio_ffmpeg
-        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-        if ffmpeg_exe and os.path.isfile(ffmpeg_exe):
-            os.makedirs(local_bin, exist_ok=True)
-            target = os.path.join(local_bin, "ffmpeg.exe")
-            if not os.path.exists(target):
-                shutil.copyfile(ffmpeg_exe, target)
-            return local_bin
-    except Exception:
-        pass
+    # Try imageio_ffmpeg only during development if bin is missing
+    if not getattr(sys, 'frozen', False):
+        try:
+            import importlib
+            img_ff = importlib.import_module("imageio_ffmpeg")
+            ffmpeg_exe = img_ff.get_ffmpeg_exe()
+            if ffmpeg_exe and os.path.isfile(ffmpeg_exe):
+                return os.path.dirname(ffmpeg_exe)
+        except Exception:
+            pass
 
     return None
 

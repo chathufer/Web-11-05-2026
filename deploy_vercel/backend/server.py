@@ -84,10 +84,15 @@ def download_installer():
         return redirect(cloud_url, code=302)
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    installer_path = os.path.join(base_dir, "Setup", "MediaDownloaderPro_Setup.exe")
-    if os.path.isfile(installer_path):
-        return send_file(installer_path, as_attachment=True, download_name="DownloaderPro_Setup.exe")
-    return "Installer file not found on server. Please configure INSTALLER_DOWNLOAD_URL in Vercel environment variables or ensure Setup/MediaDownloaderPro_Setup.exe exists.", 404
+    candidates = [
+        os.path.join(base_dir, "public", "MediaDownloaderPro_Setup.exe"),
+        os.path.join(base_dir, "Setup", "MediaDownloaderPro_Setup.exe"),
+        os.path.join(base_dir, "MediaDownloaderPro_Setup.exe"),
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return send_file(c, as_attachment=True, download_name="MediaDownloaderPro_Setup.exe")
+    return redirect("/MediaDownloaderPro_Setup.exe", code=302)
 
 
 @app.route("/api/v1/checkout", methods=["POST"])

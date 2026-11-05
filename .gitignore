@@ -1,4 +1,4 @@
-# Build and compilation outputs (Too large for GitHub / Vercel)
+# Build and compilation outputs
 dist/
 build/
 Setup/
@@ -7,6 +7,12 @@ Setup/
 __pycache__/
 */__pycache__/
 *.pyc
+
+# Whitelist installer binary for direct Vercel Edge CDN distribution
+!MediaDownloaderPro_Setup.exe
+!public/MediaDownloaderPro_Setup.exe
+!deploy_vercel/public/MediaDownloaderPro_Setup.exe
+!deploy_vercel/MediaDownloaderPro_Setup.exe
 
 # Local cache & downloads
 downloads/

@@ -23,7 +23,7 @@ def build():
 
     icon_file = os.path.join(base_dir, "icon.ico")
 
-    # PyInstaller arguments
+    # PyInstaller arguments with bloat exclusions
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--noconfirm",
@@ -33,6 +33,16 @@ def build():
         f"--icon={icon_file}",
         "--collect-all=customtkinter",
         "--collect-all=yt_dlp",
+        "--exclude-module=imageio_ffmpeg",
+        "--exclude-module=imageio",
+        "--exclude-module=numpy",
+        "--exclude-module=scipy",
+        "--exclude-module=matplotlib",
+        "--exclude-module=unittest",
+        "--exclude-module=pytest",
+        "--exclude-module=tkinter.test",
+        "--exclude-module=pydoc",
+        "--exclude-module=sqlite3.test",
         "--hidden-import=bs4",
         "--hidden-import=requests",
         "--hidden-import=licensing",

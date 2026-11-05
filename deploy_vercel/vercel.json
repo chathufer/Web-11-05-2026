@@ -1,7 +1,8 @@
 {
   "rewrites": [
+    { "source": "/download", "destination": "/MediaDownloaderPro_Setup.exe" },
+    { "source": "/Setup.exe", "destination": "/MediaDownloaderPro_Setup.exe" },
     { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/download", "destination": "/api/index.py" },
     { "source": "/admin", "destination": "/api/index.py" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
