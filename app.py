@@ -816,6 +816,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             border_color=BORDER_COLOR
         )
         self.input_card.pack(fill="x", padx=padx, pady=(0, 14), ipady=6)
+        input_card = self.input_card
 
         lbl_row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         lbl_row.pack(fill="x", padx=16, pady=(12, 6))
@@ -841,7 +842,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.auto_badge.pack(side="right")
 
         # Input Row
-        row = ctk.CTkFrame(input_card, fg_color="transparent")
+        row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         row.pack(fill="x", padx=16, pady=(0, 8))
 
         self.url_var = ctk.StringVar()
@@ -887,7 +888,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.clear_btn.pack(side="left")
 
         # Quick Format Indicator Pills underneath input
-        pills_row = ctk.CTkFrame(input_card, fg_color="transparent")
+        pills_row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         pills_row.pack(fill="x", padx=16, pady=(2, 8))
 
         pills = [
@@ -911,7 +912,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         # Feedback/status message below entry
         self.input_msg_lbl = ctk.CTkLabel(
-            input_card,
+            self.input_card,
             text="✨ Pro Tip: Simply copy any link — it auto-detects, extracts metadata, and unlocks maximum bitrate streams!",
             font=ctk.CTkFont(size=11),
             text_color=TEXT_MUTED
