@@ -2034,7 +2034,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <button class="theme-dot" data-t="cyan" title="Cyber Cyan" aria-label="Cyber Cyan"></button>
         </div>
 
-        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-gold btn-sm">
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
           <span>Download Free</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -2054,7 +2054,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
     <a href="#workstation">Workstation Showcase</a>
     <a href="#principles">Architecture Principles</a>
     <a href="#pricing">License Passes</a>
-    <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-gold" style="margin-top: 14px;">
+    <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
       <span>Download Setup v2.2</span>
       <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
     </a>
@@ -2089,7 +2089,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <div class="hero-actions reveal">
-          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-gold">
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold">
             <span>Download Windows Installer</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -2298,7 +2298,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
           <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; color: var(--muted-d);">Status: <span class="u-gold" id="analyzeStatus">Idle</span></span>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
+            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
               <span>Download Selected Format</span>
               <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
             </a>
@@ -2370,7 +2370,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </dl>
 
             <div class="f-actions">
-              <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-ink">
+              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
                 <span>Download Setup v2.2</span>
                 <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
               </a>
@@ -2417,7 +2417,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <span>Original 1080x1920</span>
               <span>100% Watermark Free</span>
             </div>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line btn-sm" style="width: 100%;">
+            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
               <span>Download Ripper</span>
               <svg class="ic"><use href="#i-download"></use></svg>
             </a>
@@ -2439,7 +2439,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <span>320kbps Constant</span>
               <span>ID3v2.4 Embedded</span>
             </div>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line btn-sm" style="width: 100%;">
+            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
               <span>Download Audio Client</span>
               <svg class="ic"><use href="#i-download"></use></svg>
             </a>
@@ -2461,7 +2461,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <span>16 Parallel Workers</span>
               <span>Auto-Resume on Drop</span>
             </div>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line btn-sm" style="width: 100%;">
+            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
               <span>Download Queue Tool</span>
               <svg class="ic"><use href="#i-download"></use></svg>
             </a>
@@ -2483,7 +2483,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <span>Zero Re-encoding</span>
               <span>Bit-for-Bit Copy</span>
             </div>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line btn-sm" style="width: 100%;">
+            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
               <span>Download Master Tool</span>
               <svg class="ic"><use href="#i-download"></use></svg>
             </a>
@@ -2506,7 +2506,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           No monthly subscription traps. Download the standalone Windows installer or unlock the Lifetime Pass for unlimited multi-device access with priority updates.
         </p>
         <div class="band-actions">
-          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-ink">
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
             <span>Download Windows Setup v2.2</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -2744,7 +2744,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </ul>
           </div>
 
-          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-line" style="width: 100%;">
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
             <span>Download Free v2.2</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>
@@ -2826,7 +2826,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         Download the setup installer now or get your Lifetime Pass. Works immediately with zero configuration.
       </p>
       <div class="closing-actions reveal">
-        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-ink">
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
           <span>Download Setup v2.2</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -2861,7 +2861,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
       <div class="footer-col">
         <p class="footer-h">Downloads</p>
-        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe">Windows Installer (.exe)</a>
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
         <a href="/download?type=zip">Portable ZIP Package</a>
         <a href="/admin">License Admin Portal</a>
         <a href="#pricing">Upgrade to Pro</a>
@@ -2885,7 +2885,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </footer>
 
   <!-- Floating Action Button -->
-  <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
+  <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
     <svg class="ic" style="width:24px; height:24px;" aria-hidden="true"><use href="#i-download"></use></svg>
   </a>
 
@@ -2944,7 +2944,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             <span>Copy Key</span>
             <svg class="ic"><use href="#i-copy"></use></svg>
           </button>
-          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe" download="MediaDownloaderPro_Setup.exe" class="btn btn-gold btn-sm" style="flex:1;">
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm" style="flex:1;">
             <span>Download Setup</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>

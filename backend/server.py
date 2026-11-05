@@ -79,7 +79,7 @@ def storefront():
 @app.route("/download", methods=["GET"])
 def download_installer():
     """Serve the single standalone Windows setup installer or redirect to cloud CDN."""
-    direct_url = "https://github.com/chathufer/Web-11-05-2026/releases/download/v2.2.0/MediaDownloaderPro_Setup.exe"
+    direct_url = "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing"
     return redirect(direct_url, code=302)
 
 
