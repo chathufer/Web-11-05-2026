@@ -1,0 +1,21 @@
+# Build and compilation outputs (Too large for GitHub / Vercel)
+dist/
+build/
+Setup/
+*.exe
+*.spec
+__pycache__/
+*/__pycache__/
+*.pyc
+
+# Local cache & downloads
+downloads/
+temp/
+*.log
+.system_generated/
+*.tmp
+
+# Environment & credentials
+.env
+.venv
+env/
