@@ -178,7 +178,10 @@ class DownloadQueueManager:
                 threading.Thread(target=self._worker, args=(it,), daemon=True).start()
 
     def _worker(self, item: QueueItem):
+        last_notify_time = 0.0
+
         def progress_cb(d: Dict[str, Any]):
+            nonlocal last_notify_time
             status = d.get('status', '')
             if status == 'downloading':
                 item.percent = d.get('percent', 0.0)
@@ -189,7 +192,11 @@ class DownloadQueueManager:
             elif status == 'processing':
                 item.percent = 100.0
                 item.speed = 'Remuxing stream...'
-            self._notify_ui()
+
+            now = time.time()
+            if (now - last_notify_time >= 0.08) or status == 'processing':
+                last_notify_time = now
+                self._notify_ui()
 
         try:
             from licensing import LicenseManager

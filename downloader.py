@@ -729,8 +729,17 @@ class YouTubeDownloader:
                     except ValueError:
                         percent = 0.0
 
-                speed_str = d.get('_speed_str', 'Calculating...')
-                eta_str = d.get('_eta_str', 'N/A')
+                speed_raw = d.get('speed')
+                if speed_raw and isinstance(speed_raw, (int, float)) and speed_raw > 0:
+                    speed_str = f"{format_bytes(speed_raw)}/s"
+                else:
+                    speed_str = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', str(d.get('_speed_str', 'Calculating...'))).strip()
+
+                eta_raw = d.get('eta')
+                if eta_raw and isinstance(eta_raw, (int, float)) and eta_raw > 0:
+                    eta_str = format_duration(int(eta_raw))
+                else:
+                    eta_str = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', str(d.get('_eta_str', 'N/A'))).strip()
                 total_str = format_bytes(total) if total > 0 else "Unknown size"
                 downloaded_str = format_bytes(downloaded)
 
