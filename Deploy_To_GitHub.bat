@@ -1,45 +1,47 @@
 @echo off
-title Downloader Pro - Deploy to GitHub & Vercel
+title Deploy Downloader Pro to GitHub and Vercel
 cls
+color 0b
 echo ===============================================================
-echo        DOWNLOADER PRO - ONE-CLICK GITHUB PUSH FOR VERCEL
+echo          DEPLOYING DOWNLOADER PRO TO GITHUB & VERCEL
 echo ===============================================================
 echo.
-echo Your code has been prepared with:
-echo   [OK] index.html (Luxury Dark & Gold Storefront)
-echo   [OK] public/index.html (Global Edge CDN Cache)
-echo   [OK] api/index.py (Vercel Serverless Backend)
-echo   [OK] Clean requirements.txt (Fast 3-second Vercel build)
-echo   [OK] Modern vercel.json routing
-echo.
 
-set GIT_PATH="C:\Users\Chathufer\AppData\Local\GitHubDesktop\app-3.6.10\resources\app\git\cmd\git.exe"
+set "GIT_DIR=C:\Users\Chathufer\AppData\Local\GitHubDesktop\app-3.6.10\resources\app\git\cmd"
+set "PATH=%GIT_DIR%;%PATH%"
 
-if not exist %GIT_PATH% (
-    echo [ERROR] Git was not found at standard path.
+echo [1/3] Verifying Git environment...
+git --version
+if errorlevel 1 (
+    echo [ERROR] Git could not be initialized.
     pause
     exit /b
 )
 
-echo Check existing remote...
-%GIT_PATH% remote -v
+echo [2/3] Checking repository destination...
+git remote -v
+
+echo.
+echo [3/3] Pushing luxury storefront & Vercel serverless backend to main branch...
+echo (If a browser window appears, simply click "Authorize" to confirm your GitHub login)
 echo.
 
-set /p REPO_URL="Enter your GitHub repository URL (e.g. https://github.com/chathufer/prodownloader.git): "
+git push -u origin main --force
 
-if "%REPO_URL%"=="" (
-    echo [INFO] No URL entered. Pushing to existing origin if configured...
-    %GIT_PATH% push -u origin main
+if errorlevel 1 (
+    echo.
+    echo [NOTE] If you were prompted for a Personal Access Token:
+    echo        Username: chathufer
+    echo        Password: Your GitHub Personal Access Token
+    echo.
 ) else (
-    %GIT_PATH% remote remove origin >nul 2>&1
-    %GIT_PATH% remote add origin %REPO_URL%
-    echo [INFO] Pushing clean code to GitHub...
-    %GIT_PATH% push -u origin main --force
+    echo.
+    echo ===============================================================
+    echo   [SUCCESS] Code successfully pushed to GitHub!
+    echo   Vercel is now building and deploying prodownloader.site!
+    echo   Open your browser and refresh: https://prodownloader.site
+    echo ===============================================================
 )
 
 echo.
-echo ===============================================================
-echo   PUSH COMPLETE! Vercel will now automatically build & deploy.
-echo   Check your site in 30 seconds: https://prodownloader.site
-echo ===============================================================
 pause
