@@ -19,3 +19,5 @@ temp/
 .env
 .venv
 env/
+
+*.bak
