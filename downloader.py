@@ -390,8 +390,15 @@ class YouTubeDownloader:
         quality: str = "best",
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
         cancel_token: Optional[CancelToken] = None,
-        file_prefix: str = ""
+        file_prefix: str = "",
+        is_pro: Optional[bool] = None
     ) -> str:
+        if is_pro is None:
+            try:
+                from licensing import LicenseManager
+                is_pro = LicenseManager().is_pro()
+            except Exception:
+                is_pro = False
         """
         Download TikTok video WITHOUT WATERMARK or as pure Hi-Fi MP3 audio.
         Streams data with real-time speed, ETA, and cancellation support.
@@ -413,7 +420,11 @@ class YouTubeDownloader:
             ext = ".mp3"
             must_convert = not bool(info.get('direct_audio_url'))
         else:
-            stream_url = info.get('direct_video_url')
+            # If Free tier, use standard 720p stream if HD is restricted
+            if not is_pro and info.get('direct_video_url_sd'):
+                stream_url = info.get('direct_video_url_sd')
+            else:
+                stream_url = info.get('direct_video_url')
             ext = ".mp4"
             must_convert = False
 
@@ -666,8 +677,15 @@ class YouTubeDownloader:
         quality: str = "best",
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
         cancel_token: Optional[CancelToken] = None,
-        file_prefix: str = ""
+        file_prefix: str = "",
+        is_pro: Optional[bool] = None
     ) -> str:
+        if is_pro is None:
+            try:
+                from licensing import LicenseManager
+                is_pro = LicenseManager().is_pro()
+            except Exception:
+                is_pro = False
         """
         Download single YouTube or TikTok video/audio.
         For TikTok: automatically extracts the clean stream WITHOUT WATERMARK.
@@ -684,7 +702,8 @@ class YouTubeDownloader:
                 quality=quality,
                 progress_callback=progress_callback,
                 cancel_token=cancel_token,
-                file_prefix=file_prefix
+                file_prefix=file_prefix,
+                is_pro=is_pro
             )
 
         # Output template (supports optional file prefix like "01 - ")
@@ -767,14 +786,29 @@ class YouTubeDownloader:
 
         if format_type == "video":
             ydl_opts['merge_output_format'] = 'mp4'
-            if quality == "best":
-                ydl_opts['format'] = 'bestvideo*+bestaudio/best'
+            if not is_pro:
+                # STRICT FREE TIER RESTRICTION: Max 720p height AND max 30fps
+                max_h = 720
+                if quality != "best":
+                    h_cand = quality.replace("p", "").strip()
+                    if h_cand.isdigit() and int(h_cand) < 720:
+                        max_h = int(h_cand)
+                ydl_opts['format'] = (
+                    f'bestvideo*[height<={max_h}][fps<=30]+bestaudio/'
+                    f'bestvideo*[height<={max_h}]+bestaudio/'
+                    f'best[height<={max_h}][fps<=30]/'
+                    f'best[height<={max_h}]/best'
+                )
             else:
-                height = quality.replace("p", "").strip()
-                if height.isdigit():
-                    ydl_opts['format'] = f'bestvideo*[height<={height}]+bestaudio/best[height<={height}]/best'
-                else:
+                # UNRESTRICTED PRO / 7-DAY TRIAL: 8K, 4K, 1440p, 1080p, 60fps
+                if quality == "best":
                     ydl_opts['format'] = 'bestvideo*+bestaudio/best'
+                else:
+                    height = quality.replace("p", "").strip()
+                    if height.isdigit():
+                        ydl_opts['format'] = f'bestvideo*[height<={height}]+bestaudio/best[height<={height}]/best'
+                    else:
+                        ydl_opts['format'] = 'bestvideo*+bestaudio/best'
 
         elif format_type == "audio_mp3":
             ydl_opts['format'] = 'bestaudio/best'
@@ -816,8 +850,15 @@ class YouTubeDownloader:
         format_type: str = "video",
         quality: str = "best",
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
-        cancel_token: Optional[CancelToken] = None
+        cancel_token: Optional[CancelToken] = None,
+        is_pro: Optional[bool] = None
     ) -> List[str]:
+        if is_pro is None:
+            try:
+                from licensing import LicenseManager
+                is_pro = LicenseManager().is_pro()
+            except Exception:
+                is_pro = False
         """
         Download a collection of playlist entries one by one into an organized subfolder.
         Reports both overall playlist progress and active video progress.
@@ -861,7 +902,8 @@ class YouTubeDownloader:
                     quality=quality,
                     progress_callback=item_progress_proxy,
                     cancel_token=cancel_token,
-                    file_prefix=f"{current_idx:02d} - "
+                    file_prefix=f"{current_idx:02d} - ",
+                    is_pro=is_pro
                 )
                 if file_path and os.path.exists(file_path):
                     downloaded_files.append(file_path)

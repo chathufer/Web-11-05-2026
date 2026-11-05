@@ -49,7 +49,8 @@ PLAN_NAMES = {
     "pro_monthly": "Pro Monthly Subscription",
     "pro_yearly": "Pro Annual Subscription",
     "pro_lifetime": "Pro Lifetime License",
-    "pro_custom": "Pro Custom License"
+    "pro_custom": "Pro Custom License",
+    "pro_trial": "Pro 7-Day Free Trial"
 }
 
 
@@ -224,6 +225,102 @@ def api_deactivate():
         "status": "success" if success else "error",
         "message": message
     }), (200 if success else 400)
+
+@app.route("/api/v1/license/trial", methods=["POST"])
+def api_trial():
+    """Issue or restore 7-Day Free Trial for a physical machine (1 per HWID)."""
+    data = request.get_json(silent=True) or {}
+    hwid = data.get("hwid", "").strip()
+    machine_name = data.get("machine_name", "").strip() or "PC"
+
+    if not hwid:
+        return jsonify({"status": "error", "message": "Hardware ID (HWID) is required."}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT l.id, l.license_key, l.plan, l.expires_at, l.is_revoked, a.activated_at
+        FROM activations a
+        JOIN licenses l ON a.license_id = l.id
+        WHERE a.hwid = ? AND l.plan = 'pro_trial'
+    """, (hwid,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        exp_str = row["expires_at"] or ""
+        is_exp = False
+        if exp_str:
+            try:
+                exp_dt = datetime.fromisoformat(exp_str)
+                if datetime.utcnow() > exp_dt:
+                    is_exp = True
+            except Exception:
+                pass
+
+        if is_exp:
+            return jsonify({
+                "status": "error",
+                "message": "The 7-Day Free Trial has already been claimed and expired on this computer. Please purchase a Pro license to continue."
+            }), 400
+
+        payload = {
+            "license_key": row["license_key"],
+            "plan": "pro_trial",
+            "plan_title": "Pro 7-Day Trial",
+            "customer_name": f"Trial User ({machine_name})",
+            "hwid": hwid,
+            "created_at": row["activated_at"],
+            "expires_at": exp_str,
+            "max_activations": 1,
+            "is_pro": 1,
+            "is_trial": 1,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        payload["signature"] = sign_license_payload(payload)
+        return jsonify({
+            "status": "success",
+            "message": "Your 7-Day Pro Free Trial is currently active!",
+            "data": payload
+        })
+
+    trial_key = generate_license_key("pro_trial")
+    exp_dt = calculate_expiry("pro_trial")
+    exp_str = exp_dt.isoformat() if exp_dt else ""
+    now_str = datetime.utcnow().isoformat()
+
+    create_license(
+        license_key=trial_key,
+        plan="pro_trial",
+        customer_name=f"Trial User ({machine_name})",
+        customer_email="",
+        expires_at=exp_str,
+        max_activations=1,
+        notes=f"Auto 7-day trial for {hwid}"
+    )
+    activate_license(trial_key, hwid, machine_name)
+
+    payload = {
+        "license_key": trial_key,
+        "plan": "pro_trial",
+        "plan_title": "Pro 7-Day Trial",
+        "customer_name": f"Trial User ({machine_name})",
+        "hwid": hwid,
+        "created_at": now_str,
+        "expires_at": exp_str,
+        "max_activations": 1,
+        "is_pro": 1,
+        "is_trial": 1,
+        "timestamp": now_str
+    }
+    payload["signature"] = sign_license_payload(payload)
+
+    return jsonify({
+        "status": "success",
+        "message": "🎉 7-Day Pro Free Trial activated successfully on this computer!",
+        "data": payload
+    })
+
 
 
 # ---------------- API ENDPOINTS (ADMIN FACING) ----------------

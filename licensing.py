@@ -9,7 +9,7 @@ import sys
 import json
 import time
 import socket
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Tuple
 
 import requests
@@ -85,6 +85,75 @@ def get_license_file_path() -> str:
     os.makedirs(fallback, exist_ok=True)
     return os.path.join(fallback, "license.json")
 
+
+
+def _get_trial_record_path() -> str:
+    folder = os.path.join(os.path.expanduser("~"), ".youtube_downloader")
+    os.makedirs(folder, exist_ok=True)
+    return os.path.join(folder, "trial_record.dat")
+
+
+def record_trial_claim(hwid: str, started_at: str, expires_at: str):
+    """Securely write trial claim to Windows Registry and local protected file."""
+    # 1. Local file record with HMAC
+    try:
+        path = _get_trial_record_path()
+        payload = {
+            "hwid": hwid,
+            "trial_started_at": started_at,
+            "trial_expires_at": expires_at,
+            "claimed": 1
+        }
+        payload["sig"] = sign_license_payload(payload)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+    except Exception:
+        pass
+
+    # 2. Windows Registry record (HKCU)
+    if sys.platform == "win32":
+        try:
+            import winreg
+            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\MediaDownloaderPro")
+            winreg.SetValueEx(reg_key, "TrialClaimed", 0, winreg.REG_DWORD, 1)
+            winreg.SetValueEx(reg_key, "TrialHWID", 0, winreg.REG_SZ, hwid)
+            winreg.SetValueEx(reg_key, "TrialExpires", 0, winreg.REG_SZ, expires_at)
+            winreg.CloseKey(reg_key)
+        except Exception:
+            pass
+
+
+def check_trial_claimed(hwid: str) -> Tuple[bool, Optional[str]]:
+    """
+    Check if this machine (HWID) has ever claimed the 7-day trial.
+    Returns (has_claimed: bool, expires_at: Optional[str])
+    """
+    # 1. Check Windows Registry
+    if sys.platform == "win32":
+        try:
+            import winreg
+            reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\MediaDownloaderPro")
+            claimed, _ = winreg.QueryValueEx(reg_key, "TrialClaimed")
+            reg_hwid, _ = winreg.QueryValueEx(reg_key, "TrialHWID")
+            reg_exp, _ = winreg.QueryValueEx(reg_key, "TrialExpires")
+            winreg.CloseKey(reg_key)
+            if claimed == 1 and (reg_hwid == hwid or not reg_hwid):
+                return True, reg_exp
+        except Exception:
+            pass
+
+    # 2. Check local file
+    try:
+        path = _get_trial_record_path()
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("hwid") == hwid and data.get("claimed") == 1:
+                return True, data.get("trial_expires_at")
+    except Exception:
+        pass
+
+    return False, None
 
 class LicenseManager:
     """Singleton Client License Manager."""
@@ -179,6 +248,9 @@ class LicenseManager:
         if not self._cached_license:
             return {
                 "is_pro": False,
+                "is_trial": False,
+                "can_start_trial": self.can_start_trial(),
+                "has_claimed_trial": self.has_claimed_trial(),
                 "plan": "free",
                 "plan_title": "Free Plan",
                 "license_key": "None",
@@ -203,10 +275,20 @@ class LicenseManager:
             except Exception:
                 pass
 
+        is_trial = self.is_trial()
+        plan_code = self._cached_license.get("plan", "pro")
+        plan_title = self._cached_license.get("plan_title", "Pro Plan")
+        if is_trial:
+            plan_title = "Pro 7-Day Trial"
+            days_rem = self.get_trial_days_remaining()
+
         return {
             "is_pro": self.is_pro(),
-            "plan": self._cached_license.get("plan", "pro"),
-            "plan_title": self._cached_license.get("plan_title", "Pro Plan"),
+            "is_trial": is_trial,
+            "can_start_trial": self.can_start_trial(),
+            "has_claimed_trial": self.has_claimed_trial(),
+            "plan": plan_code,
+            "plan_title": plan_title,
             "license_key": self._cached_license.get("license_key", ""),
             "customer_name": self._cached_license.get("customer_name", "Valued Customer"),
             "expires_at": exp_formatted,
@@ -214,6 +296,114 @@ class LicenseManager:
             "is_expired": bool(self._cached_license.get("is_expired")),
             "hwid": self.hwid
         }
+
+
+    def has_claimed_trial(self) -> bool:
+        """Check if this physical PC has ever claimed the 7-Day Free Trial."""
+        claimed, _ = check_trial_claimed(self.hwid)
+        if claimed:
+            return True
+        if self._cached_license and self._cached_license.get("plan") == "pro_trial":
+            return True
+        return False
+
+    def is_trial(self) -> bool:
+        """Check if current active license is an unexpired 7-Day Free Trial."""
+        if not self._cached_license:
+            return False
+        if self._cached_license.get("is_expired"):
+            return False
+        return self._cached_license.get("plan") == "pro_trial" or bool(self._cached_license.get("is_trial"))
+
+    def can_start_trial(self) -> bool:
+        """Check if this computer is eligible to start the 7-Day Free Trial."""
+        if self.is_pro():
+            return False
+        return not self.has_claimed_trial()
+
+    def get_trial_days_remaining(self) -> int:
+        """Return number of days remaining on active 7-Day Free Trial (or 0)."""
+        if not self.is_trial() or not self._cached_license:
+            return 0
+        exp_str = self._cached_license.get("expires_at")
+        if not exp_str:
+            return 7
+        try:
+            exp_dt = datetime.fromisoformat(exp_str)
+            now = datetime.utcnow()
+            diff = (exp_dt - now).total_seconds()
+            if diff <= 0:
+                return 0
+            return max(1, int(diff // 86400) + (1 if (diff % 86400) > 0 else 0))
+        except Exception:
+            return 0
+
+    def start_trial(self) -> Tuple[bool, str]:
+        """
+        Start the 7-Day Free Trial on this physical computer.
+        Enforces strict 1-PC machine lock using Hardware ID (HWID).
+        Unlocks all Pro features: 4K 60fps, unlimited playlists, 320k MP3.
+        """
+        if self.is_pro() and not self.is_trial():
+            return False, "You already have an active Pro license activated on this computer!"
+
+        if self.is_trial():
+            days = self.get_trial_days_remaining()
+            return True, f"Your 7-Day Pro Free Trial is already active ({days} days remaining)!"
+
+        if self.has_claimed_trial():
+            return False, "The 7-Day Free Trial has already been claimed on this computer. Please purchase a Pro license to continue enjoying 4K 60fps & Playlists."
+
+        machine_name = socket.gethostname()
+        now_dt = datetime.utcnow()
+        exp_dt = now_dt + timedelta(days=7)
+        now_str = now_dt.isoformat()
+        exp_str = exp_dt.isoformat()
+
+        # 1. Attempt online server registration
+        candidate_urls = get_candidate_server_urls()
+        if self.server_url and self.server_url not in candidate_urls:
+            candidate_urls.insert(0, self.server_url)
+
+        for base_url in candidate_urls:
+            try:
+                url = f"{base_url}/api/v1/license/trial"
+                resp = requests.post(url, json={"hwid": self.hwid, "machine_name": machine_name}, timeout=3.5)
+                if resp.status_code == 200:
+                    res_json = resp.json()
+                    if res_json.get("status") == "success":
+                        data = res_json.get("data", {})
+                        data["is_pro"] = True
+                        data["is_trial"] = True
+                        self._save_local_license(data)
+                        record_trial_claim(self.hwid, now_str, data.get("expires_at", exp_str))
+                        return True, "🎉 7-Day Pro Free Trial successfully activated on this computer!"
+                elif resp.status_code == 400:
+                    err_msg = resp.json().get("message", "Trial activation failed.")
+                    if "already been claimed" in err_msg.lower():
+                        record_trial_claim(self.hwid, now_str, exp_str)
+                        return False, err_msg
+            except Exception:
+                continue
+
+        # 2. Offline cryptographic fallback (100% verified HWID lock)
+        trial_key = generate_license_key("pro_trial")
+        payload = {
+            "license_key": trial_key,
+            "plan": "pro_trial",
+            "plan_title": "Pro 7-Day Trial",
+            "customer_name": f"Trial User ({machine_name})",
+            "customer_email": "",
+            "hwid": self.hwid,
+            "activated_at": now_str,
+            "expires_at": exp_str,
+            "is_pro": True,
+            "is_trial": True
+        }
+        payload["signature"] = sign_license_payload(payload)
+        self._save_local_license(payload)
+        record_trial_claim(self.hwid, now_str, exp_str)
+        return True, "🎉 7-Day Pro Free Trial successfully activated on this computer! (Offline Verified)"
 
     def activate(self, license_key: str) -> Tuple[bool, str]:
         """

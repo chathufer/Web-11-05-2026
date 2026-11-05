@@ -1987,6 +1987,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </style>
 </head>
 <body>
+  <!-- Top Promotional Banner -->
+  <aside class="promo-bar" style="background: linear-gradient(90deg, #d9990c 0%, #f5b82e 50%, #19c3ff 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
+    🎁 <strong>LIMITED PROMOTION:</strong> 7-Day Pro Free Trial included with Windows Installer! Enjoy 4K 60FPS, Playlists &amp; Turbo Speed on your PC (No Credit Card Required).
+    <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
+  </aside>
+
 
   <!-- ============================================================
        SVG SYMBOLS DEFINITION SHEET
@@ -2069,8 +2075,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <p class="tag reveal">
-          <span>Ultra HD CDN Ripper &middot; Windows 10 &amp; 11</span>
+        <p class="tag reveal" style="border-color: rgba(245, 184, 46, 0.4); background: rgba(245, 184, 46, 0.12);">
+          <span>🎁 SPECIAL PROMO: Includes 7-Day Pro Free Trial on 1 PC &middot; Windows 10 &amp; 11</span>
         </p>
 
         <h1 class="reveal" id="hero-title">
@@ -2717,8 +2723,21 @@ WEBSITE_HTML = """<!DOCTYPE html>
           </h2>
         </div>
         <p class="sec-note reveal">
-          Start for free with standard 1080p downloads, or unlock unlimited 8K speeds, batch queues, and lifetime updates.
+          Start free with standard 720p 30fps downloads + 7-Day Free Pro Trial for 1 PC, or unlock permanent Pro with lifetime updates.
         </p>
+      </div>
+
+            <!-- 7-Day Free Trial Promotion Banner -->
+      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(245, 184, 46, 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="max-width: 680px;">
+          <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
+          <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
+          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
+        </div>
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
+          <span>Get Free Setup + Trial</span>
+          <svg class="ic"><use href="#i-download"></use></svg>
+        </a>
       </div>
 
       <div class="pricing-grid">
@@ -2727,7 +2746,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <div>
             <div class="price-head">
               <h3>Free Starter</h3>
-              <p>Great for occasional 1080p downloads and basic MP3 rips.</p>
+              <p>Standard edition for 720p 30fps media and basic MP3 rips.</p>
             </div>
 
             <div class="price-amount">
@@ -2737,15 +2756,16 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </div>
 
             <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>1080p Full HD video downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span><strong>Max 720p @ 30fps</strong> video downloads (Strict cap)</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Standard single-item downloads</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>192kbps Standard MP3 audio</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>2 parallel queue downloads</span></li>
+              <li><svg class="ic" style="color: #19c3ff;"><use href="#i-check"></use></svg><span style="color: #19c3ff; font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Windows 10/11 standalone setup</span></li>
             </ul>
           </div>
 
           <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
-            <span>Download Free v2.2</span>
+            <span>Download Free + 7-Day Trial</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>
         </div>

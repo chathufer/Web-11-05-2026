@@ -684,6 +684,9 @@ class YouTubeDownloaderApp(ctk.CTk):
         )
         self.clipboard_dismiss_btn.pack(side="right", padx=8, pady=8)
 
+        # 2.5 Promotional 7-Day Free Trial Banner
+        self._build_promo_banner(self.view_downloader, padx=content_pad)
+
         # 3. Streamlined URL Input Section
         self._build_input_section(self.view_downloader, padx=content_pad)
 
@@ -696,17 +699,125 @@ class YouTubeDownloaderApp(ctk.CTk):
         # 6. Action, Telemetry HUD & Progress Section
         self._build_progress_section(self.view_downloader, padx=content_pad)
 
+    def _build_promo_banner(self, parent, padx: int):
+        """Promotional banner highlighting the 7-Day Free Trial for 1 PC."""
+        self.promo_trial_banner = ctk.CTkFrame(
+            parent,
+            fg_color=BG_CARD_SUBTLE,
+            border_width=1,
+            border_color="#00F2FE",
+            corner_radius=12
+        )
+        self.promo_trial_padx = padx
+
+        left_box = ctk.CTkFrame(self.promo_trial_banner, fg_color="transparent")
+        left_box.pack(side="left", fill="both", expand=True, padx=14, pady=10)
+
+        self.promo_banner_title = ctk.CTkLabel(
+            left_box,
+            text="🎁 SPECIAL PROMOTION: Try Pro 100% Free for 7 Days!",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#00F2FE"
+        )
+        self.promo_banner_title.pack(anchor="w")
+
+        self.promo_banner_sub = ctk.CTkLabel(
+            left_box,
+            text="Unlock 4K 60FPS video, unlimited playlists & 320kbps MP3s on this PC (No credit card required).",
+            font=ctk.CTkFont(size=11),
+            text_color=TEXT_MUTED
+        )
+        self.promo_banner_sub.pack(anchor="w", pady=(2, 0))
+
+        self.promo_banner_btn = ctk.CTkButton(
+            self.promo_trial_banner,
+            text="⚡ Start 7-Day Free Trial",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=32,
+            fg_color="#0284C7",
+            hover_color="#0369A1",
+            corner_radius=8,
+            command=self._on_start_trial_promo_clicked
+        )
+        self.promo_banner_btn.pack(side="right", padx=(10, 14), pady=10)
+
+    def _on_start_trial_promo_clicked(self):
+        """1-Click Start 7-Day Free Trial handler."""
+        if hasattr(self, "promo_banner_btn") and self.promo_banner_btn.winfo_exists():
+            self.promo_banner_btn.configure(state="disabled", text="Activating Trial...")
+
+        def worker():
+            ok, msg = self.license_mgr.start_trial()
+            def on_done():
+                self._update_license_ui()
+                self._on_format_changed(self.format_seg.get())
+                if ok:
+                    self._show_info_dialog("7-Day Free Trial Activated", msg)
+                else:
+                    self._show_info_dialog("Free Trial Notice", msg, is_error=True)
+            self.after(100, on_done)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_info_dialog(self, title: str, message: str, is_error: bool = False):
+        """Show clean modal dialog with informative message."""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title(title)
+        dialog.geometry("460x220")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        self.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() - 460) // 2
+        y = self.winfo_y() + (self.winfo_height() - 220) // 2
+        dialog.geometry(f"+{max(0, x)}+{max(0, y)}")
+
+        f = ctk.CTkFrame(dialog, fg_color=BG_WINDOW, corner_radius=0)
+        f.pack(fill="both", expand=True, padx=20, pady=20)
+
+        icon_color = COLOR_DANGER if is_error else COLOR_SUCCESS
+        header_text = f"✖ {title}" if is_error else f"✔ {title}"
+
+        ctk.CTkLabel(
+            f,
+            text=header_text,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=icon_color
+        ).pack(anchor="w", pady=(0, 10))
+
+        ctk.CTkLabel(
+            f,
+            text=message,
+            font=ctk.CTkFont(size=12),
+            text_color=TEXT_PRIMARY if not is_error else COLOR_DANGER,
+            justify="left",
+            wraplength=410
+        ).pack(anchor="w", pady=(0, 20))
+
+        btn = ctk.CTkButton(
+            f,
+            text="OK",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color=COLOR_PRIMARY if not is_error else BG_CARD_SUBTLE,
+            hover_color=COLOR_PRIMARY_HOVER if not is_error else BG_CARD_HOVER,
+            width=100,
+            height=36,
+            corner_radius=8,
+            command=dialog.destroy
+        )
+        btn.pack(side="right")
+
     def _build_input_section(self, parent, padx: int):
-        input_card = ctk.CTkFrame(
+        self.input_card = ctk.CTkFrame(
             parent,
             corner_radius=14,
             fg_color=BG_CARD,
             border_width=1,
             border_color=BORDER_COLOR
         )
-        input_card.pack(fill="x", padx=padx, pady=(0, 14), ipady=6)
+        self.input_card.pack(fill="x", padx=padx, pady=(0, 14), ipady=6)
 
-        lbl_row = ctk.CTkFrame(input_card, fg_color="transparent")
+        lbl_row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         lbl_row.pack(fill="x", padx=16, pady=(12, 6))
 
         lbl = ctk.CTkLabel(
@@ -2357,24 +2468,38 @@ class YouTubeDownloaderApp(ctk.CTk):
     # ---------------- Format & Options Handlers ----------------
 
     def _on_format_changed(self, value: str):
+        is_pro = self.license_mgr.is_pro()
         if "Video" in value:
-            options = ["🌟 Best Available Quality", "1080p (Full HD)", "720p (HD)", "480p (SD)", "360p"]
-            if self.current_video_info and self.current_video_info.get("available_heights"):
-                heights = self.current_video_info["available_heights"]
-                custom_opts = ["🌟 Best Available Quality"]
-                if 2160 in heights:
-                    custom_opts.append("2160p (4K UHD)")
-                if 1440 in heights:
-                    custom_opts.append("1440p (2K QHD)")
-                if 1080 in heights:
-                    custom_opts.append("1080p (Full HD)")
-                if 720 in heights:
-                    custom_opts.append("720p (HD)")
-                if 480 in heights:
-                    custom_opts.append("480p (SD)")
-                if 360 in heights:
-                    custom_opts.append("360p")
-                options = custom_opts
+            if not is_pro:
+                # FREE TIER OPTIONS: strictly max 720p and max 30fps
+                options = [
+                    "🌟 Best (Max 720p 30fps - Free)",
+                    "🔒 2160p (4K UHD 60fps) [PRO]",
+                    "🔒 1440p (2K QHD 60fps) [PRO]",
+                    "🔒 1080p (Full HD 60fps) [PRO]",
+                    "720p (HD 30fps)",
+                    "480p (SD 30fps)",
+                    "360p"
+                ]
+            else:
+                # PRO / 7-DAY TRIAL OPTIONS: full 4K, 1440p, 1080p, 60fps
+                options = ["🌟 Best Available Quality", "1080p (Full HD)", "720p (HD)", "480p (SD)", "360p"]
+                if self.current_video_info and self.current_video_info.get("available_heights"):
+                    heights = self.current_video_info["available_heights"]
+                    custom_opts = ["🌟 Best Available Quality"]
+                    if 2160 in heights:
+                        custom_opts.append("2160p (4K UHD 60fps)")
+                    if 1440 in heights:
+                        custom_opts.append("1440p (2K QHD 60fps)")
+                    if 1080 in heights:
+                        custom_opts.append("1080p (Full HD 60fps)")
+                    if 720 in heights:
+                        custom_opts.append("720p (HD)")
+                    if 480 in heights:
+                        custom_opts.append("480p (SD)")
+                    if 360 in heights:
+                        custom_opts.append("360p")
+                    options = custom_opts
             self.quality_menu.configure(values=options)
             self.quality_menu.set(options[0])
 
@@ -2389,6 +2514,14 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.quality_menu.set("Best Audio (Original AAC/M4A)")
 
     def _apply_quick_preset(self, format_type: str, quality_key: str):
+        is_pro = self.license_mgr.is_pro()
+        if format_type == "video" and not is_pro and quality_key in ["best", "1080p", "1440p", "2160p"]:
+            self._show_pro_upsell_dialog(
+                feature_title="1080p, 4K & 60FPS Video Streams",
+                feature_desc="Downloading in 1080p Full HD, 4K Ultra HD or 60FPS requires Media Downloader Pro.\n\nThe Free edition is limited to 720p 30fps.\n\nStart your 7-Day Free Trial (100% Free on this PC) or activate a license key to unlock 4K 60FPS!"
+            )
+            return
+
         if format_type == "video":
             if self.current_video_info and self.current_video_info.get("is_playlist"):
                 self.format_seg.set("🎥 All as Video (MP4)")
@@ -2453,28 +2586,47 @@ class YouTubeDownloaderApp(ctk.CTk):
             pass
 
     def _update_license_ui(self):
-        """Update all badges, labels, and buttons reflecting current Pro status."""
+        """Update all badges, labels, and buttons reflecting current Pro status, 7-Day Free Trial, or Free tier."""
         status = self.license_mgr.get_status()
         is_pro = status.get("is_pro", False)
+        is_trial = status.get("is_trial", False)
+        can_trial = status.get("can_start_trial", False)
+        days_rem = status.get("days_remaining", 0)
 
         # 1. Update Header Button
         if hasattr(self, "header_pro_btn") and self.header_pro_btn.winfo_exists():
-            if is_pro:
+            if is_pro and not is_trial:
                 self.header_pro_btn.configure(
                     text="👑 PRO ACTIVATED",
                     fg_color="#10B981",
-                    hover_color="#059669"
+                    hover_color="#059669",
+                    command=self._open_activation_dialog
+                )
+            elif is_trial:
+                self.header_pro_btn.configure(
+                    text=f"👑 TRIAL: {days_rem}d LEFT",
+                    fg_color="#0284C7",
+                    hover_color="#0369A1",
+                    command=self._open_activation_dialog
+                )
+            elif can_trial:
+                self.header_pro_btn.configure(
+                    text="🎁 Free 7-Day Trial",
+                    fg_color="#D97706",
+                    hover_color="#B45309",
+                    command=self._on_start_trial_promo_clicked
                 )
             else:
                 self.header_pro_btn.configure(
                     text="⭐ Activate Pro Key",
                     fg_color="#D97706",
-                    hover_color="#B45309"
+                    hover_color="#B45309",
+                    command=self._open_activation_dialog
                 )
 
         # 2. Update Sidebar Card
         if hasattr(self, "sidebar_pro_card") and self.sidebar_pro_card.winfo_exists():
-            if is_pro:
+            if is_pro and not is_trial:
                 self.sidebar_pro_card.configure(border_color="#10B981")
                 self.sidebar_pro_badge.configure(text="👑 PRO MEMBER", text_color="#10B981")
                 plan_t = status.get("plan_title", "Pro Plan")
@@ -2483,21 +2635,78 @@ class YouTubeDownloaderApp(ctk.CTk):
                 self.sidebar_pro_btn.configure(
                     text="Manage License",
                     fg_color="#10B981",
-                    hover_color="#059669"
+                    hover_color="#059669",
+                    command=self._open_activation_dialog
+                )
+            elif is_trial:
+                self.sidebar_pro_card.configure(border_color="#00F2FE")
+                self.sidebar_pro_badge.configure(text="👑 PRO 7-DAY TRIAL", text_color="#00F2FE")
+                self.sidebar_pro_desc.configure(text=f"Active on this PC\n{days_rem} Days Remaining")
+                self.sidebar_pro_btn.configure(
+                    text="💎 Upgrade to Lifetime",
+                    fg_color="#D97706",
+                    hover_color="#B45309",
+                    command=self._open_activation_dialog
+                )
+            elif can_trial:
+                self.sidebar_pro_card.configure(border_color="#F59E0B")
+                self.sidebar_pro_badge.configure(text="🎁 7-DAY FREE TRIAL", text_color="#F59E0B")
+                self.sidebar_pro_desc.configure(text="Unlock 4K 60fps & Playlists free on this PC")
+                self.sidebar_pro_btn.configure(
+                    text="⚡ Start Free Trial",
+                    fg_color="#0284C7",
+                    hover_color="#0369A1",
+                    command=self._on_start_trial_promo_clicked
                 )
             else:
                 self.sidebar_pro_card.configure(border_color="#D97706")
                 self.sidebar_pro_badge.configure(text="⭐ FREE EDITION", text_color="#F59E0B")
-                self.sidebar_pro_desc.configure(text="Unlock 4K, Playlists & Multi-thread Boost")
+                self.sidebar_pro_desc.configure(text="Trial expired (Max 720p 30fps). Upgrade for 4K 60fps.")
                 self.sidebar_pro_btn.configure(
-                    text="⚡ Activate Pro",
+                    text="⚡ Activate Pro Key",
                     fg_color="#D97706",
-                    hover_color="#B45309"
+                    hover_color="#B45309",
+                    command=self._open_activation_dialog
                 )
+
+        # 2.5 Update Top Promotional Banner
+        if hasattr(self, "promo_trial_banner") and self.promo_trial_banner.winfo_exists():
+            if is_pro and not is_trial:
+                self.promo_trial_banner.pack_forget()
+            elif is_trial:
+                padx = getattr(self, "promo_trial_padx", 16)
+                if hasattr(self, "input_card") and self.input_card.winfo_exists():
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14), before=self.input_card)
+                else:
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14))
+                self.promo_trial_banner.configure(border_color="#00F2FE")
+                self.promo_banner_title.configure(text=f"👑 PRO 7-DAY TRIAL: {days_rem} Days Remaining", text_color="#00F2FE")
+                self.promo_banner_sub.configure(text="All Pro features active on this PC (4K 60fps, Batch Playlists, Lossless 320k MP3).")
+                self.promo_banner_btn.configure(text="💎 Upgrade to Lifetime Pro", fg_color="#D97706", hover_color="#B45309", command=self._open_activation_dialog)
+            elif can_trial:
+                padx = getattr(self, "promo_trial_padx", 16)
+                if hasattr(self, "input_card") and self.input_card.winfo_exists():
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14), before=self.input_card)
+                else:
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14))
+                self.promo_trial_banner.configure(border_color="#F59E0B")
+                self.promo_banner_title.configure(text="🎁 SPECIAL PROMOTION: Try Pro 100% Free for 7 Days!", text_color="#F59E0B")
+                self.promo_banner_sub.configure(text="Free Edition is limited to 720p 30fps. Start your 7-Day Free Trial to unlock 4K 60fps!")
+                self.promo_banner_btn.configure(text="⚡ Start 7-Day Free Trial (0$)", fg_color="#0284C7", hover_color="#0369A1", command=self._on_start_trial_promo_clicked)
+            else:
+                padx = getattr(self, "promo_trial_padx", 16)
+                if hasattr(self, "input_card") and self.input_card.winfo_exists():
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14), before=self.input_card)
+                else:
+                    self.promo_trial_banner.pack(fill="x", padx=padx, pady=(0, 14))
+                self.promo_trial_banner.configure(border_color=BORDER_COLOR)
+                self.promo_banner_title.configure(text="⭐ 7-Day Free Trial Expired — Free Edition Active (Max 720p 30fps)", text_color=COLOR_WARNING)
+                self.promo_banner_sub.configure(text="Upgrade to Pro Lifetime to restore 4K 60fps, unlimited playlists & high-speed acceleration.")
+                self.promo_banner_btn.configure(text="🛒 Buy Pro License Key", fg_color="#F59E0B", hover_color="#D97706", command=lambda: webbrowser.open("https://prodownloader.site#pricing"))
 
         # 3. Update Settings Card
         if hasattr(self, "lic_badge_pill") and self.lic_badge_pill.winfo_exists():
-            if is_pro:
+            if is_pro and not is_trial:
                 self.lic_badge_pill.configure(
                     text="👑 PRO ACTIVE",
                     fg_color="#D1FAE5",
@@ -2511,17 +2720,32 @@ class YouTubeDownloaderApp(ctk.CTk):
                 self.lic_desc_lbl.configure(text=f"Licensed to: {status.get('customer_name', 'Customer')} | Unlimited Pro Features Active")
                 self.lic_activate_btn.configure(text="🔑 Change License Key", fg_color=BG_CARD_SUBTLE, hover_color=BG_CARD_HOVER, text_color=TEXT_PRIMARY)
                 self.lic_deactivate_btn.pack(side="left", fill="x", expand=True, padx=(6, 0))
+            elif is_trial:
+                self.lic_badge_pill.configure(
+                    text="👑 PRO TRIAL ACTIVE",
+                    fg_color="#E0F2FE",
+                    text_color="#0369A1"
+                )
+                self.lic_plan_lbl.configure(text="Pro 7-Day Free Trial")
+                self.lic_exp_lbl.configure(text=f"{status.get('expires_at', '7 Days')} ({days_rem} days left)")
+                self.lic_key_lbl.configure(text=status.get("license_key", "TRIAL"))
+                self.lic_desc_lbl.configure(text="Trial active on this PC. Unlimited 4K 60fps and playlists active.")
+                self.lic_activate_btn.configure(text="💎 Upgrade to Pro Lifetime", fg_color="#D97706", hover_color="#B45309", text_color="#FFFFFF")
+                self.lic_deactivate_btn.pack_forget()
             else:
                 self.lic_badge_pill.configure(
                     text="FREE EDITION",
                     fg_color=BG_CARD_SUBTLE,
                     text_color=COLOR_WARNING
                 )
-                self.lic_plan_lbl.configure(text="Free Edition")
+                self.lic_plan_lbl.configure(text="Free Edition (Max 720p 30fps)")
                 self.lic_exp_lbl.configure(text="N/A")
                 self.lic_key_lbl.configure(text="None")
-                self.lic_desc_lbl.configure(text="Unlock 4K Ultra HD, unlimited playlist downloads, and high-speed multi-threaded acceleration.")
-                self.lic_activate_btn.configure(text="⚡ Activate Pro License Key", fg_color="#D97706", hover_color="#B45309", text_color="#FFFFFF")
+                self.lic_desc_lbl.configure(text="Free edition limited to 720p 30fps. Start 7-Day Free Trial or activate Pro Key for 4K 60fps.")
+                if can_trial:
+                    self.lic_activate_btn.configure(text="⚡ Start 7-Day Free Trial (0$)", fg_color="#0284C7", hover_color="#0369A1", text_color="#FFFFFF")
+                else:
+                    self.lic_activate_btn.configure(text="⚡ Activate Pro License Key", fg_color="#D97706", hover_color="#B45309", text_color="#FFFFFF")
                 self.lic_deactivate_btn.pack_forget()
 
     def _open_activation_dialog(self):
@@ -2597,6 +2821,50 @@ class YouTubeDownloaderApp(ctk.CTk):
             ctk.CTkLabel(p_row, text=icon, font=ctk.CTkFont(size=12), width=20).pack(side="left")
             ctk.CTkLabel(p_row, text=f" {title} ", font=ctk.CTkFont(size=11, weight="bold"), text_color=TEXT_PRIMARY).pack(side="left")
             ctk.CTkLabel(p_row, text=f"— {desc}", font=ctk.CTkFont(size=10), text_color=TEXT_MUTED).pack(side="left")
+
+        if self.license_mgr.can_start_trial():
+            trial_promo_card = ctk.CTkFrame(frame, fg_color=BG_CARD, corner_radius=12, border_width=1, border_color="#00F2FE")
+            trial_promo_card.pack(fill="x", pady=(0, 12), ipady=4)
+
+            tp_head = ctk.CTkFrame(trial_promo_card, fg_color="transparent")
+            tp_head.pack(fill="x", padx=14, pady=(6, 2))
+            ctk.CTkLabel(tp_head, text="🎁 SPECIAL PROMO: 7-DAY FREE TRIAL (1 PC)", font=ctk.CTkFont(size=11, weight="bold"), text_color="#00F2FE").pack(side="left")
+            ctk.CTkLabel(tp_head, text="No Card Required", font=ctk.CTkFont(size=10, weight="bold"), text_color=TEXT_MUTED).pack(side="right")
+
+            ctk.CTkLabel(
+                trial_promo_card,
+                text="Try full Pro abilities free on this PC for 7 days: 4K 60fps, unlimited playlists & turbo speed.",
+                font=ctk.CTkFont(size=10),
+                text_color=TEXT_MUTED
+            ).pack(anchor="w", padx=14, pady=(0, 6))
+
+            def start_trial_action():
+                trial_act_btn.configure(state="disabled", text="Activating Trial...")
+                def worker():
+                    ok, msg = self.license_mgr.start_trial()
+                    def on_done():
+                        if ok:
+                            self._update_license_ui()
+                            self._on_format_changed(self.format_seg.get())
+                            dialog.destroy()
+                            self._show_info_dialog("Trial Activated", msg)
+                        else:
+                            trial_act_btn.configure(state="normal", text="⚡ Start 7-Day Free Trial (0$)")
+                            self._show_info_dialog("Notice", msg, is_error=True)
+                    self.after(100, on_done)
+                threading.Thread(target=worker, daemon=True).start()
+
+            trial_act_btn = ctk.CTkButton(
+                trial_promo_card,
+                text="⚡ Start 7-Day Free Trial Now (0$ - Instant Unlock)",
+                font=ctk.CTkFont(size=12, weight="bold"),
+                fg_color="#0284C7",
+                hover_color="#0369A1",
+                height=36,
+                corner_radius=8,
+                command=start_trial_action
+            )
+            trial_act_btn.pack(fill="x", padx=14, pady=(2, 8))
 
         # Step 1: Hardware ID Box
         hwid_box = ctk.CTkFrame(frame, fg_color=BG_CARD, corner_radius=12, border_width=1, border_color=BORDER_COLOR)
@@ -2862,27 +3130,29 @@ class YouTubeDownloaderApp(ctk.CTk):
         btn_cancel.pack(side="left")
 
     def _show_pro_upsell_dialog(self, feature_title: str, feature_desc: str):
-        """Show clean modal dialog explaining a Pro feature and offering activation."""
+        """Show clean modal dialog explaining a Pro feature and offering activation or free trial."""
         dialog = ctk.CTkToplevel(self)
         dialog.title("Pro Feature")
-        dialog.geometry("480x320")
+        can_trial = self.license_mgr.can_start_trial()
+        dlg_h = 390 if can_trial else 320
+        dialog.geometry(f"520x{dlg_h}")
         dialog.transient(self)
         dialog.grab_set()
 
         self.update_idletasks()
-        x = self.winfo_x() + (self.winfo_width() - 480) // 2
-        y = self.winfo_y() + (self.winfo_height() - 320) // 2
+        x = self.winfo_x() + (self.winfo_width() - 520) // 2
+        y = self.winfo_y() + (self.winfo_height() - dlg_h) // 2
         dialog.geometry(f"+{max(0, x)}+{max(0, y)}")
 
         f = ctk.CTkFrame(dialog, fg_color=BG_WINDOW, corner_radius=0)
-        f.pack(fill="both", expand=True, padx=22, pady=22)
+        f.pack(fill="both", expand=True, padx=22, pady=20)
 
         ctk.CTkLabel(
             f,
             text=f"👑 {feature_title}",
             font=ctk.CTkFont(size=17, weight="bold"),
             text_color="#F59E0B"
-        ).pack(anchor="w", pady=(0, 8))
+        ).pack(anchor="w", pady=(0, 6))
 
         ctk.CTkLabel(
             f,
@@ -2890,8 +3160,45 @@ class YouTubeDownloaderApp(ctk.CTk):
             font=ctk.CTkFont(size=12),
             text_color=TEXT_SECONDARY,
             justify="left",
-            wraplength=430
-        ).pack(anchor="w", pady=(0, 20))
+            wraplength=470
+        ).pack(anchor="w", pady=(0, 12))
+
+        if can_trial:
+            trial_box = ctk.CTkFrame(f, fg_color=BG_CARD, border_width=1, border_color="#00F2FE", corner_radius=10)
+            trial_box.pack(fill="x", pady=(0, 14), ipady=4)
+
+            tb_head = ctk.CTkFrame(trial_box, fg_color="transparent")
+            tb_head.pack(fill="x", padx=12, pady=(6, 2))
+            ctk.CTkLabel(tb_head, text="🎁 SPECIAL PROMOTION: 7-DAY FREE TRIAL", font=ctk.CTkFont(size=11, weight="bold"), text_color="#00F2FE").pack(side="left")
+            ctk.CTkLabel(tb_head, text="100% FREE · 1 PC", font=ctk.CTkFont(size=10, weight="bold"), text_color=TEXT_MUTED).pack(side="right")
+
+            def start_trial_click():
+                btn_trial.configure(state="disabled", text="Activating Trial...")
+                def worker():
+                    ok, msg = self.license_mgr.start_trial()
+                    def on_done():
+                        if ok:
+                            dialog.destroy()
+                            self._update_license_ui()
+                            self._on_format_changed(self.format_seg.get())
+                            self._show_info_dialog("Trial Activated", msg)
+                        else:
+                            btn_trial.configure(state="normal", text="⚡ Start 7-Day Free Trial (0$)")
+                            self._show_info_dialog("Trial Notice", msg, is_error=True)
+                    self.after(100, on_done)
+                threading.Thread(target=worker, daemon=True).start()
+
+            btn_trial = ctk.CTkButton(
+                trial_box,
+                text="⚡ Start 7-Day Free Trial (0$ - 1 PC)",
+                font=ctk.CTkFont(size=12, weight="bold"),
+                fg_color="#0284C7",
+                hover_color="#0369A1",
+                height=34,
+                corner_radius=8,
+                command=start_trial_click
+            )
+            btn_trial.pack(fill="x", padx=12, pady=(4, 6))
 
         b_row = ctk.CTkFrame(f, fg_color="transparent")
         b_row.pack(fill="x", side="bottom")
@@ -2902,15 +3209,28 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         btn_act = ctk.CTkButton(
             b_row,
-            text="⚡ Activate Pro License",
+            text="🔑 Enter Pro Key",
             font=ctk.CTkFont(size=12, weight="bold"),
             fg_color="#F59E0B",
             hover_color="#D97706",
-            height=40,
+            height=38,
             corner_radius=8,
             command=go_activate
         )
         btn_act.pack(side="left", fill="x", expand=True, padx=(0, 8))
+
+        btn_buy = ctk.CTkButton(
+            b_row,
+            text="🌐 Buy Key",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color=BG_CARD_SUBTLE,
+            hover_color=BG_CARD_HOVER,
+            width=90,
+            height=38,
+            corner_radius=8,
+            command=lambda: webbrowser.open("https://prodownloader.site#pricing")
+        )
+        btn_buy.pack(side="left", padx=(0, 8))
 
         btn_dismiss = ctk.CTkButton(
             b_row,
@@ -2919,7 +3239,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             fg_color=BG_CARD_SUBTLE,
             hover_color=BG_CARD_HOVER,
             width=95,
-            height=40,
+            height=38,
             corner_radius=8,
             command=dialog.destroy
         )
@@ -2970,13 +3290,14 @@ class YouTubeDownloaderApp(ctk.CTk):
         else:
             quality = "best"
 
-        # Check Pro restrictions on 4K / 2K resolutions
-        if not self.license_mgr.is_pro() and quality in ["2160p", "1440p"]:
-            self._show_pro_upsell_dialog(
-                feature_title="Ultra HD 4K & 2K Video Streams",
-                feature_desc="Downloading in Ultra HD 4K (2160p) and Quad HD 2K (1440p) requires an active Media Downloader Pro license.\n\nActivate your Pro key to enjoy crystal-clear Ultra HD downloads without restrictions!"
-            )
-            return
+        # Check Pro restrictions on >720p resolutions and 60fps
+        if not self.license_mgr.is_pro() and format_type == "video":
+            if any(k in quality_choice for k in ["2160p", "1440p", "1080p", "4K", "2K", "60fps", "[PRO]"]):
+                self._show_pro_upsell_dialog(
+                    feature_title="1080p, 4K & 60FPS Video Streams",
+                    feature_desc="Downloading in 1080p Full HD, 4K Ultra HD or 60FPS requires Media Downloader Pro.\n\nThe Free edition is strictly limited to 720p at 30fps max.\n\nStart your 7-Day Free Trial (100% Free on this PC) or activate a license key to unlock 4K 60FPS!"
+                )
+                return
 
         is_pl = self.current_video_info and self.current_video_info.get("is_playlist")
 
