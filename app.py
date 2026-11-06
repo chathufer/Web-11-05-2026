@@ -4366,8 +4366,9 @@ class YouTubeDownloaderApp(ctk.CTk):
 
             # Load Thumbnail
             thumb_url = info.get("thumbnail")
+            fallbacks = info.get("thumbnail_fallbacks", [])
             if thumb_url:
-                self._load_thumbnail_threaded(thumb_url)
+                self._load_thumbnail_threaded(thumb_url, fallbacks)
 
     def _populate_playlist_items(self, entries: List[Dict[str, Any]]):
         for widget in self.pl_items_scroll.winfo_children():
@@ -4417,10 +4418,16 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _load_playlist_thumb_threaded(self, url: str):
         def task():
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'image/*,*/*;q=0.8'
+            }
             try:
-                resp = requests.get(url, timeout=10)
-                if resp.status_code == 200:
+                resp = requests.get(url, headers=headers, timeout=5)
+                if resp.status_code == 200 and len(resp.content) > 500:
                     img_data = Image.open(BytesIO(resp.content))
+                    if img_data.mode not in ("RGB", "RGBA"):
+                        img_data = img_data.convert("RGB")
                     img_data.thumbnail((180, 100), Image.Resampling.LANCZOS)
                     def update_pl():
                         try:
@@ -4430,8 +4437,22 @@ class YouTubeDownloaderApp(ctk.CTk):
                         except Exception:
                             pass
                     self.run_on_ui_thread(update_pl)
+                else:
+                    def fallback_pl():
+                        try:
+                            if hasattr(self, "pl_thumb_label") and self.pl_thumb_label.winfo_exists():
+                                self.pl_thumb_label.configure(image=None, text="📑\nPlaylist", text_color=TEXT_MUTED)
+                        except Exception:
+                            pass
+                    self.run_on_ui_thread(fallback_pl)
             except Exception:
-                pass
+                def fallback_pl_err():
+                    try:
+                        if hasattr(self, "pl_thumb_label") and self.pl_thumb_label.winfo_exists():
+                            self.pl_thumb_label.configure(image=None, text="📑\nPlaylist", text_color=TEXT_MUTED)
+                    except Exception:
+                        pass
+                self.run_on_ui_thread(fallback_pl_err)
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -4444,16 +4465,43 @@ class YouTubeDownloaderApp(ctk.CTk):
             first_line = first_line[:80] + "..."
         self.input_msg_lbl.configure(text=f"⚠ Error: {first_line}", text_color=COLOR_DANGER)
 
-    def _load_thumbnail_threaded(self, url: str):
+    def _load_thumbnail_threaded(self, primary_url: str, fallbacks: Optional[List[str]] = None):
         def task():
-            try:
-                resp = requests.get(url, timeout=10)
-                if resp.status_code == 200:
-                    img_data = Image.open(BytesIO(resp.content))
-                    self.raw_thumbnail_pil = img_data
-                    self.run_on_ui_thread(self._render_thumbnail_auto)
-            except Exception:
-                pass
+            urls_to_try = [primary_url]
+            if fallbacks:
+                for f_url in fallbacks:
+                    if f_url and f_url not in urls_to_try:
+                        urls_to_try.append(f_url)
+
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+            }
+
+            loaded_image = None
+            for u in urls_to_try:
+                try:
+                    resp = requests.get(u, headers=headers, timeout=4)
+                    if resp.status_code == 200 and len(resp.content) > 500:
+                        img = Image.open(BytesIO(resp.content))
+                        if img.mode not in ("RGB", "RGBA"):
+                            img = img.convert("RGB")
+                        loaded_image = img
+                        break
+                except Exception:
+                    continue
+
+            if loaded_image is not None:
+                self.raw_thumbnail_pil = loaded_image
+                self.run_on_ui_thread(self._render_thumbnail_auto)
+            else:
+                def set_fallback_badge():
+                    try:
+                        if hasattr(self, "thumb_label") and self.thumb_label.winfo_exists():
+                            self.thumb_label.configure(image=None, text="🎬\nMedia Preview", text_color=TEXT_MUTED)
+                    except Exception:
+                        pass
+                self.run_on_ui_thread(set_fallback_badge)
 
         threading.Thread(target=task, daemon=True).start()
 

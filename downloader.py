@@ -631,6 +631,8 @@ class YouTubeDownloader:
             'quiet': True,
             'no_warnings': True,
             'skip_download': True,
+            'socket_timeout': 15,
+            'retries': 5,
         }
         if self.ffmpeg_dir:
             ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
@@ -711,18 +713,32 @@ class YouTubeDownloader:
             max_fps = max(fps_set) if fps_set else None
 
             uploader = info.get('uploader') or info.get('channel') or 'Unknown Creator'
+            vid_id = info.get('id', '')
+            fast_thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg" if vid_id else ''
+            thumb_candidates = []
+            if vid_id:
+                thumb_candidates = [
+                    f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg",
+                    f"https://i.ytimg.com/vi/{vid_id}/mqdefault.jpg",
+                    f"https://i.ytimg.com/vi/{vid_id}/sddefault.jpg",
+                    f"https://i.ytimg.com/vi/{vid_id}/maxresdefault.jpg"
+                ]
+            raw_thumb = info.get('thumbnail', '')
+            if raw_thumb and raw_thumb not in thumb_candidates:
+                thumb_candidates.append(raw_thumb)
 
             return {
                 'is_playlist': False,
                 'platform': 'youtube',
                 'is_tiktok': False,
                 'no_watermark': False,
-                'id': info.get('id', ''),
+                'id': vid_id,
                 'title': info.get('title', 'Unknown Title'),
                 'uploader': uploader,
                 'duration': info.get('duration', 0),
                 'duration_str': format_duration(info.get('duration')),
-                'thumbnail': info.get('thumbnail', ''),
+                'thumbnail': fast_thumb or raw_thumb,
+                'thumbnail_fallbacks': thumb_candidates,
                 'view_count': info.get('view_count'),
                 'views_str': format_views(info.get('view_count')),
                 'upload_date': info.get('upload_date', ''),
@@ -850,9 +866,12 @@ class YouTubeDownloader:
             'no_warnings': True,
             'no_color': True,
             'socket_timeout': 30,
-            'retries': 10,
-            'fragment_retries': 10,
-            'concurrent_fragment_downloads': 4,
+            'retries': 20,
+            'fragment_retries': 20,
+            'file_access_retries': 5,
+            'http_chunk_size': 10485760,  # 10MB chunking prevents YouTube googlevideo TCP resets & enables chunk-level retries
+            'buffersize': 1024 * 64,
+            'retry_sleep_functions': {'http': lambda n: 1, 'fragment': lambda n: 1},
             'progress_hooks': [yt_progress_hook],
             'postprocessor_hooks': [postprocessor_hook],
             'windowsfilenames': True,

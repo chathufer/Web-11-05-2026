@@ -36,14 +36,10 @@ def build_setup():
     print("      CREATING SINGLE INSTALLATION FILE FOR DISTRIBUTION")
     print("=" * 65)
 
-    # 1. Ensure dist\YouTubeDownloader\YouTubeDownloader.exe exists
-    exe_target = os.path.join(base_dir, "dist", "YouTubeDownloader", "YouTubeDownloader.exe")
-    if not os.path.exists(exe_target):
-        print("\n[1/4] Application binary not found. Running PyInstaller first...")
-        build_exe_script = os.path.join(base_dir, "build_exe.py")
-        subprocess.run([sys.executable, build_exe_script], check=True)
-    else:
-        print("\n[1/4] Found application executable in dist/YouTubeDownloader")
+    # 1. Compile fresh application executable with PyInstaller
+    print("\n[1/4] Building latest application binary with PyInstaller...")
+    build_exe_script = os.path.join(base_dir, "build_exe.py")
+    subprocess.run([sys.executable, build_exe_script], check=True)
 
     # 2. Clean temporary/personal user data from dist before packaging
     dist_history = os.path.join(base_dir, "dist", "YouTubeDownloader", "history.json")
@@ -83,6 +79,9 @@ def build_setup():
     if os.path.exists(setup_file):
         try:
             shutil.copyfile(setup_file, generic_setup)
+            # Also keep root MediaDownloaderPro_Setup.exe synchronized
+            root_setup = os.path.join(base_dir, "MediaDownloaderPro_Setup.exe")
+            shutil.copyfile(setup_file, root_setup)
         except Exception:
             pass
 

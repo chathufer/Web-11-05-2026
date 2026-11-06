@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "fix(ui): implement thread-safe GUI event queue dispatcher restoring video preview and thumbnail rendering"
+commit_msg = "fix(downloader): resolve CDN chunk read errors with 10MB http_chunk_size and optimize thumbnail fetch speed with lightweight JPEG cascade"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
