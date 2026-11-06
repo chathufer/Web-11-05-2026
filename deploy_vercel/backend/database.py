@@ -130,6 +130,17 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS trial_claims (
+        hwid TEXT PRIMARY KEY COLLATE NOCASE,
+        machine_name TEXT,
+        claimed_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        ip_address TEXT DEFAULT '',
+        last_seen_at TEXT NOT NULL
+    )
+    """)
+
     # Safe schema migration for older DBs
     cursor.execute("PRAGMA table_info(licenses)")
     columns = [col[1] for col in cursor.fetchall()]
@@ -167,6 +178,19 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_key ON license_history(license_key)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_created ON license_history(created_at)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_admin_username ON admin_users(username)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_trial_claims_hwid ON trial_claims(hwid)")
+
+    # Backfill trial claims from existing activations / licenses
+    try:
+        cursor.execute("""
+            INSERT OR IGNORE INTO trial_claims (hwid, machine_name, claimed_at, expires_at, ip_address, last_seen_at)
+            SELECT a.hwid, a.machine_name, a.activated_at, COALESCE(l.expires_at, datetime(a.activated_at, '+7 days')), '', a.last_verified_at
+            FROM activations a
+            JOIN licenses l ON a.license_id = l.id
+            WHERE l.plan = 'pro_trial' AND a.hwid IS NOT NULL AND a.hwid != ''
+        """)
+    except Exception:
+        pass
 
     # Seed default superadmin ('admin' / 'admin2026!') and guest ('guest' / 'guest123')
     cursor.execute("SELECT COUNT(*) FROM admin_users")
@@ -873,43 +897,10 @@ def activate_license(
     clean_k = license_key.strip().upper()
     clean_hwid = hwid.strip().upper()
 
-    # Support direct HWID activation
+    # Strictly reject direct HWID activation attempts (no backdoors allowed)
     if clean_k.startswith("HWID-") or clean_k == clean_hwid:
-        cursor.execute("""
-            SELECT l.* FROM licenses l
-            JOIN activations a ON l.id = a.license_id
-            WHERE a.hwid = ?
-        """, (hwid.strip(),))
-        existing_auto = cursor.fetchone()
-        if existing_auto:
-            lic_dict = dict(existing_auto)
-            cursor.execute("SELECT * FROM activations WHERE license_id = ?", (lic_dict["id"],))
-            lic_dict["activations_count"] = len(cursor.fetchall())
-            conn.close()
-            return True, "Device Hardware ID verified! Pro Lifetime Plan is active.", lic_dict
-
-        from backend.keygen import generate_license_key
-        auto_key = generate_license_key("pro_lifetime")
-        now_iso = datetime.utcnow().isoformat()
-        cursor.execute("""
-            INSERT INTO licenses (
-                license_key, plan, customer_name, customer_email, customer_phone,
-                price_paid, is_gift, payment_method, max_activations, created_at, expires_at,
-                is_revoked, notes
-            ) VALUES (?, 'pro_lifetime', 'Device Pro User', '', '', 24.99, 0, 'Direct HWID Activation', 3, ?, NULL, 0, 'Auto-provisioned via HWID')
-        """, (auto_key, now_iso))
-        new_lic_id = cursor.lastrowid
-        cursor.execute("""
-            INSERT INTO activations (license_id, hwid, machine_name, activated_at, last_verified_at)
-            VALUES (?, ?, ?, ?, ?)
-        """, (new_lic_id, hwid.strip(), machine_name, now_iso, now_iso))
-        conn.commit()
-
-        cursor.execute("SELECT * FROM licenses WHERE id = ?", (new_lic_id,))
-        lic_dict = dict(cursor.fetchone())
-        lic_dict["activations_count"] = 1
         conn.close()
-        return True, "Device Hardware ID verified! Pro Lifetime Plan activated successfully!", lic_dict
+        return False, "Machine Hardware ID cannot be used as a license key. Please enter your official Pro License Key (e.g. MDP-LFT-XXXX-XXXX-SIG) issued by the seller.", None
 
     cursor.execute("SELECT * FROM licenses WHERE license_key = ?", (license_key.strip(),))
     lic = cursor.fetchone()
@@ -983,22 +974,10 @@ def verify_license(
     clean_k = license_key.strip().upper()
     clean_hwid = hwid.strip().upper()
 
-    # Support direct HWID verification
+    # Strictly reject direct HWID verification attempts
     if clean_k.startswith("HWID-") or clean_k == clean_hwid:
-        cursor.execute("""
-            SELECT l.* FROM licenses l
-            JOIN activations a ON l.id = a.license_id
-            WHERE a.hwid = ?
-        """, (hwid.strip(),))
-        existing_auto = cursor.fetchone()
-        if existing_auto:
-            lic_dict = dict(existing_auto)
-            cursor.execute("SELECT * FROM activations WHERE license_id = ?", (lic_dict["id"],))
-            lic_dict["activations_count"] = len(cursor.fetchall())
-            conn.close()
-            return True, "Device Hardware ID verified! Pro Lifetime Plan is active.", lic_dict
         conn.close()
-        return False, "Device is not registered yet.", None
+        return False, "Machine Hardware ID is not a license key.", None
 
     cursor.execute("SELECT * FROM licenses WHERE license_key = ?", (license_key.strip(),))
     lic = cursor.fetchone()
@@ -1062,6 +1041,83 @@ def deactivate_license(
     if deleted:
         return True, "Device successfully deactivated. Slot is now free for transfer."
     return False, "Device was not activated on this license."
+
+
+def record_trial_claim(
+    hwid: str,
+    machine_name: str,
+    claimed_at: str,
+    expires_at: str,
+    ip_address: str = "",
+    db_path: str = DEFAULT_DB_PATH
+) -> bool:
+    """
+    Permanently record a machine hardware ID (HWID) trial claim in trial_claims table.
+    Enforces that one physical PC can ONLY claim a 7-day trial once for life.
+    """
+    clean_hwid = (hwid or "").strip().upper()
+    if not clean_hwid:
+        return False
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+    now_iso = datetime.utcnow().isoformat()
+    try:
+        cursor.execute("""
+            INSERT INTO trial_claims (hwid, machine_name, claimed_at, expires_at, ip_address, last_seen_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(hwid) DO UPDATE SET
+                last_seen_at = excluded.last_seen_at,
+                machine_name = COALESCE(excluded.machine_name, machine_name),
+                expires_at = excluded.expires_at
+        """, (clean_hwid, machine_name, claimed_at, expires_at, ip_address, now_iso))
+        conn.commit()
+        return True
+    except Exception as ex:
+        print(f"Error recording trial claim: {ex}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_trial_claim(
+    hwid: str,
+    db_path: str = DEFAULT_DB_PATH
+) -> Optional[Dict[str, Any]]:
+    """Retrieve permanent trial record for a hardware ID."""
+    clean_hwid = (hwid or "").strip().upper()
+    if not clean_hwid:
+        return None
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM trial_claims WHERE hwid = ?", (clean_hwid,))
+    row = cursor.fetchone()
+
+    # Also check legacy activations if not found in trial_claims
+    if not row:
+        cursor.execute("""
+            SELECT a.hwid, a.machine_name, a.activated_at as claimed_at,
+                   COALESCE(l.expires_at, datetime(a.activated_at, '+7 days')) as expires_at,
+                   '' as ip_address, a.last_verified_at as last_seen_at
+            FROM activations a
+            JOIN licenses l ON a.license_id = l.id
+            WHERE UPPER(a.hwid) = ? AND l.plan = 'pro_trial'
+        """, (clean_hwid,))
+        row = cursor.fetchone()
+        if row:
+            r_dict = dict(row)
+            try:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO trial_claims (hwid, machine_name, claimed_at, expires_at, ip_address, last_seen_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (clean_hwid, r_dict.get("machine_name"), r_dict.get("claimed_at"), r_dict.get("expires_at"), "", r_dict.get("last_seen_at", r_dict.get("claimed_at"))))
+                conn.commit()
+            except Exception:
+                pass
+
+    conn.close()
+    return dict(row) if row else None
 
 
 def list_all_licenses(

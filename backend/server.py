@@ -48,6 +48,8 @@ from database import (
     reset_admin_password,
     delete_admin_user,
     list_admin_users,
+    record_trial_claim,
+    get_trial_claim,
     DEFAULT_PLAN_PRICES,
     DEFAULT_DB_PATH
 )
@@ -248,6 +250,11 @@ def api_activate():
     if not key or not hwid:
         return jsonify({"status": "error", "message": "License key and Hardware ID (HWID) are required."}), 400
 
+    clean_k = key.strip().upper()
+    clean_h = hwid.strip().upper()
+    if clean_k.startswith("HWID-") or clean_k == clean_h:
+        return jsonify({"status": "error", "message": "Machine Hardware ID cannot be used as a license key. Please enter your official Pro License Key (starts with MDP-) issued by the seller."}), 400
+
     success, message, lic_dict = activate_license(key, hwid, machine_name)
 
     if not success or not lic_dict:
@@ -284,6 +291,11 @@ def api_verify():
 
     if not key or not hwid:
         return jsonify({"status": "error", "message": "License key and HWID are required."}), 400
+
+    clean_k = key.strip().upper()
+    clean_h = hwid.strip().upper()
+    if clean_k.startswith("HWID-") or clean_k == clean_h:
+        return jsonify({"status": "error", "message": "Machine Hardware ID is not a license key."}), 400
 
     success, message, lic_dict = verify_license(key, hwid)
 
@@ -331,7 +343,7 @@ def api_deactivate():
 
 @app.route("/api/v1/license/trial", methods=["POST"])
 def api_trial():
-    """Issue or restore 7-Day Free Trial for a physical machine (1 per HWID)."""
+    """Issue or restore 7-Day Free Trial for a physical machine (strictly 1 per HWID for life)."""
     data = request.get_json(silent=True) or {}
     hwid = data.get("hwid", "").strip()
     machine_name = data.get("machine_name", "").strip() or "PC"
@@ -339,20 +351,11 @@ def api_trial():
     if not hwid:
         return jsonify({"status": "error", "message": "Hardware ID (HWID) is required."}), 400
 
-    from database import get_connection
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT l.id, l.license_key, l.plan, l.expires_at, l.is_revoked, a.activated_at
-        FROM activations a
-        JOIN licenses l ON a.license_id = l.id
-        WHERE a.hwid = ? AND l.plan = 'pro_trial'
-    """, (hwid,))
-    row = cursor.fetchone()
-    conn.close()
+    clean_hwid = hwid.upper()
+    claim = get_trial_claim(clean_hwid)
 
-    if row:
-        exp_str = row["expires_at"] or ""
+    if claim:
+        exp_str = claim.get("expires_at") or ""
         is_exp = False
         if exp_str:
             try:
@@ -365,29 +368,83 @@ def api_trial():
         if is_exp:
             return jsonify({
                 "status": "error",
-                "message": "The 7-Day Free Trial has already expired on this computer. Contact admins on WhatsApp to buy a Pro license."
+                "message": "The 7-Day Free Trial has expired for this computer. Each physical PC is strictly limited to one 7-day trial period for life. Please contact admins on WhatsApp to buy a Pro license."
             }), 400
 
+        # Calculate remaining days
+        days_rem = 7
+        try:
+            exp_dt = datetime.fromisoformat(exp_str)
+            diff_secs = (exp_dt - datetime.utcnow()).total_seconds()
+            days_rem = max(1, int(diff_secs // 86400) + (1 if (diff_secs % 86400) > 0 else 0))
+        except Exception:
+            pass
+
         payload = {
-            "license_key": row["license_key"],
+            "license_key": "MDP-TRI-ACTIVE-TRIAL",
             "plan": "pro_trial",
             "plan_title": "Pro 7-Day Trial",
             "customer_name": f"Trial User ({machine_name})",
-            "hwid": hwid,
-            "created_at": row["activated_at"],
+            "hwid": clean_hwid,
+            "created_at": claim.get("claimed_at") or datetime.utcnow().isoformat(),
             "expires_at": exp_str,
             "max_activations": 1,
             "is_pro": 1,
             "is_trial": 1,
+            "days_remaining": days_rem,
             "timestamp": datetime.utcnow().isoformat()
         }
         payload["signature"] = sign_license_payload(payload)
         return jsonify({
             "status": "success",
-            "message": "Your 7-Day Pro Free Trial is currently active!",
+            "message": f"Your 7-Day Pro Free Trial is currently active ({days_rem} days remaining)!",
             "data": payload
         })
 
+    trial_key = generate_license_key("pro_trial")
+    exp_dt = calculate_expiry("pro_trial")
+    exp_str = exp_dt.isoformat() if exp_dt else ""
+    now_str = datetime.utcnow().isoformat()
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+
+    record_trial_claim(clean_hwid, machine_name, now_str, exp_str, client_ip)
+
+    create_license(
+        license_key=trial_key,
+        plan="pro_trial",
+        customer_name=f"Trial User ({machine_name})",
+        customer_email="",
+        customer_phone="",
+        price_paid=0.0,
+        is_gift=1,
+        payment_method="Free Promotion",
+        expires_at=exp_str,
+        max_activations=1,
+        notes=f"Auto 7-day trial for {clean_hwid}"
+    )
+    activate_license(trial_key, clean_hwid, machine_name)
+
+    payload = {
+        "license_key": trial_key,
+        "plan": "pro_trial",
+        "plan_title": "Pro 7-Day Trial",
+        "customer_name": f"Trial User ({machine_name})",
+        "hwid": clean_hwid,
+        "created_at": now_str,
+        "expires_at": exp_str,
+        "max_activations": 1,
+        "is_pro": 1,
+        "is_trial": 1,
+        "days_remaining": 7,
+        "timestamp": now_str
+    }
+    payload["signature"] = sign_license_payload(payload)
+
+    return jsonify({
+        "status": "success",
+        "message": "🎉 7-Day Pro Free Trial activated successfully on this computer!",
+        "data": payload
+    })
     trial_key = generate_license_key("pro_trial")
     exp_dt = calculate_expiry("pro_trial")
     exp_str = exp_dt.isoformat() if exp_dt else ""

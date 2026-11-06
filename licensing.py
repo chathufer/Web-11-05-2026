@@ -87,73 +87,213 @@ def get_license_file_path() -> str:
 
 
 
+def _get_system_trial_marker_path() -> str:
+    """Return machine-wide persistent storage path that survives user profile resets and app uninstallation."""
+    program_data = os.environ.get("ALLUSERSPROFILE") or os.environ.get("ProgramData") or r"C:\ProgramData"
+    folder = os.path.join(program_data, "MediaDownloaderPro")
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except Exception:
+        pass
+    return os.path.join(folder, "sys_fingerprint.dat")
+
+
 def _get_trial_record_path() -> str:
     folder = os.path.join(os.path.expanduser("~"), ".youtube_downloader")
-    os.makedirs(folder, exist_ok=True)
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except Exception:
+        pass
     return os.path.join(folder, "trial_record.dat")
 
 
-def record_trial_claim(hwid: str, started_at: str, expires_at: str):
-    """Securely write trial claim to Windows Registry and local protected file."""
-    # 1. Local file record with HMAC
+def record_trial_claim(hwid: str, started_at: str, expires_at: str, watermark: Optional[str] = None):
+    """
+    Multi-Tier Permanent Machine Trial Lock:
+    Permanently writes the trial claim across 4 independent persistence layers:
+    1. Machine-Wide System Directory (ProgramData) - Survives uninstallation and user profile switches.
+    2. Windows Registry Primary Key (HKCU\Software\MediaDownloaderPro).
+    3. Windows Registry Secondary Stealth Key (HKCU\Software\AppDataSystem\MDP_Core).
+    4. Local User AppData Directory (~/.youtube_downloader/trial_record.dat).
+    """
+    clean_hwid = (hwid or "").strip().upper()
+    now_str = datetime.utcnow().isoformat()
+    clock_mark = watermark or now_str
+
+    payload = {
+        "hwid": clean_hwid,
+        "trial_started_at": started_at,
+        "trial_expires_at": expires_at,
+        "clock_watermark": clock_mark,
+        "claimed": 1
+    }
+    payload["sig"] = sign_license_payload(payload)
+
+    # Layer 1: Machine-Wide System Storage (ProgramData)
+    try:
+        sys_path = _get_system_trial_marker_path()
+        with open(sys_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+    except Exception:
+        pass
+
+    # Layer 2 & 3: Windows Registry (Primary + Secondary Stealth Key)
+    if sys.platform == "win32":
+        try:
+            import winreg
+            # Primary Key
+            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\MediaDownloaderPro")
+            winreg.SetValueEx(reg_key, "TrialClaimed", 0, winreg.REG_DWORD, 1)
+            winreg.SetValueEx(reg_key, "TrialHWID", 0, winreg.REG_SZ, clean_hwid)
+            winreg.SetValueEx(reg_key, "TrialStarted", 0, winreg.REG_SZ, started_at)
+            winreg.SetValueEx(reg_key, "TrialExpires", 0, winreg.REG_SZ, expires_at)
+            winreg.SetValueEx(reg_key, "ClockWatermark", 0, winreg.REG_SZ, clock_mark)
+            winreg.CloseKey(reg_key)
+
+            # Secondary Stealth Key
+            stealth_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\AppDataSystem\MDP_Core")
+            winreg.SetValueEx(stealth_key, "Claimed", 0, winreg.REG_DWORD, 1)
+            winreg.SetValueEx(stealth_key, "HWID", 0, winreg.REG_SZ, clean_hwid)
+            winreg.SetValueEx(stealth_key, "Expires", 0, winreg.REG_SZ, expires_at)
+            winreg.SetValueEx(stealth_key, "Watermark", 0, winreg.REG_SZ, clock_mark)
+            winreg.CloseKey(stealth_key)
+        except Exception:
+            pass
+
+    # Layer 4: Local User AppData Directory
     try:
         path = _get_trial_record_path()
-        payload = {
-            "hwid": hwid,
-            "trial_started_at": started_at,
-            "trial_expires_at": expires_at,
-            "claimed": 1
-        }
-        payload["sig"] = sign_license_payload(payload)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(payload, f)
     except Exception:
         pass
 
-    # 2. Windows Registry record (HKCU)
-    if sys.platform == "win32":
-        try:
-            import winreg
-            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\MediaDownloaderPro")
-            winreg.SetValueEx(reg_key, "TrialClaimed", 0, winreg.REG_DWORD, 1)
-            winreg.SetValueEx(reg_key, "TrialHWID", 0, winreg.REG_SZ, hwid)
-            winreg.SetValueEx(reg_key, "TrialExpires", 0, winreg.REG_SZ, expires_at)
-            winreg.CloseKey(reg_key)
-        except Exception:
-            pass
 
+def check_trial_claimed(hwid: str) -> Tuple[bool, Optional[str], bool, str]:
+    """
+    Check if this physical machine (HWID) has ever claimed the 7-day trial across all 4 persistence layers.
+    Includes Clock Rollback / Anti-Tampering Protection.
+    Returns: (has_claimed: bool, expires_at: Optional[str], is_expired: bool, reason: str)
+    """
+    clean_hwid = (hwid or "").strip().upper()
+    now_dt = datetime.utcnow()
 
-def check_trial_claimed(hwid: str) -> Tuple[bool, Optional[str]]:
-    """
-    Check if this machine (HWID) has ever claimed the 7-day trial.
-    Returns (has_claimed: bool, expires_at: Optional[str])
-    """
-    # 1. Check Windows Registry
+    claimed = False
+    earliest_started = None
+    target_expires = None
+    max_watermark = None
+
+    def update_record(h, start_str, exp_str, mark_str):
+        nonlocal claimed, earliest_started, target_expires, max_watermark
+        if not h or h.strip().upper() == clean_hwid:
+            claimed = True
+            if exp_str and (not target_expires or exp_str < target_expires):
+                target_expires = exp_str
+            if start_str and (not earliest_started or start_str < earliest_started):
+                earliest_started = start_str
+            if mark_str and (not max_watermark or mark_str > max_watermark):
+                max_watermark = mark_str
+
+    # 1. Check Machine-Wide ProgramData Storage
+    try:
+        sys_path = _get_system_trial_marker_path()
+        if os.path.isfile(sys_path):
+            with open(sys_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("claimed") == 1:
+                update_record(data.get("hwid"), data.get("trial_started_at"), data.get("trial_expires_at"), data.get("clock_watermark"))
+    except Exception:
+        pass
+
+    # 2. Check Windows Registry Primary Key
     if sys.platform == "win32":
         try:
             import winreg
             reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\MediaDownloaderPro")
-            claimed, _ = winreg.QueryValueEx(reg_key, "TrialClaimed")
-            reg_hwid, _ = winreg.QueryValueEx(reg_key, "TrialHWID")
-            reg_exp, _ = winreg.QueryValueEx(reg_key, "TrialExpires")
+            c_val, _ = winreg.QueryValueEx(reg_key, "TrialClaimed")
+            h_val, _ = winreg.QueryValueEx(reg_key, "TrialHWID")
+            e_val, _ = winreg.QueryValueEx(reg_key, "TrialExpires")
+            try:
+                s_val, _ = winreg.QueryValueEx(reg_key, "TrialStarted")
+            except Exception:
+                s_val = None
+            try:
+                w_val, _ = winreg.QueryValueEx(reg_key, "ClockWatermark")
+            except Exception:
+                w_val = None
             winreg.CloseKey(reg_key)
-            if claimed == 1 and (reg_hwid == hwid or not reg_hwid):
-                return True, reg_exp
+            if c_val == 1:
+                update_record(h_val, s_val, e_val, w_val)
         except Exception:
             pass
 
-    # 2. Check local file
+        # 3. Check Windows Registry Secondary Stealth Key
+        try:
+            import winreg
+            stealth_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\AppDataSystem\MDP_Core")
+            sc_val, _ = winreg.QueryValueEx(stealth_key, "Claimed")
+            sh_val, _ = winreg.QueryValueEx(stealth_key, "HWID")
+            se_val, _ = winreg.QueryValueEx(stealth_key, "Expires")
+            try:
+                sw_val, _ = winreg.QueryValueEx(stealth_key, "Watermark")
+            except Exception:
+                sw_val = None
+            winreg.CloseKey(stealth_key)
+            if sc_val == 1:
+                update_record(sh_val, None, se_val, sw_val)
+        except Exception:
+            pass
+
+    # 4. Check Local AppData File
     try:
         path = _get_trial_record_path()
         if os.path.isfile(path):
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            if data.get("hwid") == hwid and data.get("claimed") == 1:
-                return True, data.get("trial_expires_at")
+            if data.get("claimed") == 1:
+                update_record(data.get("hwid"), data.get("trial_started_at"), data.get("trial_expires_at"), data.get("clock_watermark"))
     except Exception:
         pass
 
-    return False, None
+    if not claimed:
+        return False, None, False, "No trial claimed"
+
+    # Anti-Clock-Tampering (Clock Rollback Check)
+    clock_tampered = False
+    if max_watermark:
+        try:
+            watermark_dt = datetime.fromisoformat(max_watermark)
+            if now_dt < watermark_dt - timedelta(hours=1):
+                clock_tampered = True
+        except Exception:
+            pass
+
+    # Check natural expiration
+    is_expired = False
+    if target_expires:
+        try:
+            exp_dt = datetime.fromisoformat(target_expires)
+            if now_dt >= exp_dt:
+                is_expired = True
+        except Exception:
+            pass
+
+    if clock_tampered:
+        is_expired = True
+
+    # Advance clock watermark to current system time if legitimate
+    new_mark = now_dt.isoformat()
+    if max_watermark and max_watermark > new_mark and not clock_tampered:
+        new_mark = max_watermark
+
+    # Self-Healing Synchronization: restore trial record to ALL 4 layers
+    if earliest_started or target_expires:
+        s_date = earliest_started or (datetime.fromisoformat(target_expires) - timedelta(days=7)).isoformat()
+        e_date = target_expires or (datetime.fromisoformat(s_date) + timedelta(days=7)).isoformat()
+        record_trial_claim(clean_hwid, s_date, e_date, watermark=new_mark)
+
+    reason = "Clock tampering detected" if clock_tampered else ("Trial expired" if is_expired else "Trial active")
+    return True, target_expires, is_expired, reason
 
 class LicenseManager:
     """Singleton Client License Manager."""
@@ -178,29 +318,27 @@ class LicenseManager:
     def _load_local_license(self):
         """Load and cryptographically verify local license file."""
         if not os.path.isfile(self.license_path):
-            claimed, trial_exp = check_trial_claimed(self.hwid)
-            if claimed and trial_exp:
+            claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
+            if claimed and trial_exp and not is_exp:
                 try:
-                    exp_dt = datetime.fromisoformat(trial_exp)
-                    if datetime.utcnow() < exp_dt:
-                        machine_name = socket.gethostname()
-                        trial_key = generate_license_key("pro_trial")
-                        payload = {
-                            "license_key": trial_key,
-                            "plan": "pro_trial",
-                            "plan_title": "Pro 7-Day Trial",
-                            "customer_name": f"Trial User ({machine_name})",
-                            "customer_email": "",
-                            "hwid": self.hwid,
-                            "activated_at": datetime.utcnow().isoformat(),
-                            "expires_at": trial_exp,
-                            "is_pro": True,
-                            "is_trial": True,
-                            "is_expired": False
-                        }
-                        payload["signature"] = sign_license_payload(payload)
-                        self._save_local_license(payload)
-                        return
+                    machine_name = socket.gethostname()
+                    trial_key = generate_license_key("pro_trial")
+                    payload = {
+                        "license_key": trial_key,
+                        "plan": "pro_trial",
+                        "plan_title": "Pro 7-Day Trial",
+                        "customer_name": f"Trial User ({machine_name})",
+                        "customer_email": "",
+                        "hwid": self.hwid,
+                        "activated_at": datetime.utcnow().isoformat(),
+                        "expires_at": trial_exp,
+                        "is_pro": True,
+                        "is_trial": True,
+                        "is_expired": False
+                    }
+                    payload["signature"] = sign_license_payload(payload)
+                    self._save_local_license(payload)
+                    return
                 except Exception:
                     pass
             self._cached_license = None
@@ -220,15 +358,28 @@ class LicenseManager:
                 self._cached_license = None
                 return
 
-            # 3. Expiration check
+            # 3. Expiration check & Trial lockdown check
+            if data.get("plan") == "pro_trial":
+                claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
+                if is_exp:
+                    data["is_expired"] = True
+                    data["is_pro"] = False
+                    self._cached_license = data
+                    self._save_local_license(data)
+                    return
+
             exp_str = data.get("expires_at")
             if exp_str:
-                exp_dt = datetime.fromisoformat(exp_str)
-                if datetime.utcnow() > exp_dt:
-                    # License expired
-                    data["is_expired"] = True
-                    self._cached_license = data
-                    return
+                try:
+                    exp_dt = datetime.fromisoformat(exp_str)
+                    if datetime.utcnow() > exp_dt:
+                        data["is_expired"] = True
+                        data["is_pro"] = False
+                        self._cached_license = data
+                        self._save_local_license(data)
+                        return
+                except Exception:
+                    pass
 
             # 4. Check revocation state if local database is accessible
             try:
@@ -266,6 +417,12 @@ class LicenseManager:
             return False
         if self._cached_license.get("is_expired"):
             return False
+        if self._cached_license.get("plan") == "pro_trial":
+            claimed, _, is_exp, _ = check_trial_claimed(self.hwid)
+            if is_exp:
+                self._cached_license["is_expired"] = True
+                self._cached_license["is_pro"] = False
+                return False
         return bool(self._cached_license.get("is_pro"))
 
     def get_status(self) -> Dict[str, Any]:
@@ -325,7 +482,7 @@ class LicenseManager:
 
     def has_claimed_trial(self) -> bool:
         """Check if this physical PC has ever claimed the 7-Day Free Trial."""
-        claimed, _ = check_trial_claimed(self.hwid)
+        claimed, _, _, _ = check_trial_claimed(self.hwid)
         if claimed:
             return True
         if self._cached_license and self._cached_license.get("plan") == "pro_trial":
@@ -338,22 +495,23 @@ class LicenseManager:
             return False
         if self._cached_license.get("is_expired"):
             return False
-        return self._cached_license.get("plan") == "pro_trial" or bool(self._cached_license.get("is_trial"))
+        if self._cached_license.get("plan") == "pro_trial" or bool(self._cached_license.get("is_trial")):
+            claimed, _, is_exp, _ = check_trial_claimed(self.hwid)
+            return not is_exp
+        return False
 
     def can_start_trial(self) -> bool:
-        """Check if this computer is eligible to start the 7-Day Free Trial."""
+        """
+        Check if this physical PC is eligible to start the 7-Day Free Trial.
+        Strict rule: One physical machine can ONLY claim a 7-day trial ONCE for life.
+        """
         if self.is_pro():
             return False
-        claimed, trial_exp = check_trial_claimed(self.hwid)
-        if not claimed:
-            return True
-        if trial_exp:
-            try:
-                if datetime.utcnow() < datetime.fromisoformat(trial_exp):
-                    return True
-            except Exception:
-                pass
-        return False
+        claimed, _, is_exp, _ = check_trial_claimed(self.hwid)
+        # If ever claimed, user can NEVER start a fresh trial
+        if claimed:
+            return False
+        return True
 
     def get_trial_days_remaining(self) -> int:
         """Return number of days remaining on active 7-Day Free Trial (or 0)."""
@@ -385,35 +543,34 @@ class LicenseManager:
             days = self.get_trial_days_remaining()
             return True, f"Your 7-Day Pro Free Trial is already active ({days} days remaining)!"
 
-        claimed, trial_exp = check_trial_claimed(self.hwid)
+        claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
         if claimed:
-            if trial_exp:
+            if not is_exp and trial_exp:
                 try:
                     exp_dt = datetime.fromisoformat(trial_exp)
-                    if datetime.utcnow() < exp_dt:
-                        diff = (exp_dt - datetime.utcnow()).total_seconds()
-                        days = max(1, int(diff // 86400) + (1 if (diff % 86400) > 0 else 0))
-                        machine_name = socket.gethostname()
-                        trial_key = generate_license_key("pro_trial")
-                        payload = {
-                            "license_key": trial_key,
-                            "plan": "pro_trial",
-                            "plan_title": "Pro 7-Day Trial",
-                            "customer_name": f"Trial User ({machine_name})",
-                            "customer_email": "",
-                            "hwid": self.hwid,
-                            "activated_at": datetime.utcnow().isoformat(),
-                            "expires_at": trial_exp,
-                            "is_pro": True,
-                            "is_trial": True,
-                            "is_expired": False
-                        }
-                        payload["signature"] = sign_license_payload(payload)
-                        self._save_local_license(payload)
-                        return True, f"Your 7-Day Pro Free Trial is active ({days} days remaining)!"
+                    diff = (exp_dt - datetime.utcnow()).total_seconds()
+                    days = max(1, int(diff // 86400) + (1 if (diff % 86400) > 0 else 0))
+                    machine_name = socket.gethostname()
+                    trial_key = generate_license_key("pro_trial")
+                    payload = {
+                        "license_key": trial_key,
+                        "plan": "pro_trial",
+                        "plan_title": "Pro 7-Day Trial",
+                        "customer_name": f"Trial User ({machine_name})",
+                        "customer_email": "",
+                        "hwid": self.hwid,
+                        "activated_at": datetime.utcnow().isoformat(),
+                        "expires_at": trial_exp,
+                        "is_pro": True,
+                        "is_trial": True,
+                        "is_expired": False
+                    }
+                    payload["signature"] = sign_license_payload(payload)
+                    self._save_local_license(payload)
+                    return True, f"Your 7-Day Pro Free Trial is active ({days} days remaining)!"
                 except Exception:
                     pass
-            return False, "The 7-Day Free Trial has already been claimed on this computer. Please purchase a Pro license to continue enjoying 4K 60fps & Playlists."
+            return False, "The 7-Day Free Trial has already expired on this computer. Each physical PC is strictly limited to one 7-day trial period for life. Please contact admins on WhatsApp to buy a Pro license."
 
         machine_name = socket.gethostname()
         now_dt = datetime.utcnow()
@@ -479,26 +636,9 @@ class LicenseManager:
         if not raw:
             return False, "Please enter a valid license key."
 
-        # ---------------- 1. DIRECT HWID ACTIVATION ----------------
+        # ---------------- 1. STRICT HWID REJECTION (NO BACKDOORS) ----------------
         if raw.startswith("HWID-") or raw == self.hwid.upper():
-            try:
-                new_key = generate_license_key("pro_lifetime")
-                payload = {
-                    "license_key": new_key,
-                    "plan": "pro_lifetime",
-                    "plan_title": "Pro Lifetime Plan",
-                    "customer_name": "Pro User",
-                    "customer_email": "",
-                    "hwid": self.hwid,
-                    "activated_at": datetime.utcnow().isoformat(),
-                    "expires_at": "",
-                    "is_pro": True
-                }
-                payload["signature"] = sign_license_payload(payload)
-                self._save_local_license(payload)
-                return True, "Device verified! Pro Lifetime Plan activated successfully!"
-            except Exception as ex:
-                return False, f"Activation error: {ex}"
+            return False, "This is your computer's Hardware ID (HWID), not a license key. Please enter your official Pro License Key (e.g. MDP-LFT-XXXX-XXXX-SIG) purchased from the seller."
 
         # ---------------- 2. FORMAT AND SANITIZE KEY ----------------
         formatted_key = format_license_key(license_key)
