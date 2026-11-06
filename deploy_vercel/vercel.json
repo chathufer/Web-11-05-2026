@@ -1,12 +1,33 @@
 {
   "redirects": [
-    { "source": "/download", "destination": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing", "permanent": false },
-    { "source": "/Setup.exe", "destination": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing", "permanent": false },
-    { "source": "/MediaDownloaderPro_Setup.exe", "destination": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing", "permanent": false }
+    {
+      "source": "/download",
+      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "permanent": false
+    },
+    {
+      "source": "/Setup.exe",
+      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "permanent": false
+    },
+    {
+      "source": "/MediaDownloaderPro_Setup.exe",
+      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/admin", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

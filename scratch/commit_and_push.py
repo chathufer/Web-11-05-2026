@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "security: eliminate key activation bypasses, enforce strict hardware-locked 7-day trial limit per physical PC, and add anti-tampering clock protection"
+commit_msg = "chore: update latest installer download link to new Google Drive URL"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
