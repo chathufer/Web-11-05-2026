@@ -780,11 +780,15 @@ class YouTubeDownloader:
                         'percent': 100.0,
                     })
 
-        # Base YDL options for YouTube
+        # Base YDL options for YouTube (Optimized for speed & clean telemetry)
         ydl_opts: Dict[str, Any] = {
             'outtmpl': outtmpl,
             'quiet': True,
             'no_warnings': True,
+            'no_color': True,
+            'socket_timeout': 20,
+            'buffersize': 1024 * 64,       # 64KB stream buffer
+            'http_chunk_size': 10485760,   # 10MB chunking for max download speed
             'progress_hooks': [yt_progress_hook],
             'postprocessor_hooks': [postprocessor_hook],
             'windowsfilenames': True,

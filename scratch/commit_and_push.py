@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "fix: resolve download speed UI flickering with in-place widget caching and stable telemetry layout"
+commit_msg = "perf: optimize app startup, hide parent console window on launch, and silence subprocess execution"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)

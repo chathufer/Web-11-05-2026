@@ -105,23 +105,42 @@ def format_license_key(raw_input: str) -> str:
     return "-".join(chunks[:5])
 
 
+_CACHED_HWID = None
+
 def get_hardware_id() -> str:
     """
     Generate a stable, tamper-resistant Hardware Identifier (HWID)
     bound to the user's physical computer motherboard & CPU.
+    Completely silent without console/CMD windows and cached in memory.
     """
+    global _CACHED_HWID
+    if _CACHED_HWID:
+        return _CACHED_HWID
+
     identifiers = []
 
     # 1. Platform architecture & node
     identifiers.append(platform.machine())
     identifiers.append(platform.processor())
 
-    # 2. Windows-specific hardware identifiers (WMIC / PowerShell)
+    # 2. Windows-specific hardware identifiers (WMIC / PowerShell / Registry)
     if sys.platform == 'win32':
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        creationflags = 0x08000000  # CREATE_NO_WINDOW
+
         # Bios / Motherboard Serial
         try:
             cmd = "Get-CimInstance Win32_BIOS | Select-Object -ExpandProperty SerialNumber"
-            res = subprocess.check_output(["powershell", "-NoProfile", "-Command", cmd], text=True, stderr=subprocess.DEVNULL)
+            res = subprocess.check_output(
+                ["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", cmd],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                startupinfo=startupinfo,
+                creationflags=creationflags,
+                timeout=2.0
+            )
             if res.strip():
                 identifiers.append(res.strip())
         except Exception:
@@ -130,7 +149,14 @@ def get_hardware_id() -> str:
         # Motherboard UUID
         try:
             cmd = "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"
-            res = subprocess.check_output(["powershell", "-NoProfile", "-Command", cmd], text=True, stderr=subprocess.DEVNULL)
+            res = subprocess.check_output(
+                ["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", cmd],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                startupinfo=startupinfo,
+                creationflags=creationflags,
+                timeout=2.0
+            )
             if res.strip():
                 identifiers.append(res.strip())
         except Exception:
@@ -153,7 +179,8 @@ def get_hardware_id() -> str:
 
     raw_string = "|".join(identifiers)
     hwid = hashlib.sha256(raw_string.encode('utf-8')).hexdigest()[:32].upper()
-    return f"HWID-{hwid[:4]}-{hwid[4:8]}-{hwid[8:12]}-{hwid[12:16]}"
+    _CACHED_HWID = f"HWID-{hwid[:4]}-{hwid[4:8]}-{hwid[8:12]}-{hwid[12:16]}"
+    return _CACHED_HWID
 
 
 def sign_license_payload(payload: Dict[str, Any]) -> str:

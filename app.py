@@ -295,6 +295,27 @@ class HistoryManager:
         self.save()
 
 
+def locate_in_explorer(file_path: str):
+    """Safely reveal file in Windows Explorer without flashing a CMD window."""
+    if not file_path:
+        return
+    try:
+        abs_p = os.path.abspath(file_path)
+        if os.path.exists(abs_p):
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                creationflags = 0x08000000
+                subprocess.run(f'explorer /select,"{abs_p}"', startupinfo=startupinfo, creationflags=creationflags)
+            else:
+                os.startfile(os.path.dirname(abs_p))
+    except Exception:
+        try:
+            os.startfile(os.path.dirname(os.path.abspath(file_path)))
+        except Exception:
+            pass
+
 # ----------------- Main Application Window -----------------
 class YouTubeDownloaderApp(ctk.CTk):
     def __init__(self):
@@ -3371,7 +3392,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 fg_color=BG_CARD_SUBTLE,
                 text_color=TEXT_PRIMARY,
                 hover_color=BG_CARD_HOVER,
-                command=lambda p=file_path: os.startfile(p) if is_pl else subprocess.run(f'explorer /select,"{os.path.abspath(p)}"')
+                command=lambda p=file_path: os.startfile(p) if is_pl else locate_in_explorer(p)
             )
             locate_btn.pack(side="left", padx=3)
 
@@ -5277,16 +5298,24 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def _locate_last_downloaded(self):
         if self.last_downloaded_file and os.path.exists(self.last_downloaded_file):
-            try:
-                subprocess.run(f'explorer /select,"{os.path.abspath(self.last_downloaded_file)}"')
-            except Exception:
-                if self.last_downloaded_folder and os.path.exists(self.last_downloaded_folder):
-                    os.startfile(self.last_downloaded_folder)
+            locate_in_explorer(self.last_downloaded_file)
         elif self.last_downloaded_folder and os.path.exists(self.last_downloaded_folder):
-            os.startfile(self.last_downloaded_folder)
+            try:
+                os.startfile(self.last_downloaded_folder)
+            except Exception:
+                pass
 
 
 def main():
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+            if hwnd != 0:
+                ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+        except Exception:
+            pass
+
     app = YouTubeDownloaderApp()
     app.mainloop()
 
