@@ -21,6 +21,7 @@ def build():
         print("ERROR: bin/ffmpeg.exe not found! Please ensure FFmpeg is in the bin directory.")
         return False
 
+    qjs_exe = os.path.join(base_dir, "bin", "qjs.exe")
     icon_file = os.path.join(base_dir, "icon.ico")
 
     # PyInstaller arguments with bloat exclusions
@@ -53,8 +54,12 @@ def build():
         f"--add-data={ffmpeg_exe};bin",
         f"--add-data={icon_file};.",
         f"--add-data={os.path.join(base_dir, 'backend')};backend",
-        "main.py"
     ]
+
+    if os.path.exists(qjs_exe):
+        cmd.append(f"--add-data={qjs_exe};bin")
+
+    cmd.append("main.py")
 
     print(f"Running command:\n{' '.join(cmd)}\n")
     result = subprocess.run(cmd)

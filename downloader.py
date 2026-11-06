@@ -67,6 +67,67 @@ _ffmpeg_dir = get_ffmpeg_dir()
 if _ffmpeg_dir and _ffmpeg_dir not in os.environ.get("PATH", ""):
     os.environ["PATH"] = _ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
 
+# Add local bin and standard Node.js directories to PATH for JS execution
+_local_bin = os.path.join(get_base_dir(), "bin")
+if os.path.isdir(_local_bin) and _local_bin not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = _local_bin + os.pathsep + os.environ.get("PATH", "")
+
+for _node_dir in [r"C:\Program Files\nodejs", r"C:\Program Files (x86)\nodejs"]:
+    if os.path.isdir(_node_dir) and _node_dir not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = _node_dir + os.pathsep + os.environ.get("PATH", "")
+
+
+def get_js_runtime_config() -> Dict[str, Any]:
+    """
+    Detect available JavaScript runtimes (QuickJS, Node.js, Deno) to solve YouTube n-sig
+    challenges instantly, preventing speed throttling down to 100-250 KB/s.
+    Returns options dict to merge into ydl_opts.
+    """
+    base_dir = get_base_dir()
+    runtimes: Dict[str, Any] = {}
+
+    # 1. QuickJS (bundled in bin/qjs.exe or system PATH)
+    local_qjs = os.path.join(base_dir, "bin", "qjs.exe")
+    cwd_qjs = os.path.join(os.getcwd(), "bin", "qjs.exe")
+    qjs_which = shutil.which("qjs") or shutil.which("quickjs")
+    if os.path.isfile(local_qjs):
+        runtimes['quickjs'] = {'path': local_qjs}
+    elif os.path.isfile(cwd_qjs):
+        runtimes['quickjs'] = {'path': cwd_qjs}
+    elif qjs_which:
+        runtimes['quickjs'] = {'path': qjs_which}
+
+    # 2. Node.js (system PATH or standard install paths)
+    node_which = shutil.which("node")
+    standard_node_paths = [
+        r"C:\Program Files\nodejs\node.exe",
+        r"C:\Program Files (x86)\nodejs\node.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\node\node.exe"),
+        os.path.expandvars(r"%APPDATA%\npm\node.exe"),
+    ]
+    if node_which and os.path.isfile(node_which):
+        runtimes['node'] = {'path': node_which}
+    else:
+        for np in standard_node_paths:
+            if np and os.path.isfile(np):
+                runtimes['node'] = {'path': np}
+                break
+
+    # 3. Deno (system PATH or standard install paths)
+    deno_which = shutil.which("deno")
+    deno_local = os.path.expandvars(r"%USERPROFILE%\.deno\bin\deno.exe")
+    if deno_which and os.path.isfile(deno_which):
+        runtimes['deno'] = {'path': deno_which}
+    elif os.path.isfile(deno_local):
+        runtimes['deno'] = {'path': deno_local}
+
+    cfg: Dict[str, Any] = {
+        'remote_components': {'ejs:github'},
+    }
+    if runtimes:
+        cfg['js_runtimes'] = runtimes
+    return cfg
+
 
 class CancelToken:
     """Thread-safe cancellation token for downloads."""
@@ -350,6 +411,7 @@ class YouTubeDownloader:
             }
             if self.ffmpeg_dir:
                 ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
+            ydl_opts.update(get_js_runtime_config())
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(resolved_url, download=False)
                 if info:
@@ -572,6 +634,7 @@ class YouTubeDownloader:
         }
         if self.ffmpeg_dir:
             ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
+        ydl_opts.update(get_js_runtime_config())
 
         # For playlist links, use flat extraction to quickly load items
         if is_playlist_url:
@@ -780,19 +843,21 @@ class YouTubeDownloader:
                         'percent': 100.0,
                     })
 
-        # Base YDL options for YouTube (Optimized for speed & clean telemetry)
+        # Base YDL options for YouTube (Optimized for high-speed throughput & clean telemetry)
         ydl_opts: Dict[str, Any] = {
             'outtmpl': outtmpl,
             'quiet': True,
             'no_warnings': True,
             'no_color': True,
-            'socket_timeout': 20,
-            'buffersize': 1024 * 64,       # 64KB stream buffer
-            'http_chunk_size': 10485760,   # 10MB chunking for max download speed
+            'socket_timeout': 30,
+            'retries': 10,
+            'fragment_retries': 10,
+            'concurrent_fragment_downloads': 4,
             'progress_hooks': [yt_progress_hook],
             'postprocessor_hooks': [postprocessor_hook],
             'windowsfilenames': True,
         }
+        ydl_opts.update(get_js_runtime_config())
 
         if self.ffmpeg_dir:
             ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
@@ -944,6 +1009,7 @@ class YouTubeDownloader:
         }
         if self.ffmpeg_dir:
             ydl_opts['ffmpeg_location'] = self.ffmpeg_dir
+        ydl_opts.update(get_js_runtime_config())
 
         search_spec = f"ytsearch{limit}:{query}"
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
