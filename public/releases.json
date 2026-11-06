@@ -1,12 +1,22 @@
 [
   {
+    "version": "v1.0.1",
+    "date": "2026-11-06",
+    "date_formatted": "Nov 06, 2026",
+    "title": "Media Downloader Pro Turbo Update",
+    "is_latest": true,
+    "url": "https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing",
+    "size": "57.8 MB",
+    "notes": "Latest updated release: Streamlined 4K 60FPS video downloading, TikTok watermark-free extraction, persistent 7-day trial engine, and human-friendly error messages."
+  },
+  {
     "version": "v1.0.0",
     "date": "2026-11-06",
     "date_formatted": "Nov 06, 2026",
     "title": "Media Downloader Pro Official Launch",
-    "is_latest": true,
+    "is_latest": false,
     "url": "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing",
     "size": "57.8 MB",
-    "notes": "First official release of Media Downloader Pro: Ultra-fast 4K 60FPS video downloads, TikTok watermark-free extractor, lossless MP3 conversion, playlist batching, and single-file Windows installer."
+    "notes": "First official release of Media Downloader Pro: 4K 60FPS video downloads, TikTok watermark-free extractor, lossless MP3 conversion, playlist batching, and single-file Windows installer."
   }
 ]

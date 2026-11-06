@@ -38,9 +38,9 @@ from queue_manager import DownloadQueueManager, QueueItem
 
 # ----------------- App Metadata & Paths -----------------
 APP_NAME = "Media Downloader Pro"
-APP_VERSION = "v1.0.0"
-APP_VERSION_DISPLAY = "v1.0 Commercial Launch Edition"
-CURRENT_VERSION_CODE = "1.0.0"
+APP_VERSION = "v1.0.1"
+APP_VERSION_DISPLAY = "v1.0.1 Turbo Update"
+CURRENT_VERSION_CODE = "1.0.1"
 
 def parse_version_tuple(v_str: str) -> tuple:
     nums = [int(x) for x in re.findall(r'\d+', str(v_str))]

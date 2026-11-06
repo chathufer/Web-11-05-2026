@@ -2,7 +2,7 @@
 ; Generates a professional single standalone installer for commercial distribution
 
 #define MyAppName "Media Downloader Pro"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "Media Downloader"
 #define MyAppExeName "YouTubeDownloader.exe"
 
