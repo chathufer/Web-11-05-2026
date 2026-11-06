@@ -178,6 +178,31 @@ class LicenseManager:
     def _load_local_license(self):
         """Load and cryptographically verify local license file."""
         if not os.path.isfile(self.license_path):
+            claimed, trial_exp = check_trial_claimed(self.hwid)
+            if claimed and trial_exp:
+                try:
+                    exp_dt = datetime.fromisoformat(trial_exp)
+                    if datetime.utcnow() < exp_dt:
+                        machine_name = socket.gethostname()
+                        trial_key = generate_license_key("pro_trial")
+                        payload = {
+                            "license_key": trial_key,
+                            "plan": "pro_trial",
+                            "plan_title": "Pro 7-Day Trial",
+                            "customer_name": f"Trial User ({machine_name})",
+                            "customer_email": "",
+                            "hwid": self.hwid,
+                            "activated_at": datetime.utcnow().isoformat(),
+                            "expires_at": trial_exp,
+                            "is_pro": True,
+                            "is_trial": True,
+                            "is_expired": False
+                        }
+                        payload["signature"] = sign_license_payload(payload)
+                        self._save_local_license(payload)
+                        return
+                except Exception:
+                    pass
             self._cached_license = None
             return
 
@@ -319,7 +344,16 @@ class LicenseManager:
         """Check if this computer is eligible to start the 7-Day Free Trial."""
         if self.is_pro():
             return False
-        return not self.has_claimed_trial()
+        claimed, trial_exp = check_trial_claimed(self.hwid)
+        if not claimed:
+            return True
+        if trial_exp:
+            try:
+                if datetime.utcnow() < datetime.fromisoformat(trial_exp):
+                    return True
+            except Exception:
+                pass
+        return False
 
     def get_trial_days_remaining(self) -> int:
         """Return number of days remaining on active 7-Day Free Trial (or 0)."""
@@ -351,7 +385,34 @@ class LicenseManager:
             days = self.get_trial_days_remaining()
             return True, f"Your 7-Day Pro Free Trial is already active ({days} days remaining)!"
 
-        if self.has_claimed_trial():
+        claimed, trial_exp = check_trial_claimed(self.hwid)
+        if claimed:
+            if trial_exp:
+                try:
+                    exp_dt = datetime.fromisoformat(trial_exp)
+                    if datetime.utcnow() < exp_dt:
+                        diff = (exp_dt - datetime.utcnow()).total_seconds()
+                        days = max(1, int(diff // 86400) + (1 if (diff % 86400) > 0 else 0))
+                        machine_name = socket.gethostname()
+                        trial_key = generate_license_key("pro_trial")
+                        payload = {
+                            "license_key": trial_key,
+                            "plan": "pro_trial",
+                            "plan_title": "Pro 7-Day Trial",
+                            "customer_name": f"Trial User ({machine_name})",
+                            "customer_email": "",
+                            "hwid": self.hwid,
+                            "activated_at": datetime.utcnow().isoformat(),
+                            "expires_at": trial_exp,
+                            "is_pro": True,
+                            "is_trial": True,
+                            "is_expired": False
+                        }
+                        payload["signature"] = sign_license_payload(payload)
+                        self._save_local_license(payload)
+                        return True, f"Your 7-Day Pro Free Trial is active ({days} days remaining)!"
+                except Exception:
+                    pass
             return False, "The 7-Day Free Trial has already been claimed on this computer. Please purchase a Pro license to continue enjoying 4K 60fps & Playlists."
 
         machine_name = socket.gethostname()

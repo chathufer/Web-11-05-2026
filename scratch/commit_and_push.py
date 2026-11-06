@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "perf: fix YouTube download throttling with JS challenge solver and unthrottled concurrent streaming"
+commit_msg = "feat: update pricing (Free $0, Monthly $1.99, Annual $14.99, Lifetime $24.99) & enhance 7-day trial across app and web"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)

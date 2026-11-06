@@ -4554,7 +4554,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         ctk.CTkLabel(
             head_box,
-            text="Unlock unlimited 4K 60FPS video, audio extractions & batch playlist grabbers.",
+            text="Unlock unlimited 4K 60FPS video, audio extractions & batch playlist grabbers.\nPackages: Monthly $1.99 · Annual $14.99 · Lifetime $24.99 (or 7-Day Free Trial for $0)",
             font=ctk.CTkFont(size=11),
             text_color=TEXT_MUTED
         ).pack(anchor="w", pady=(2, 0))
@@ -4802,7 +4802,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         buy_online_btn = ctk.CTkButton(
             btn_box,
-            text="🌐 Buy Key Online",
+            text="🌐 Buy Key Online (From $1.99)",
             font=ctk.CTkFont(size=11, weight="bold"),
             fg_color=BG_CARD_SUBTLE,
             hover_color=BG_CARD_HOVER,
@@ -4983,7 +4983,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         btn_buy = ctk.CTkButton(
             b_row,
-            text="🌐 Buy Key",
+            text="🌐 Buy Key ($1.99+)",
             font=ctk.CTkFont(size=11, weight="bold"),
             fg_color=BG_CARD_SUBTLE,
             hover_color=BG_CARD_HOVER,

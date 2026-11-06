@@ -46,11 +46,11 @@ ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "MDP_ADMIN_SECRET_KEY_2026")
 init_db()
 
 PLAN_NAMES = {
-    "pro_monthly": "Pro Monthly Subscription",
-    "pro_yearly": "Pro Annual Subscription",
-    "pro_lifetime": "Pro Lifetime License",
+    "pro_monthly": "Pro Monthly Subscription ($1.99/mo)",
+    "pro_yearly": "Pro Annual Subscription ($14.99/yr)",
+    "pro_lifetime": "Pro Lifetime License ($24.99)",
     "pro_custom": "Pro Custom License",
-    "pro_trial": "Pro 7-Day Free Trial"
+    "pro_trial": "Pro 7-Day Free Trial (1 PC)"
 }
 
 

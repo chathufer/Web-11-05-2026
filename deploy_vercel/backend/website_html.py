@@ -1545,7 +1545,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 26px;
       align-items: stretch;
     }
@@ -2511,7 +2511,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
           <button class="btn btn-line trigger-checkout" data-plan="pro_lifetime" style="border-color: var(--ink); color: var(--ink);">
-            <span>Get Lifetime Pass ($49.99)</span>
+            <span>Get Lifetime Pass ($24.99)</span>
             <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
           </button>
         </div>
@@ -2722,12 +2722,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </div>
 
       <div class="pricing-grid">
-        <!-- Plan 1: Free Starter -->
+        <!-- Plan 1: Free Starter ($0) -->
         <div class="price-card reveal">
           <div>
             <div class="price-head">
               <h3>Free Starter</h3>
-              <p>Great for occasional 1080p downloads and basic MP3 rips.</p>
+              <p>Standard edition for 720p 30fps media and basic MP3 rips.</p>
             </div>
 
             <div class="price-amount">
@@ -2737,30 +2737,60 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </div>
 
             <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>1080p Full HD video downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span><strong>Max 720p @ 30fps</strong> video downloads (Strict cap)</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Standard single-item downloads</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>192kbps Standard MP3 audio</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>2 parallel queue downloads</span></li>
+              <li><svg class="ic" style="color: #19c3ff;"><use href="#i-check"></use></svg><span style="color: #19c3ff; font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Windows 10/11 standalone setup</span></li>
             </ul>
           </div>
 
           <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
-            <span>Download Free v2.2</span>
+            <span>Download Free ($0)</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>
         </div>
 
-        <!-- Plan 2: Annual Pro -->
+        <!-- Plan 2: Monthly Pro ($1.99 USD) -->
         <div class="price-card reveal">
           <div>
             <div class="price-head">
-              <h3>Annual Pro Pass</h3>
-              <p>For active video editors and audio curators.</p>
+              <h3>Monthly Pro Pass</h3>
+              <p>Low-cost flexible access. Cancel anytime.</p>
             </div>
 
             <div class="price-amount">
               <span class="currency">$</span>
-              <span class="num">29</span>
+              <span class="num">1</span>
+              <span class="period">.99 / month</span>
+            </div>
+
+            <ul class="price-perks">
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>4 parallel queue workers</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>1 PC device activation</span></li>
+            </ul>
+          </div>
+
+          <button class="btn btn-line trigger-checkout" data-plan="pro_monthly" style="width: 100%;">
+            <span>Get Monthly Pass ($1.99)</span>
+            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+          </button>
+        </div>
+
+        <!-- Plan 3: Annual Pro ($14.99 USD) -->
+        <div class="price-card reveal">
+          <div>
+            <div class="price-head">
+              <h3>Annual Pro Pass</h3>
+              <p>Best for active creators. Save 37% vs monthly.</p>
+            </div>
+
+            <div class="price-amount">
+              <span class="currency">$</span>
+              <span class="num">14</span>
               <span class="period">.99 / year</span>
             </div>
 
@@ -2774,12 +2804,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
           </div>
 
           <button class="btn btn-line trigger-checkout" data-plan="pro_yearly" style="width: 100%;">
-            <span>Get Annual Pass</span>
+            <span>Get Annual Pass ($14.99)</span>
             <svg class="ic"><use href="#i-arrow-ne"></use></svg>
           </button>
         </div>
 
-        <!-- Plan 3: Lifetime Master (Featured) -->
+        <!-- Plan 4: Lifetime Master ($24.99 USD) -->
         <div class="price-card featured-plan reveal">
           <span class="price-badge-top">BEST VALUE &middot; ONE-TIME</span>
 
@@ -2791,7 +2821,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
             <div class="price-amount">
               <span class="currency">$</span>
-              <span class="num">49</span>
+              <span class="num">24</span>
               <span class="period">.99 / one-time</span>
             </div>
 
@@ -2806,7 +2836,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           </div>
 
           <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="width: 100%;">
-            <span>Get Lifetime License</span>
+            <span>Get Lifetime License ($24.99)</span>
             <svg class="ic"><use href="#i-arrow"></use></svg>
           </button>
         </div>
@@ -2831,7 +2861,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
         <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="background:#0b0b0b; color:var(--gold); border-color:#0b0b0b;">
-          <span>Unlock Lifetime Pass</span>
+          <span>Unlock Lifetime Pass ($24.99)</span>
           <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
         </button>
       </div>
@@ -2908,8 +2938,9 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <div class="form-group">
             <label for="checkoutPlan">Selected Plan</label>
             <select id="checkoutPlan" class="form-input" style="cursor:pointer;">
-              <option value="pro_lifetime">Lifetime Master Pass ($49.99 one-time)</option>
-              <option value="pro_yearly">Annual Pro Pass ($29.99 / year)</option>
+              <option value="pro_lifetime">Lifetime Master Pass ($24.99 one-time)</option>
+              <option value="pro_yearly">Annual Pro Pass ($14.99 / year)</option>
+              <option value="pro_monthly">Monthly Pro Pass ($1.99 / month)</option>
             </select>
           </div>
 
@@ -3253,7 +3284,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           btnSubmit.textContent = 'Generating License...';
 
           let key = '';
-          let planTitle = plan === 'pro_lifetime' ? 'Lifetime Master Pass' : 'Annual Pro Pass';
+          let planTitle = 'Lifetime Master Pass ($24.99)'; if (plan === 'pro_yearly') planTitle = 'Annual Pro Pass ($14.99/yr)'; if (plan === 'pro_monthly') planTitle = 'Monthly Pro Pass ($1.99/mo)';
 
           try {
             const resp = await fetch('/api/v1/checkout', {
@@ -3275,7 +3306,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           // Fallback key generator if running as static HTML without backend
           if (!key) {
             const randHex = (n) => [...Array(n)].map(() => Math.floor(Math.random()*16).toString(16).toUpperCase()).join('');
-            const pfx = plan === 'pro_lifetime' ? 'MDP-LFT' : 'MDP-YRL';
+            let pfx = 'MDP-LFT'; if (plan === 'pro_yearly') pfx = 'MDP-YEA'; if (plan === 'pro_monthly') pfx = 'MDP-MON';
             key = `${pfx}-${randHex(4)}-${randHex(4)}-${randHex(4)}`;
           }
 
