@@ -3932,14 +3932,23 @@ WEBSITE_HTML = """<!DOCTYPE html>
     // ============================================================
     // CENTRALIZED RELEASE MANAGEMENT & DYNAMIC DOWNLOAD BINDING
     // ============================================================
-    // APP_RELEASES_START
-    const APP_RELEASES = [
+    // APP_RELEASES_START\n    const APP_RELEASES = [
+      {
+            "version": "v2.3.0",
+            "date": "2026-11-06",
+            "date_formatted": "Nov 06, 2026",
+            "title": "In-App Update Engine & Performance Enhancements",
+            "is_latest": true,
+            "url": "https://drive.google.com/file/d/1oDrWH2SAtZK_gET-T9O9Ts0KX3Gcrsnc/view?usp=drive_link",
+            "size": "57.7 MB",
+            "notes": "Integrated background automatic update detection with 1-click upgrade redirect, moved version archive below pipeline workstations, full 7-day trial recovery, and optimized 8K DASH downloader."
+      },
       {
             "version": "v2.2.0",
             "date": "2026-11-06",
             "date_formatted": "Nov 06, 2026",
             "title": "Turbo Speed & QuickJS Challenge Solver Engine",
-            "is_latest": true,
+            "is_latest": false,
             "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
             "size": "57.7 MB",
             "notes": "Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows."
@@ -3964,8 +3973,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "size": "56.9 MB",
             "notes": "Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer."
       }
-];
-    // APP_RELEASES_END
+];\n    // APP_RELEASES_END
 
     function applyReleaseUpdates(releases) {
       if (!Array.isArray(releases) || releases.length === 0) return;
