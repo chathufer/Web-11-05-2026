@@ -192,20 +192,15 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     except Exception:
         pass
 
-    # Seed default superadmin ('admin' / 'admin2026!') and guest ('guest' / 'guest123')
+    # Seed default superadmin ('admin') if table is empty
     cursor.execute("SELECT COUNT(*) FROM admin_users")
     if cursor.fetchone()[0] == 0:
         now_iso = datetime.utcnow().isoformat()
         admin_pw = hash_password("admin2026!")
-        guest_pw = hash_password("guest123")
         cursor.execute("""
             INSERT INTO admin_users (username, password_hash, role, created_at)
             VALUES ('admin', ?, 'superadmin', ?)
         """, (admin_pw, now_iso))
-        cursor.execute("""
-            INSERT INTO admin_users (username, password_hash, role, created_at)
-            VALUES ('guest', ?, 'guest', ?)
-        """, (guest_pw, now_iso))
 
     conn.commit()
     conn.close()

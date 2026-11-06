@@ -25,14 +25,26 @@ assert admin_data["user"]["role"] == "superadmin"
 admin_token = admin_data["token"]
 print("[OK] Superadmin login successful (role: superadmin)")
 
-# 3. Login as Guest ('guest' / 'guest123')
+# 2b. Verify default guest no longer exists for public secrecy
 res = client.post("/api/v1/admin/login", json={"username": "guest", "password": "guest123"})
+assert res.status_code == 401, "Public default guest account must NOT exist"
+print("[OK] Default guest account correctly absent (confidential logins)")
+
+# 3. Create a Guest account for role-permission testing
+res = client.post("/api/v1/admin/users/create", headers={"Authorization": f"Bearer {admin_token}"}, json={
+    "username": "guest_role_tester",
+    "password": "guest_secret_pass",
+    "role": "guest"
+})
+assert res.status_code == 200
+
+res = client.post("/api/v1/admin/login", json={"username": "guest_role_tester", "password": "guest_secret_pass"})
 assert res.status_code == 200, f"Expected 200, got {res.status_code}"
 guest_data = res.get_json()
 assert guest_data["status"] == "success"
 assert guest_data["user"]["role"] == "guest"
 guest_token = guest_data["token"]
-print("[OK] Guest login successful (role: guest)")
+print("[OK] Created guest user logged in successfully (role: guest)")
 
 # 4. Test Guest Read-Only Permissions
 # 4a. Guest CAN read summary (GET)
@@ -56,7 +68,7 @@ res = client.get("/api/v1/admin/users/list", headers={"Authorization": f"Bearer 
 assert res.status_code == 200
 users = res.get_json()["data"]
 usernames = [u["username"] for u in users]
-assert "admin" in usernames and "guest" in usernames
+assert "admin" in usernames
 print(f"[OK] GET /api/v1/admin/users/list returned {len(users)} users: {usernames}")
 
 # 5b. Create new admin account
@@ -94,7 +106,8 @@ res = client.post("/api/v1/admin/users/delete", headers={"Authorization": f"Bear
     "username": "moderator_test"
 })
 assert res.status_code == 200
-print("[OK] POST /api/v1/admin/users/delete deleted user 'moderator_test'")
+client.post("/api/v1/admin/users/delete", headers={"Authorization": f"Bearer {admin_token}"}, json={"username": "guest_role_tester"})
+print("[OK] Cleaned up temporary test users")
 
 # 6. Verify legacy ADMIN_API_KEY backwards compatibility
 res = client.get(f"/api/v1/admin/summary?admin_key={ADMIN_API_KEY}")

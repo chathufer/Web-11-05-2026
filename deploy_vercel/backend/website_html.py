@@ -3660,7 +3660,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <p class="footer-h">Downloads</p>
         <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
         <a href="/download?type=zip">Portable ZIP Package</a>
-        <a href="/admin">License Admin Portal</a>
         <a href="#pricing">Upgrade to Pro</a>
       </div>
 

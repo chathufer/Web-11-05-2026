@@ -1043,7 +1043,7 @@ DASHBOARD_HTML = """
             <form onsubmit="handleLoginSubmit(event)">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="login-username" placeholder="admin or guest" required autocomplete="username">
+                    <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -1054,19 +1054,7 @@ DASHBOARD_HTML = """
                 </button>
             </form>
 
-            <div style="text-align: center; margin: 18px 0; color: var(--text-muted); font-size: 12px; font-weight: 700;">
-                ── OR ──
-            </div>
 
-            <button type="button" class="btn btn-cyan" onclick="quickGuestLogin()" style="width: 100%; justify-content: center; padding: 11px; font-size: 13.5px;">
-                <span>👁️ Quick Guest Login (Read-Only Demo)</span>
-            </button>
-
-            <div style="margin-top: 24px; padding: 12px 14px; background: var(--bg-card-subtle); border-radius: 8px; border: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
-                <strong>Default Accounts:</strong><br>
-                &bull; Master Admin: <code style="color:#60a5fa;">admin</code> / <code style="color:#60a5fa;">admin2026!</code> (Full Control)<br>
-                &bull; Guest Access: <code style="color:#22d3ee;">guest</code> / <code style="color:#22d3ee;">guest123</code> (Read-Only)
-            </div>
         </div>
     </div>
 
@@ -1719,12 +1707,7 @@ DASHBOARD_HTML = """
             }
         }
 
-        function quickGuestLogin() {
-            document.getElementById('login-username').value = 'guest';
-            document.getElementById('login-password').value = 'guest123';
-            const fakeEvent = { preventDefault: () => {} };
-            handleLoginSubmit(fakeEvent);
-        }
+
 
         async function handleLogout() {
             try {
@@ -2553,8 +2536,6 @@ if __name__ == "__main__":
     print("=" * 64)
     print(f"Server Port:       {port}")
     print(f"Admin Dashboard:   http://localhost:{port}/admin")
-    print("Default Superadmin: admin / admin2026!")
-    print("Default Guest:      guest / guest123")
     print(f"Download Setup:    {LATEST_INSTALLER_URL}")
     print(f"VIP WhatsApp:      {WHATSAPP_GROUP_URL}")
     print("=" * 64)
