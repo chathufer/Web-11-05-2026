@@ -40,7 +40,7 @@ from queue_manager import DownloadQueueManager, QueueItem
 APP_NAME = "Media Downloader Pro"
 APP_VERSION = "v1.0.0"
 APP_VERSION_DISPLAY = "v1.0 Commercial Launch Edition"
-CURRENT_VERSION_CODE = "2.2.0"
+CURRENT_VERSION_CODE = "1.0.0"
 
 def parse_version_tuple(v_str: str) -> tuple:
     nums = [int(x) for x in re.findall(r'\d+', str(v_str))]
@@ -327,6 +327,48 @@ class HistoryManager:
     def clear(self):
         self.history = []
         self.save()
+
+
+def clean_error_message(err_msg: str) -> str:
+    """Format technical raw download/fetch error strings into polished human-readable messages."""
+    if not err_msg:
+        return "Download error occurred"
+    text = str(err_msg).strip()
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if lines:
+        for l in lines:
+            if "error:" in l.lower() or "exception:" in l.lower():
+                text = l
+                break
+        else:
+            text = lines[0]
+
+    import re
+    text = re.sub(r'^[a-zA-Z0-9_.]*Error:\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'^(?:ERROR|Error):\s*', '', text)
+    text = re.sub(r'^\[[a-zA-Z0-9_:-]+\]\s*', '', text)
+    text = re.sub(r'^(?:ERROR|Error):\s*', '', text)
+
+    low = text.lower()
+    if '1008 bytes read' in low or 'incomplete read' in low or 'connection reset' in low:
+        text = 'Network connection interrupted by host. Please retry download.'
+    elif 'video unavailable' in low:
+        text = 'Video is unavailable or has been removed.'
+    elif 'private video' in low:
+        text = 'This video is private and cannot be downloaded.'
+    elif 'sign in' in low or 'age-restricted' in low:
+        text = 'Video requires YouTube login or is age-restricted.'
+    elif 'ffmpeg' in low and 'not found' in low:
+        text = 'FFmpeg media converter was not found.'
+    elif 'no space' in low or 'disk full' in low:
+        text = 'Not enough disk space on target drive.'
+    elif 'permission denied' in low:
+        text = 'Permission denied saving to destination folder.'
+
+    text = text.strip()
+    if len(text) > 75:
+        text = text[:72] + '...'
+    return text
 
 
 def locate_in_explorer(file_path: str):
@@ -4265,6 +4307,12 @@ class YouTubeDownloaderApp(ctk.CTk):
     def _on_info_fetched_success(self, info: Dict[str, Any]):
         self.is_fetching = False
         self.current_video_info = info
+        try:
+            self._populate_video_preview(info)
+        except Exception as e:
+            self._on_info_fetched_error(f"Render error: {str(e)}")
+
+    def _populate_video_preview(self, info: Dict[str, Any]):
         self.preview_placeholder.pack_forget()
 
         is_pl = info.get("is_playlist", False)
@@ -4463,10 +4511,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.is_fetching = False
         self.auto_badge.configure(text="⚠ Fetch Failed", text_color=COLOR_DANGER, fg_color=COLOR_PRIMARY_SUBTLE)
 
-        first_line = err_msg.split("\n")[0] if "\n" in err_msg else err_msg
-        if len(first_line) > 80:
-            first_line = first_line[:80] + "..."
-        self.input_msg_lbl.configure(text=f"⚠ Error: {first_line}", text_color=COLOR_DANGER)
+        cleaned = clean_error_message(err_msg)
+        self.input_msg_lbl.configure(text=f"⚠ Error: {cleaned}", text_color=COLOR_DANGER)
 
     def _load_thumbnail_threaded(self, primary_url: str, fallbacks: Optional[List[str]] = None):
         def task():
@@ -4547,7 +4593,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 ]
             else:
                 # PRO / 7-DAY TRIAL OPTIONS: full 4K, 1440p, 1080p, 60fps
-                options = ["🌟 Best Available Quality", "1080p (Full HD)", "720p (HD)", "480p (SD)", "360p"]
+                options = ["🌟 Best Available Quality", "2160p (4K UHD 60fps)", "1440p (2K QHD 60fps)", "1080p (Full HD 60fps)", "720p (HD)", "480p (SD)", "360p"]
                 if self.current_video_info and self.current_video_info.get("available_heights"):
                     heights = self.current_video_info["available_heights"]
                     custom_opts = ["🌟 Best Available Quality"]
@@ -5680,10 +5726,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         if "cancelled" in err_msg.lower():
             self.status_lbl.configure(text="Cancelled", text_color=COLOR_WARNING)
         else:
-            first_line = err_msg.split("\n")[0] if "\n" in err_msg else err_msg
-            if len(first_line) > 50:
-                first_line = first_line[:50] + "..."
-            self.status_lbl.configure(text=f"Error: {first_line}", text_color=COLOR_DANGER)
+            cleaned = clean_error_message(err_msg)
+            self.status_lbl.configure(text=f"Error: {cleaned}", text_color=COLOR_DANGER)
 
     def _on_cancel_clicked(self):
         if self.active_cancel_token and self.is_downloading:

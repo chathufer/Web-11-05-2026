@@ -198,15 +198,20 @@ def resolve_tiktok_url(url: str) -> str:
     """Resolve shortened TikTok URLs (vm.tiktok.com, vt.tiktok.com, /t/) to canonical URL."""
     url = url.strip()
     if any(s in url for s in ['vm.tiktok.com', 'vt.tiktok.com', '/t/']):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        }
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-            resp = requests.head(url, allow_redirects=True, timeout=10, headers=headers)
-            if resp.url:
-                return resp.url.split('?')[0]
+            with requests.get(url, stream=True, allow_redirects=True, timeout=8, headers=headers) as resp:
+                if resp.url:
+                    return resp.url.split('?')[0]
         except Exception:
-            pass
+            try:
+                resp = requests.head(url, allow_redirects=True, timeout=6, headers=headers)
+                if resp.url:
+                    return resp.url.split('?')[0]
+            except Exception:
+                pass
     return url
 
 

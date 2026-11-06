@@ -25,7 +25,8 @@ PLAN_CODES = {
     "pro_monthly": "MON",
     "pro_yearly": "YEA",
     "pro_lifetime": "LFT",
-    "pro_custom": "CUS"
+    "pro_custom": "CUS",
+    "pro_trial": "TRI"
 }
 
 CODE_TO_PLAN = {v: k for k, v in PLAN_CODES.items()}
@@ -232,6 +233,8 @@ def calculate_expiry(plan: str, custom_days: Optional[int] = None) -> Optional[d
         return now + timedelta(days=365)
     elif plan == "pro_lifetime":
         return None  # No expiration
+    elif plan == "pro_trial":
+        return now + timedelta(days=7)
     elif plan == "pro_custom" and custom_days:
         return now + timedelta(days=int(custom_days))
     return now + timedelta(days=30)
