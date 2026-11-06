@@ -68,7 +68,7 @@ app = Flask(__name__)
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "MDP_ADMIN_SECRET_KEY_2026")
 
 # Official Google Drive installer download link
-LATEST_INSTALLER_URL = "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link"
+LATEST_INSTALLER_URL = "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing"
 WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG"
 
 # Initialize database on startup
@@ -234,7 +234,7 @@ def health_check():
     return jsonify({
         "status": "ok",
         "service": "Downloader Pro License Server",
-        "version": "2.3.0",
+        "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat()
     })
 
@@ -2066,7 +2066,7 @@ DASHBOARD_HTML = """
 
         function openWaModal(key, name, planTitle, exp, maxActs) {
             const customerName = name || 'Valued Creator';
-            const installerUrl = "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link";
+            const installerUrl = "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing";
 
             const msg = `🎉 *Welcome to Media Downloader Pro VIP!*
 

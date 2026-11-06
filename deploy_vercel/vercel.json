@@ -2,17 +2,17 @@
   "redirects": [
     {
       "source": "/download",
-      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "destination": "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing",
       "permanent": false
     },
     {
       "source": "/Setup.exe",
-      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "destination": "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing",
       "permanent": false
     },
     {
       "source": "/MediaDownloaderPro_Setup.exe",
-      "destination": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
+      "destination": "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing",
       "permanent": false
     }
   ],

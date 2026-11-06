@@ -1,5 +1,5 @@
 """
-YouTube & TikTok Video Downloader PC App - v2.2 Turbo
+YouTube & TikTok Video Downloader PC App - v1.0 Turbo
 Supports YouTube Videos, Shorts, TikTok (Without Watermark), and Full Playlists
 Optimized for any screen resolution (720p, 1080p, 2K, 4K, Ultra-Wide)
 """
@@ -38,8 +38,8 @@ from queue_manager import DownloadQueueManager, QueueItem
 
 # ----------------- App Metadata & Paths -----------------
 APP_NAME = "Media Downloader Pro"
-APP_VERSION = "v2.2.0"
-APP_VERSION_DISPLAY = "v2.2 Commercial Turbo Edition"
+APP_VERSION = "v1.0.0"
+APP_VERSION_DISPLAY = "v1.0 Commercial Launch Edition"
 CURRENT_VERSION_CODE = "2.2.0"
 
 def parse_version_tuple(v_str: str) -> tuple:
