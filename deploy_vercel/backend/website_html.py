@@ -2793,12 +2793,11 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </a>
 
       <nav class="nav" aria-label="Main Navigation">
-        <a href="#formats">Formats</a>
         <a href="#inspector">Analyzer</a>
+        <a href="#pricing">Pricing</a>
         <a href="#workstation">Workstation</a>
         <a href="#principles">Architecture</a>
         <a href="#older-versions">Older Versions</a>
-        <a href="#pricing">Pricing</a>
         <a href="#contact">Contact &amp; VIP Group</a>
       </nav>
 
@@ -2825,11 +2824,11 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
   <!-- Mobile Flyout Menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#formats">Formats &amp; Resolutions</a>
     <a href="#inspector">Stream Analyzer</a>
+    <a href="#pricing">License Passes</a>
     <a href="#workstation">Workstation Showcase</a>
     <a href="#principles">Architecture Principles</a>
-    <a href="#pricing">License Passes</a>
+    <a href="#older-versions">Older Versions Archive</a>
     <a href="#contact">Contact &amp; Buy Plan</a>
     <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
       <span>Download Setup v2.2</span>
@@ -3091,270 +3090,162 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </section>
 
   <!-- ============================================================
-       COURSES / FORMATS SECTION
+       PRICING / LICENSE PASSES
        ============================================================ -->
-  <section class="section courses" id="formats" aria-labelledby="fmt-title">
+  <section class="section pricing-sec" id="pricing" aria-labelledby="pr-title">
     <div class="wrap">
       <div class="sec-head">
         <div>
-          <p class="sticker reveal"><span>Multi-Format Engine</span></p>
-          <h2 class="reveal" id="fmt-title">
-            <span>Pick your format.</span>
-            <mark>Rip in seconds.</mark>
+          <p class="sticker reveal"><span>Simple Pricing</span></p>
+          <h2 class="reveal" id="pr-title">
+            <span>Choose your pass.</span>
+            <mark>Instant unlock.</mark>
           </h2>
         </div>
         <p class="sec-note reveal">
-          Every format is remuxed in native containers with hardware acceleration. No transcoding losses, no missing audio channels.
+          Start free ($0) with standard 720p 30fps downloads + 7-Day Free Pro Trial for 1 PC, or choose Monthly ($1.99/mo), Annual ($14.99/yr), or Lifetime ($24.99).
         </p>
       </div>
 
-      <!-- Category Filter Pills -->
-      <div class="filters reveal">
-        <button class="filter is-active" data-cat="all">All Formats</button>
-        <button class="filter" data-cat="video">Video 4K / 8K</button>
-        <button class="filter" data-cat="tiktok">TikTok Clean</button>
-        <button class="filter" data-cat="audio">Audio Hi-Fi</button>
-        <button class="filter" data-cat="batch">Playlists &amp; Batch</button>
+            <!-- 7-Day Free Trial Promotion Banner -->
+      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(245, 184, 46, 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="max-width: 680px;">
+          <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
+          <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
+          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
+        </div>
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
+          <span>Get Free Setup + Trial</span>
+          <svg class="ic"><use href="#i-download"></use></svg>
+        </a>
       </div>
 
-      <!-- Featured Gold Poster Card: 8K Flagship -->
-      <div class="featured reveal" data-cat="video">
-        <div class="f-body">
+      <div class="pricing-grid">
+        <!-- Plan 1: Free Starter ($0) -->
+        <div class="price-card reveal">
           <div>
-            <div class="f-top">
-              <span class="f-tag">Flagship Pipeline</span>
-              <span class="f-badge">8K 60FPS HDR</span>
+            <div class="price-head">
+              <h3>Free Starter</h3>
+              <p>Standard edition for 720p 30fps media and basic MP3 rips.</p>
             </div>
-            <h3>YouTube 8K Cinema Stream with Automated FFmpeg Remux</h3>
-            <p>
-              Direct DASH protocol extraction fetching VP9 and AV1 video streams alongside uncompressed 320kbps Opus audio, muxed locally via your GPU with zero CPU stutter.
-            </p>
+
+            <div class="price-amount">
+              <span class="currency">$</span>
+              <span class="num">0</span>
+              <span class="period">/ forever</span>
+            </div>
+
+            <ul class="price-perks">
+              <li><svg class="ic"><use href="#i-check"></use></svg><span><strong>Max 720p @ 30fps</strong> video downloads (Strict cap)</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Standard single-item downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>192kbps Standard MP3 audio</span></li>
+              <li><svg class="ic" style="color: #19c3ff;"><use href="#i-check"></use></svg><span style="color: #19c3ff; font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Windows 10/11 standalone setup</span></li>
+            </ul>
           </div>
 
-          <div>
-            <dl class="f-specs">
-              <div>
-                <dt>Resolution</dt>
-                <dd>7680 &times; 4320 (8K UHD)</dd>
-              </div>
-              <div>
-                <dt>Framerate</dt>
-                <dd>Smooth 60 FPS HDR</dd>
-              </div>
-              <div>
-                <dt>Audio Muxing</dt>
-                <dd>Opus &middot; 320kbps Hi-Fi</dd>
-              </div>
-              <div>
-                <dt>Throughput</dt>
-                <dd>Uncapped 16 Threads</dd>
-              </div>
-            </dl>
-
-            <div class="f-actions">
-              <a href="https://drive.google.com/file/d/1oDrWH2SAtZK_gET-T9O9Ts0KX3Gcrsnc/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-ink btn-download-latest" data-download-link="latest">
-                <span>Download Setup (<span class="dyn-latest-ver">v2.3.0</span>)</span>
-                <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
-              </a>
-              <a href="#older-versions" class="btn btn-line" style="border-color: var(--ink); color: var(--ink);">
-                <span>Older Versions &darr;</span>
-              </a>
-              <a href="#inspector" class="btn btn-line" style="border-color: var(--ink); color: var(--ink);">
-                <span>Inspect 8K Stream</span>
-                <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
-              </a>
-            </div>
-          </div>
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
+            <span>Download Free ($0)</span>
+            <svg class="ic"><use href="#i-download"></use></svg>
+          </a>
         </div>
 
-        <div class="f-media">
-          <div class="f-media-art">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; font-weight:800; color:var(--gold);">DASH MANIFEST 4320p</span>
-              <span style="font-size:11px; color:#4ec9b0; font-family:monospace;">16 CHANNELS SYNCED</span>
+        <!-- Plan 2: Monthly Pro ($1.99 USD) -->
+        <div class="price-card reveal">
+          <div>
+            <div class="price-head">
+              <h3>Monthly Pro Pass</h3>
+              <p>Low-cost flexible access. Cancel anytime.</p>
             </div>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size: 54px; font-weight: 800; color: var(--gold); line-height: 1;">8K</div>
-              <div style="font-size: 13px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;">CINEMA STREAM MATRIX</div>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted-d);">
-              <span>AV1 Codec: Level 6.2</span>
-              <span>Bitrate: 85.4 Mbps</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Product Cards Grid -->
-      <div class="c-grid">
-        <!-- Card 1: TikTok Clean -->
-        <div class="c-card reveal" data-cat="tiktok">
-          <div>
-            <div class="c-top">
-              <span class="c-pill">No Watermark</span>
-              <div class="c-icon"><svg class="ic"><use href="#i-video"></use></svg></div>
+            <div class="price-amount">
+              <span class="currency">$</span>
+              <span class="num">1</span>
+              <span class="period">.99 / month</span>
             </div>
-            <h3>TikTok Clean Video Ripper</h3>
-            <p>Bypass username stamps, bouncing logos, and UI overlays. Grabs the original pure source video file directly from the TikTok CDN.</p>
+
+            <ul class="price-perks">
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>4 parallel queue workers</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>1 PC device activation</span></li>
+            </ul>
           </div>
-          <div>
-            <div class="c-specs-mini">
-              <span>Original 1080x1920</span>
-              <span>100% Watermark Free</span>
-            </div>
-            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
-              <span>Download Ripper</span>
-              <svg class="ic"><use href="#i-download"></use></svg>
-            </a>
-          </div>
+
+          <button class="btn btn-line trigger-checkout" data-plan="pro_monthly" style="width: 100%;">
+            <span>Get Monthly Pass ($1.99)</span>
+            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+          </button>
+          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
         </div>
 
-        <!-- Card 2: Studio 320k MP3 -->
-        <div class="c-card reveal" data-cat="audio">
+        <!-- Plan 3: Annual Pro ($14.99 USD) -->
+        <div class="price-card reveal">
           <div>
-            <div class="c-top">
-              <span class="c-pill">Studio Hi-Fi</span>
-              <div class="c-icon"><svg class="ic"><use href="#i-music"></use></svg></div>
+            <div class="price-head">
+              <h3>Annual Pro Pass</h3>
+              <p>Best for active creators. Save 37% vs monthly.</p>
             </div>
-            <h3>Studio 320kbps MP3 &amp; Covers</h3>
-            <p>Converts YouTube and music videos to crystal-clear 320kbps CBR MP3s. Automatically embeds track title, artist, and full HD album artwork.</p>
-          </div>
-          <div>
-            <div class="c-specs-mini">
-              <span>320kbps Constant</span>
-              <span>ID3v2.4 Embedded</span>
+
+            <div class="price-amount">
+              <span class="currency">$</span>
+              <span class="num">14</span>
+              <span class="period">.99 / year</span>
             </div>
-            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
-              <span>Download Audio Client</span>
-              <svg class="ic"><use href="#i-download"></use></svg>
-            </a>
+
+            <ul class="price-perks">
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>8 parallel queue workers</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>2 PC device activations</span></li>
+            </ul>
           </div>
+
+          <button class="btn btn-line trigger-checkout" data-plan="pro_yearly" style="width: 100%;">
+            <span>Get Annual Pass ($14.99)</span>
+            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+          </button>
+          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
         </div>
 
-        <!-- Card 3: Batch Playlists -->
-        <div class="c-card reveal" data-cat="batch">
+        <!-- Plan 4: Lifetime Master ($24.99 USD) -->
+        <div class="price-card featured-plan reveal">
+          <span class="price-badge-top">BEST VALUE &middot; ONE-TIME</span>
+
           <div>
-            <div class="c-top">
-              <span class="c-pill">Parallel Batch</span>
-              <div class="c-icon"><svg class="ic"><use href="#i-layers"></use></svg></div>
+            <div class="price-head">
+              <h3 style="color:var(--gold);">Lifetime Master</h3>
+              <p>Pay once, own forever. All present and future updates included.</p>
             </div>
-            <h3>Batch Channel &amp; Playlists</h3>
-            <p>Paste an entire YouTube playlist or creator channel link. Queue hundreds of videos in parallel with intelligent automatic naming and resume.</p>
-          </div>
-          <div>
-            <div class="c-specs-mini">
-              <span>16 Parallel Workers</span>
-              <span>Auto-Resume on Drop</span>
-            </div>
-            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
-              <span>Download Queue Tool</span>
-              <svg class="ic"><use href="#i-download"></use></svg>
-            </a>
-          </div>
-        </div>
 
-        <!-- Card 4: Lossless M4A & FLAC -->
-        <div class="c-card reveal" data-cat="audio">
-          <div>
-            <div class="c-top">
-              <span class="c-pill">Lossless Master</span>
-              <div class="c-icon"><svg class="ic"><use href="#i-bolt"></use></svg></div>
+            <div class="price-amount">
+              <span class="currency">$</span>
+              <span class="num">24</span>
+              <span class="period">.99 / one-time</span>
             </div>
-            <h3>Lossless M4A &amp; Opus Pure Audio</h3>
-            <p>Direct copy extraction from YouTube's highest quality audio stream without re-compression. Ideal for audiophiles and DAWs.</p>
-          </div>
-          <div>
-            <div class="c-specs-mini">
-              <span>Zero Re-encoding</span>
-              <span>Bit-for-Bit Copy</span>
-            </div>
-            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="width: 100%;">
-              <span>Download Master Tool</span>
-              <svg class="ic"><use href="#i-download"></use></svg>
-            </a>
-          </div>
-        </div>
-      </div>
 
-      <!-- ============================================================
-           OLDER VERSIONS & PREVIOUS BUILDS ARCHIVE
-           ============================================================ -->
-      <div class="older-versions-sec reveal" id="older-versions">
-        <div class="ov-head">
-          <div class="ov-head-left">
-            <span class="sticker"><span>Build Archive</span></span>
-            <h3 class="ov-title">Older Versions</h3>
-            <p class="ov-desc">
-              Whenever a new update is released, the latest build becomes the default download across the site. All previous releases are preserved here with full changelogs and direct Google Drive download links.
-            </p>
-          </div>
-          <div class="ov-head-badge">
-            <span class="ov-dot"></span>
-            <span>Current Latest: <strong class="dyn-latest-ver">v2.3.0</strong></span>
-          </div>
-        </div>
-
-        <div class="ov-cards-list" id="olderVersionsList">
-          <div class="ov-card">
-            <div class="ov-card-info">
-              <div class="ov-card-meta">
-                <span class="ov-ver-tag">v2.2.0</span>
-                <span class="ov-badge-status">Previous Version</span>
-                <span class="ov-date">📅 Released: Nov 06, 2026</span>
-                <span class="ov-size">📦 57.7 MB</span>
-              </div>
-              <h4 class="ov-card-title">Turbo Speed &amp; QuickJS Challenge Solver Engine</h4>
-              <p class="ov-card-notes">Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows.</p>
-            </div>
-            <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.2.0">
-                <span>Download v2.2.0 (57.7 MB)</span>
-                <svg class="ic"><use href="#i-download"></use></svg>
-              </a>
-            </div>
+            <ul class="price-perks">
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Everything in Annual Pro</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Unlimited</b> parallel threads (16+)</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full channel &amp; playlist <b>batch rips</b></span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span><b>3 PC lifetime</b> license activations</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Lifetime updates &amp; priority manifests</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>GPU hardware acceleration engine</span></li>
+            </ul>
           </div>
 
-          <div class="ov-card">
-            <div class="ov-card-info">
-              <div class="ov-card-meta">
-                <span class="ov-ver-tag">v2.1.0</span>
-                <span class="ov-badge-status">Previous Version</span>
-                <span class="ov-date">📅 Released: Nov 05, 2026</span>
-                <span class="ov-size">📦 57.5 MB</span>
-              </div>
-              <h4 class="ov-card-title">Browse &amp; Search with In-Queue Quality Selector</h4>
-              <p class="ov-card-notes">Added built-in YouTube Search &amp; Browse workstation, in-queue quality resolution picker dialog, 6 calm theme color palettes, and eliminated download progress UI flickering.</p>
-            </div>
-            <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.1.0">
-                <span>Download v2.1.0 (57.5 MB)</span>
-                <svg class="ic"><use href="#i-download"></use></svg>
-              </a>
-            </div>
-          </div>
-
-          <div class="ov-card">
-            <div class="ov-card-info">
-              <div class="ov-card-meta">
-                <span class="ov-ver-tag">v2.0.0</span>
-                <span class="ov-badge-status">Previous Version</span>
-                <span class="ov-date">📅 Released: Nov 04, 2026</span>
-                <span class="ov-size">📦 56.9 MB</span>
-              </div>
-              <h4 class="ov-card-title">Initial Commercial Studio Edition Launch</h4>
-              <p class="ov-card-notes">Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer.</p>
-            </div>
-            <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.0.0">
-                <span>Download v2.0.0 (56.9 MB)</span>
-                <svg class="ic"><use href="#i-download"></use></svg>
-              </a>
-            </div>
-          </div>
+          <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="width: 100%;">
+            <span>Get Lifetime License ($24.99)</span>
+            <svg class="ic"><use href="#i-arrow"></use></svg>
+          </button>
+          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
         </div>
       </div>
     </div>
   </section>
+
 
   <!-- ============================================================
        GOLD ACCENT BAND
@@ -3566,158 +3457,83 @@ WEBSITE_HTML = """<!DOCTYPE html>
     </div>
   </section>
 
+
   <!-- ============================================================
-       PRICING / LICENSE PASSES
+       OLDER VERSIONS & PREVIOUS BUILDS ARCHIVE
        ============================================================ -->
-  <section class="section pricing-sec" id="pricing" aria-labelledby="pr-title">
+  <section class="section older-versions-sec" id="older-versions" aria-labelledby="ov-title">
     <div class="wrap">
-      <div class="sec-head">
-        <div>
-          <p class="sticker reveal"><span>Simple Pricing</span></p>
-          <h2 class="reveal" id="pr-title">
-            <span>Choose your pass.</span>
-            <mark>Instant unlock.</mark>
-          </h2>
+        <div class="ov-head">
+          <div class="ov-head-left">
+            <span class="sticker"><span>Build Archive</span></span>
+            <h3 class="ov-title">Older Versions</h3>
+            <p class="ov-desc">
+              Whenever a new update is released, the latest build becomes the default download across the site. All previous releases are preserved here with full changelogs and direct Google Drive download links.
+            </p>
+          </div>
+          <div class="ov-head-badge">
+            <span class="ov-dot"></span>
+            <span>Current Latest: <strong class="dyn-latest-ver">v2.3.0</strong></span>
+          </div>
         </div>
-        <p class="sec-note reveal">
-          Start free ($0) with standard 720p 30fps downloads + 7-Day Free Pro Trial for 1 PC, or choose Monthly ($1.99/mo), Annual ($14.99/yr), or Lifetime ($24.99).
-        </p>
-      </div>
 
-            <!-- 7-Day Free Trial Promotion Banner -->
-      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(245, 184, 46, 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-        <div style="max-width: 680px;">
-          <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
-          <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
-          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
-        </div>
-        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
-          <span>Get Free Setup + Trial</span>
-          <svg class="ic"><use href="#i-download"></use></svg>
-        </a>
-      </div>
-
-      <div class="pricing-grid">
-        <!-- Plan 1: Free Starter ($0) -->
-        <div class="price-card reveal">
-          <div>
-            <div class="price-head">
-              <h3>Free Starter</h3>
-              <p>Standard edition for 720p 30fps media and basic MP3 rips.</p>
+        <div class="ov-cards-list" id="olderVersionsList">
+          <div class="ov-card">
+            <div class="ov-card-info">
+              <div class="ov-card-meta">
+                <span class="ov-ver-tag">v2.2.0</span>
+                <span class="ov-badge-status">Previous Version</span>
+                <span class="ov-date">📅 Released: Nov 06, 2026</span>
+                <span class="ov-size">📦 57.7 MB</span>
+              </div>
+              <h4 class="ov-card-title">Turbo Speed &amp; QuickJS Challenge Solver Engine</h4>
+              <p class="ov-card-notes">Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows.</p>
             </div>
-
-            <div class="price-amount">
-              <span class="currency">$</span>
-              <span class="num">0</span>
-              <span class="period">/ forever</span>
+            <div class="ov-card-action">
+              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.2.0">
+                <span>Download v2.2.0 (57.7 MB)</span>
+                <svg class="ic"><use href="#i-download"></use></svg>
+              </a>
             </div>
-
-            <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span><strong>Max 720p @ 30fps</strong> video downloads (Strict cap)</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Standard single-item downloads</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>192kbps Standard MP3 audio</span></li>
-              <li><svg class="ic" style="color: #19c3ff;"><use href="#i-check"></use></svg><span style="color: #19c3ff; font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Windows 10/11 standalone setup</span></li>
-            </ul>
           </div>
 
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
-            <span>Download Free ($0)</span>
-            <svg class="ic"><use href="#i-download"></use></svg>
-          </a>
-        </div>
-
-        <!-- Plan 2: Monthly Pro ($1.99 USD) -->
-        <div class="price-card reveal">
-          <div>
-            <div class="price-head">
-              <h3>Monthly Pro Pass</h3>
-              <p>Low-cost flexible access. Cancel anytime.</p>
+          <div class="ov-card">
+            <div class="ov-card-info">
+              <div class="ov-card-meta">
+                <span class="ov-ver-tag">v2.1.0</span>
+                <span class="ov-badge-status">Previous Version</span>
+                <span class="ov-date">📅 Released: Nov 05, 2026</span>
+                <span class="ov-size">📦 57.5 MB</span>
+              </div>
+              <h4 class="ov-card-title">Browse &amp; Search with In-Queue Quality Selector</h4>
+              <p class="ov-card-notes">Added built-in YouTube Search &amp; Browse workstation, in-queue quality resolution picker dialog, 6 calm theme color palettes, and eliminated download progress UI flickering.</p>
             </div>
-
-            <div class="price-amount">
-              <span class="currency">$</span>
-              <span class="num">1</span>
-              <span class="period">.99 / month</span>
+            <div class="ov-card-action">
+              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.1.0">
+                <span>Download v2.1.0 (57.5 MB)</span>
+                <svg class="ic"><use href="#i-download"></use></svg>
+              </a>
             </div>
-
-            <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>4 parallel queue workers</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>1 PC device activation</span></li>
-            </ul>
           </div>
 
-          <button class="btn btn-line trigger-checkout" data-plan="pro_monthly" style="width: 100%;">
-            <span>Get Monthly Pass ($1.99)</span>
-            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
-        </div>
-
-        <!-- Plan 3: Annual Pro ($14.99 USD) -->
-        <div class="price-card reveal">
-          <div>
-            <div class="price-head">
-              <h3>Annual Pro Pass</h3>
-              <p>Best for active creators. Save 37% vs monthly.</p>
+          <div class="ov-card">
+            <div class="ov-card-info">
+              <div class="ov-card-meta">
+                <span class="ov-ver-tag">v2.0.0</span>
+                <span class="ov-badge-status">Previous Version</span>
+                <span class="ov-date">📅 Released: Nov 04, 2026</span>
+                <span class="ov-size">📦 56.9 MB</span>
+              </div>
+              <h4 class="ov-card-title">Initial Commercial Studio Edition Launch</h4>
+              <p class="ov-card-notes">Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer.</p>
             </div>
-
-            <div class="price-amount">
-              <span class="currency">$</span>
-              <span class="num">14</span>
-              <span class="period">.99 / year</span>
+            <div class="ov-card-action">
+              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.0.0">
+                <span>Download v2.0.0 (56.9 MB)</span>
+                <svg class="ic"><use href="#i-download"></use></svg>
+              </a>
             </div>
-
-            <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>8 parallel queue workers</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>2 PC device activations</span></li>
-            </ul>
           </div>
-
-          <button class="btn btn-line trigger-checkout" data-plan="pro_yearly" style="width: 100%;">
-            <span>Get Annual Pass ($14.99)</span>
-            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
-        </div>
-
-        <!-- Plan 4: Lifetime Master ($24.99 USD) -->
-        <div class="price-card featured-plan reveal">
-          <span class="price-badge-top">BEST VALUE &middot; ONE-TIME</span>
-
-          <div>
-            <div class="price-head">
-              <h3 style="color:var(--gold);">Lifetime Master</h3>
-              <p>Pay once, own forever. All present and future updates included.</p>
-            </div>
-
-            <div class="price-amount">
-              <span class="currency">$</span>
-              <span class="num">24</span>
-              <span class="period">.99 / one-time</span>
-            </div>
-
-            <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Everything in Annual Pro</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Unlimited</b> parallel threads (16+)</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full channel &amp; playlist <b>batch rips</b></span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span><b>3 PC lifetime</b> license activations</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Lifetime updates &amp; priority manifests</span></li>
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>GPU hardware acceleration engine</span></li>
-            </ul>
-          </div>
-
-          <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="width: 100%;">
-            <span>Get Lifetime License ($24.99)</span>
-            <svg class="ic"><use href="#i-arrow"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
         </div>
       </div>
     </div>
@@ -3832,12 +3648,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
       <nav class="footer-col" aria-label="Explore Links">
         <p class="footer-h">Explore</p>
-        <a href="#formats">Formats &amp; Resolutions</a>
         <a href="#inspector">Stream Analyzer</a>
+        <a href="#pricing">License Passes</a>
         <a href="#workstation">Workstation Modules</a>
         <a href="#principles">Architecture Guarantees</a>
-        <a href="#pricing">License Passes</a>
-    <a href="#contact">Contact &amp; Buy Plan</a>
+        <a href="#older-versions">Older Versions</a>
+        <a href="#contact">Contact &amp; Buy Plan</a>
       </nav>
 
       <div class="footer-col">
@@ -4211,7 +4027,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
     // ============================================================
     // CENTRALIZED RELEASE MANAGEMENT & DYNAMIC DOWNLOAD BINDING
     // ============================================================
-    // APP_RELEASES_START\n    const APP_RELEASES = [
+    // APP_RELEASES_START
+    const APP_RELEASES = [
       {
             "version": "v2.3.0",
             "date": "2026-11-06",
@@ -4252,7 +4069,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "size": "56.9 MB",
             "notes": "Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer."
       }
-];\n    // APP_RELEASES_END
+];
+    // APP_RELEASES_END
 
     function applyReleaseUpdates(releases) {
       if (!Array.isArray(releases) || releases.length === 0) return;
