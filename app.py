@@ -424,8 +424,11 @@ class YouTubeDownloaderApp(ctk.CTk):
         # Update License UI Badges & Status
         self._update_license_ui()
 
-        # Background silent license validation
-        threading.Thread(target=self.license_mgr.verify_background, daemon=True).start()
+        # Background silent license validation & website backend trial synchronization
+        def bg_verify():
+            self.license_mgr.verify_background()
+            self.run_on_ui_thread(self._update_license_ui)
+        threading.Thread(target=bg_verify, daemon=True).start()
 
         # Background silent check for newer version releases
         self.latest_available_release = None

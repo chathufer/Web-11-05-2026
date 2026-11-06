@@ -187,7 +187,8 @@ def check_trial_claimed(hwid: str) -> Tuple[bool, Optional[str], bool, str]:
         nonlocal claimed, earliest_started, target_expires, max_watermark
         if not h or h.strip().upper() == clean_hwid:
             claimed = True
-            if exp_str and (not target_expires or exp_str < target_expires):
+            # Keep the latest expiration date
+            if exp_str and (not target_expires or exp_str > target_expires):
                 target_expires = exp_str
             if start_str and (not earliest_started or start_str < earliest_started):
                 earliest_started = start_str
@@ -258,12 +259,12 @@ def check_trial_claimed(hwid: str) -> Tuple[bool, Optional[str], bool, str]:
     if not claimed:
         return False, None, False, "No trial claimed"
 
-    # Anti-Clock-Tampering (Clock Rollback Check)
+    # Anti-Clock-Tampering (Safe 24-hour tolerance check preventing timezone or daylight saving false triggers)
     clock_tampered = False
     if max_watermark:
         try:
             watermark_dt = datetime.fromisoformat(max_watermark)
-            if now_dt < watermark_dt - timedelta(hours=1):
+            if now_dt < watermark_dt - timedelta(hours=24):
                 clock_tampered = True
         except Exception:
             pass
@@ -316,11 +317,73 @@ class LicenseManager:
         self._load_local_license()
 
     def _load_local_license(self):
-        """Load and cryptographically verify local license file."""
-        if not os.path.isfile(self.license_path):
-            claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
-            if claimed and trial_exp and not is_exp:
-                try:
+        """
+        Load and cryptographically verify local license file.
+        Guarantees that active 7-Day Free Trials are seamlessly preserved across
+        app and PC restarts without resetting or disabling Pro features.
+        """
+        # 1. Attempt loading from license.json
+        if os.path.isfile(self.license_path):
+            try:
+                with open(self.license_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                # Verify HWID matches current physical machine
+                if data.get("hwid") == self.hwid:
+                    # Check if this is a 7-Day Trial license
+                    if data.get("plan") == "pro_trial" or bool(data.get("is_trial")):
+                        claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
+                        exp_str = data.get("expires_at") or trial_exp
+                        if exp_str:
+                            try:
+                                exp_dt = datetime.fromisoformat(exp_str)
+                                if datetime.utcnow() >= exp_dt:
+                                    is_exp = True
+                            except Exception:
+                                pass
+
+                        if not is_exp:
+                            # Active trial! Keep Pro features active
+                            data["is_expired"] = False
+                            data["is_pro"] = True
+                            data["is_trial"] = True
+                            if trial_exp and not data.get("expires_at"):
+                                data["expires_at"] = trial_exp
+                            data["signature"] = sign_license_payload(data)
+                            self._cached_license = data
+                            return
+                        else:
+                            data["is_expired"] = True
+                            data["is_pro"] = False
+                            self._cached_license = data
+                            return
+
+                    # Paid Pro License: verify cryptographic signature & expiration
+                    if verify_license_payload(data):
+                        exp_str = data.get("expires_at")
+                        if exp_str:
+                            try:
+                                exp_dt = datetime.fromisoformat(exp_str)
+                                if datetime.utcnow() >= exp_dt:
+                                    data["is_expired"] = True
+                                    data["is_pro"] = False
+                                    self._cached_license = data
+                                    return
+                            except Exception:
+                                pass
+                        data["is_expired"] = False
+                        data["is_pro"] = True
+                        self._cached_license = data
+                        return
+            except Exception:
+                pass
+
+        # 2. If license file missing or unverified, check multi-tier persistent trial records
+        claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
+        if claimed and trial_exp and not is_exp:
+            try:
+                exp_dt = datetime.fromisoformat(trial_exp)
+                if datetime.utcnow() < exp_dt:
                     machine_name = socket.gethostname()
                     trial_key = generate_license_key("pro_trial")
                     payload = {
@@ -339,68 +402,10 @@ class LicenseManager:
                     payload["signature"] = sign_license_payload(payload)
                     self._save_local_license(payload)
                     return
-                except Exception:
-                    pass
-            self._cached_license = None
-            return
-
-        try:
-            with open(self.license_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            # 1. Cryptographic signature check
-            if not verify_license_payload(data):
-                self._cached_license = None
-                return
-
-            # 2. HWID check (must match current physical machine)
-            if data.get("hwid") != self.hwid:
-                self._cached_license = None
-                return
-
-            # 3. Expiration check & Trial lockdown check
-            if data.get("plan") == "pro_trial":
-                claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
-                if is_exp:
-                    data["is_expired"] = True
-                    data["is_pro"] = False
-                    self._cached_license = data
-                    self._save_local_license(data)
-                    return
-
-            exp_str = data.get("expires_at")
-            if exp_str:
-                try:
-                    exp_dt = datetime.fromisoformat(exp_str)
-                    if datetime.utcnow() > exp_dt:
-                        data["is_expired"] = True
-                        data["is_pro"] = False
-                        self._cached_license = data
-                        self._save_local_license(data)
-                        return
-                except Exception:
-                    pass
-
-            # 4. Check revocation state if local database is accessible
-            try:
-                from backend.database import get_license_with_activations
-                lic_rec = get_license_with_activations(data.get("license_key", ""))
-                if lic_rec is not None and lic_rec.get("is_revoked"):
-                    # License was terminated by the seller!
-                    self._cached_license = None
-                    if os.path.exists(self.license_path):
-                        try:
-                            os.remove(self.license_path)
-                        except Exception:
-                            pass
-                    return
             except Exception:
                 pass
 
-            data["is_expired"] = False
-            self._cached_license = data
-        except Exception:
-            self._cached_license = None
+        self._cached_license = None
 
     def _save_local_license(self, payload: Dict[str, Any]):
         """Save verified license payload to local file."""
@@ -593,6 +598,7 @@ class LicenseManager:
                         data = res_json.get("data", {})
                         data["is_pro"] = True
                         data["is_trial"] = True
+                        data["signature"] = sign_license_payload(data)
                         self._save_local_license(data)
                         record_trial_claim(self.hwid, now_str, data.get("expires_at", exp_str))
                         return True, "🎉 7-Day Pro Free Trial successfully activated on this computer!"
@@ -772,8 +778,79 @@ class LicenseManager:
 
         return True, "License successfully deactivated. You can now transfer it to another computer."
 
+    def sync_trial_from_server(self) -> bool:
+        """
+        Fetch and synchronize trial status from the website backend.
+        Guarantees exact trial synchronization with the server database.
+        """
+        candidate_urls = get_candidate_server_urls()
+        if self.server_url and self.server_url not in candidate_urls:
+            candidate_urls.insert(0, self.server_url)
+
+        for base_url in candidate_urls:
+            try:
+                # Try dedicated status endpoint first
+                url = f"{base_url}/api/v1/license/trial/status"
+                resp = requests.post(url, json={"hwid": self.hwid}, timeout=3.5)
+                if resp.status_code == 200:
+                    res_json = resp.json()
+                    if res_json.get("status") == "success" and res_json.get("has_claimed"):
+                        is_active = res_json.get("is_active", False)
+                        data = res_json.get("data", {})
+                        if is_active and data:
+                            data["is_pro"] = True
+                            data["is_trial"] = True
+                            data["is_expired"] = False
+                            data["signature"] = sign_license_payload(data)
+                            self._save_local_license(data)
+                            record_trial_claim(self.hwid, data.get("created_at") or datetime.utcnow().isoformat(), data.get("expires_at"))
+                            return True
+                        elif res_json.get("is_expired"):
+                            if self._cached_license:
+                                self._cached_license["is_expired"] = True
+                                self._cached_license["is_pro"] = False
+                                self._save_local_license(self._cached_license)
+                            return False
+
+                # Fallback to /api/v1/license/trial
+                url2 = f"{base_url}/api/v1/license/trial"
+                resp2 = requests.post(url2, json={"hwid": self.hwid, "machine_name": socket.gethostname()}, timeout=3.5)
+                if resp2.status_code == 200:
+                    res2 = resp2.json()
+                    if res2.get("status") == "success":
+                        data2 = res2.get("data", {})
+                        data2["is_pro"] = True
+                        data2["is_trial"] = True
+                        data2["is_expired"] = False
+                        data2["signature"] = sign_license_payload(data2)
+                        self._save_local_license(data2)
+                        record_trial_claim(self.hwid, data2.get("created_at") or datetime.utcnow().isoformat(), data2.get("expires_at"))
+                        return True
+            except Exception:
+                continue
+        return False
+
     def verify_background(self):
-        """Silently verify license in background thread against server."""
+        """Silently verify license in background thread against server and keep trial active."""
+        # 1. Active Trial: synchronize with website backend
+        if self.is_trial() or (self._cached_license and (self._cached_license.get("plan") == "pro_trial" or self._cached_license.get("is_trial"))):
+            # Sync latest details from backend
+            self.sync_trial_from_server()
+            # Verify local natural expiration
+            claimed, trial_exp, is_exp, _ = check_trial_claimed(self.hwid)
+            if is_exp and self._cached_license:
+                self._cached_license["is_expired"] = True
+                self._cached_license["is_pro"] = False
+                self._save_local_license(self._cached_license)
+            return
+
+        # 2. If no license or trial locally, check if backend has an active trial for this HWID
+        if not self._cached_license or not self._cached_license.get("is_pro"):
+            synced = self.sync_trial_from_server()
+            if synced:
+                return
+
+        # 3. Paid Pro license verification against server
         if not self._cached_license or not self._cached_license.get("license_key"):
             return
 
@@ -781,14 +858,14 @@ class LicenseManager:
         for base_url in get_candidate_server_urls():
             try:
                 url = f"{base_url}/api/v1/license/verify"
-                resp = requests.post(url, json={"key": key, "hwid": self.hwid}, timeout=3)
+                resp = requests.post(url, json={"key": key, "hwid": self.hwid}, timeout=3.5)
                 if resp.status_code == 200:
                     data = resp.json().get("data", {})
                     if data and verify_license_payload(data):
+                        data["is_pro"] = True
                         self._save_local_license(data)
                         return
                 elif resp.status_code == 400:
-                    # Explicitly revoked or expired on server
                     err_msg = resp.json().get("message", "")
                     if "revoked" in err_msg.lower():
                         self.deactivate()

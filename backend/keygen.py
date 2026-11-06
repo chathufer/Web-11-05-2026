@@ -187,29 +187,41 @@ def get_hardware_id() -> str:
 def sign_license_payload(payload: Dict[str, Any]) -> str:
     """
     Generate HMAC-SHA256 cryptographic signature for a license payload dictionary.
-    Guarantees tamper-proof local license validation.
+    Guarantees tamper-proof local license validation with consistent boolean/integer normalization.
     """
-    # Deterministic sorted key-value string
     sorted_pairs = []
     for k in sorted(payload.keys()):
         if k != "signature":
-            sorted_pairs.append(f"{k}={payload[k]}")
+            val = payload[k]
+            if isinstance(val, bool):
+                val = 1 if val else 0
+            sorted_pairs.append(f"{k}={val}")
     data_str = "&".join(sorted_pairs)
-
-    signature = hmac.new(MASTER_SECRET, data_str.encode('utf-8'), hashlib.sha256).hexdigest()
-    return signature
+    return hmac.new(MASTER_SECRET, data_str.encode('utf-8'), hashlib.sha256).hexdigest()
 
 
 def verify_license_payload(payload: Dict[str, Any]) -> bool:
     """
     Verify the cryptographic signature and validity of a license payload.
+    Supports both normalized boolean signatures and legacy signatures.
     """
+    if not payload or not isinstance(payload, dict):
+        return False
     expected_sig = payload.get("signature")
     if not expected_sig:
         return False
 
     computed_sig = sign_license_payload(payload)
-    return hmac.compare_digest(expected_sig, computed_sig)
+    if hmac.compare_digest(expected_sig, computed_sig):
+        return True
+
+    # Fallback for legacy raw values
+    raw_pairs = []
+    for k in sorted(payload.keys()):
+        if k != "signature":
+            raw_pairs.append(f"{k}={payload[k]}")
+    raw_sig = hmac.new(MASTER_SECRET, "&".join(raw_pairs).encode('utf-8'), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected_sig, raw_sig)
 
 
 def calculate_expiry(plan: str, custom_days: Optional[int] = None) -> Optional[datetime]:

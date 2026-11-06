@@ -300,6 +300,41 @@ def api_verify():
     success, message, lic_dict = verify_license(key, hwid)
 
     if not success or not lic_dict:
+        # Check if this machine has an active 7-Day Pro Trial registered on the server
+        claim = get_trial_claim(clean_h)
+        if claim:
+            exp_str = claim.get("expires_at") or ""
+            is_exp = False
+            if exp_str:
+                try:
+                    exp_dt = datetime.fromisoformat(exp_str)
+                    if datetime.utcnow() > exp_dt:
+                        is_exp = True
+                except Exception:
+                    pass
+            if not is_exp:
+                diff_secs = (exp_dt - datetime.utcnow()).total_seconds()
+                days_rem = max(1, int(diff_secs // 86400) + (1 if (diff_secs % 86400) > 0 else 0))
+                payload = {
+                    "license_key": key or "MDP-TRI-ACTIVE-TRIAL",
+                    "plan": "pro_trial",
+                    "plan_title": "Pro 7-Day Trial",
+                    "customer_name": f"Trial User ({claim.get('machine_name', 'PC')})",
+                    "hwid": clean_h,
+                    "created_at": claim.get("claimed_at") or datetime.utcnow().isoformat(),
+                    "expires_at": exp_str,
+                    "max_activations": 1,
+                    "is_pro": 1,
+                    "is_trial": 1,
+                    "days_remaining": days_rem,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                payload["signature"] = sign_license_payload(payload)
+                return jsonify({
+                    "status": "success",
+                    "message": f"7-Day Pro Trial active ({days_rem} days remaining) for this computer.",
+                    "data": payload
+                })
         return jsonify({"status": "error", "message": message}), 400
 
     plan = lic_dict.get("plan", "pro_lifetime")
@@ -339,6 +374,67 @@ def api_deactivate():
         "status": "success" if success else "error",
         "message": message
     }), (200 if success else 400)
+
+
+@app.route("/api/v1/license/trial/status", methods=["GET", "POST"])
+def api_trial_status():
+    """Check trial status for a HWID and return signed active trial payload if valid."""
+    data = request.get_json(silent=True) or {}
+    hwid = data.get("hwid") or request.args.get("hwid", "")
+    clean_hwid = (hwid or "").strip().upper()
+    if not clean_hwid:
+        return jsonify({"status": "error", "message": "Hardware ID is required."}), 400
+
+    claim = get_trial_claim(clean_hwid)
+    if not claim:
+        return jsonify({
+            "status": "success",
+            "has_claimed": False,
+            "is_active": False,
+            "can_start": True,
+            "message": "Trial not yet claimed."
+        })
+
+    exp_str = claim.get("expires_at") or ""
+    is_exp = False
+    days_rem = 0
+    if exp_str:
+        try:
+            exp_dt = datetime.fromisoformat(exp_str)
+            diff = (exp_dt - datetime.utcnow()).total_seconds()
+            if diff <= 0:
+                is_exp = True
+                days_rem = 0
+            else:
+                days_rem = max(1, int(diff // 86400) + (1 if (diff % 86400) > 0 else 0))
+        except Exception:
+            pass
+
+    payload = {
+        "license_key": "MDP-TRI-ACTIVE-TRIAL",
+        "plan": "pro_trial",
+        "plan_title": "Pro 7-Day Trial",
+        "customer_name": f"Trial User ({claim.get('machine_name', 'PC')})",
+        "hwid": clean_hwid,
+        "created_at": claim.get("claimed_at") or datetime.utcnow().isoformat(),
+        "expires_at": exp_str,
+        "max_activations": 1,
+        "is_pro": 1 if not is_exp else 0,
+        "is_trial": 1,
+        "days_remaining": days_rem,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    payload["signature"] = sign_license_payload(payload)
+
+    return jsonify({
+        "status": "success",
+        "has_claimed": True,
+        "is_active": not is_exp,
+        "is_expired": is_exp,
+        "days_remaining": days_rem,
+        "expires_at": exp_str,
+        "data": payload
+    })
 
 
 @app.route("/api/v1/license/trial", methods=["POST"])
