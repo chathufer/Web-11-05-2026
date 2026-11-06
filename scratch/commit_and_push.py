@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "fix(ui): define TEXT_MAIN alias in app.py and update all installer download links to latest build"
+commit_msg = "perf(ui): eliminate window drag stutter/crash by filtering move events in configure and offloading clipboard I/O"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
