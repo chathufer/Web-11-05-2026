@@ -238,6 +238,7 @@ COLOR_PURPLE_SUBTLE = ("#EDE9FE", "#25124D")
 TEXT_PRIMARY = ("#0F172A", "#F8FAFC")
 TEXT_SECONDARY = ("#475569", "#94A3B8")
 TEXT_MUTED = ("#94A3B8", "#64748B")
+TEXT_MAIN = TEXT_PRIMARY
 
 
 
@@ -3879,7 +3880,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             fg_color=BG_WINDOW,
             border_width=1,
             border_color=BORDER_COLOR,
-            text_color=TEXT_MAIN,
+            text_color=TEXT_PRIMARY,
             hover_color=BG_CARD_HOVER,
             command=self._on_manual_check_updates
         )
@@ -4020,7 +4021,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             card,
             text=title,
             font=ctk.CTkFont(size=13, weight="bold"),
-            text_color=TEXT_MAIN,
+            text_color=TEXT_PRIMARY,
             wraplength=460,
             justify="left"
         ).pack(anchor="w", padx=16, pady=(12, 6))

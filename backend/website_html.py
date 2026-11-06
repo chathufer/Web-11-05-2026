@@ -2757,7 +2757,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
   <!-- Top Promotional Banner -->
   <aside class="promo-bar" style="background: linear-gradient(90deg, #d9990c 0%, #f5b82e 50%, #19c3ff 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
     🎁 <strong>LIMITED PROMOTION:</strong> 7-Day Pro Free Trial included with Windows Installer! Enjoy 4K 60FPS, Playlists &amp; Turbo Speed on your PC (No Credit Card Required).
-    <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
+    <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
   </aside>
 
 
@@ -2809,7 +2809,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <button class="theme-dot" data-t="cyan" title="Cyber Cyan" aria-label="Cyber Cyan"></button>
         </div>
 
-        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
+        <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
           <span>Download Free</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -2830,7 +2830,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
     <a href="#principles">Architecture Principles</a>
     <a href="#older-versions">Older Versions Archive</a>
     <a href="#contact">Contact &amp; Buy Plan</a>
-    <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
+    <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
       <span>Download Setup v2.2</span>
       <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
     </a>
@@ -2865,7 +2865,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <div class="hero-actions reveal">
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-download-latest" data-download-link="latest">
+          <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-download-latest" data-download-link="latest">
             <span>Download Windows Setup (<span class="dyn-latest-ver">v2.2.0</span>)</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -3079,7 +3079,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
           <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; color: var(--muted-d);">Status: <span class="u-gold" id="analyzeStatus">Idle</span></span>
-            <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
+            <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
               <span>Download Selected Format</span>
               <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
             </a>
@@ -3114,7 +3114,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
           <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
         </div>
-        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
+        <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
           <span>Get Free Setup + Trial</span>
           <svg class="ic"><use href="#i-download"></use></svg>
         </a>
@@ -3144,7 +3144,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </ul>
           </div>
 
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
+          <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
             <span>Download Free ($0)</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>
@@ -3260,7 +3260,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           No monthly subscription traps. Download the standalone Windows installer or unlock the Lifetime Pass for unlimited multi-device access with priority updates.
         </p>
         <div class="band-actions">
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
+          <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
             <span>Download Windows Setup v2.2</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -3490,7 +3490,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <p class="ov-card-notes">Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows.</p>
             </div>
             <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.2.0">
+              <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.2.0">
                 <span>Download v2.2.0 (57.7 MB)</span>
                 <svg class="ic"><use href="#i-download"></use></svg>
               </a>
@@ -3509,7 +3509,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <p class="ov-card-notes">Added built-in YouTube Search &amp; Browse workstation, in-queue quality resolution picker dialog, 6 calm theme color palettes, and eliminated download progress UI flickering.</p>
             </div>
             <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.1.0">
+              <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.1.0">
                 <span>Download v2.1.0 (57.5 MB)</span>
                 <svg class="ic"><use href="#i-download"></use></svg>
               </a>
@@ -3528,7 +3528,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
               <p class="ov-card-notes">Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer.</p>
             </div>
             <div class="ov-card-action">
-              <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.0.0">
+              <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="ov-dl-btn" data-download-specific-version="v2.0.0">
                 <span>Download v2.0.0 (56.9 MB)</span>
                 <svg class="ic"><use href="#i-download"></use></svg>
               </a>
@@ -3622,7 +3622,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         Download the setup installer now or get your Lifetime Pass. Works immediately with zero configuration.
       </p>
       <div class="closing-actions reveal">
-        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
+        <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
           <span>Download Setup v2.2</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -3658,7 +3658,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
       <div class="footer-col">
         <p class="footer-h">Downloads</p>
-        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
+        <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
         <a href="/download?type=zip">Portable ZIP Package</a>
         <a href="#pricing">Upgrade to Pro</a>
       </div>
@@ -3681,7 +3681,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </footer>
 
   <!-- Floating Action Button -->
-  <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
+  <a href="https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
     <svg class="ic" style="width:24px; height:24px;" aria-hidden="true"><use href="#i-download"></use></svg>
   </a>
 
@@ -4044,7 +4044,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "date_formatted": "Nov 06, 2026",
             "title": "Turbo Speed & QuickJS Challenge Solver Engine",
             "is_latest": false,
-            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
             "size": "57.7 MB",
             "notes": "Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows."
       },
@@ -4054,7 +4054,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "date_formatted": "Nov 05, 2026",
             "title": "Browse & Search with In-Queue Quality Selector",
             "is_latest": false,
-            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
             "size": "57.5 MB",
             "notes": "Added built-in YouTube Search & Browse workstation, in-queue quality resolution picker dialog, 6 calm theme color palettes, and eliminated download progress UI flickering."
       },
@@ -4064,7 +4064,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "date_formatted": "Nov 04, 2026",
             "title": "Initial Commercial Studio Edition Launch",
             "is_latest": false,
-            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1Ghsj-UAtHQRpjqised3ugUjZBfdyIchS/view?usp=drive_link",
             "size": "56.9 MB",
             "notes": "Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer."
       }

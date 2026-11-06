@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "fix(auth): add persistent environment variable admin login support for Vercel serverless deployments"
+commit_msg = "fix(ui): define TEXT_MAIN alias in app.py and update all installer download links to latest build"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
