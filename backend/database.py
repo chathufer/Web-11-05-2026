@@ -213,10 +213,47 @@ def authenticate_admin_user(
     password: str,
     db_path: str = DEFAULT_DB_PATH
 ) -> Optional[Dict[str, Any]]:
-    """Validate credentials and return user profile if correct."""
+    """Validate credentials and return user profile if correct (supports DB + Vercel Env Vars)."""
+    clean_u = (username or "").strip().lower()
+    clean_p = (password or "").strip()
+    if not clean_u or not clean_p:
+        return None
+
+    now_iso = datetime.utcnow().isoformat()
+
+    # 1. Check Vercel / System Environment Variables for 100% persistent cloud login
+    env_admin_u = os.environ.get("ADMIN_USERNAME", "").strip().lower()
+    env_admin_p = os.environ.get("ADMIN_PASSWORD", "").strip()
+    if env_admin_u and clean_u == env_admin_u and clean_p == env_admin_p:
+        return {
+            "id": 1000,
+            "username": clean_u,
+            "role": "superadmin",
+            "created_at": now_iso,
+            "last_login": now_iso
+        }
+
+    env_users = os.environ.get("ADMIN_USERS", "")
+    if env_users:
+        for entry in env_users.split(","):
+            parts = [p.strip() for p in entry.split(":") if p.strip()]
+            if len(parts) >= 2:
+                eu_name = parts[0].lower()
+                eu_pass = parts[1]
+                eu_role = parts[2].lower() if len(parts) >= 3 else "admin"
+                if clean_u == eu_name and clean_p == eu_pass:
+                    return {
+                        "id": 1001 + (abs(hash(eu_name)) % 500),
+                        "username": eu_name,
+                        "role": eu_role,
+                        "created_at": now_iso,
+                        "last_login": now_iso
+                    }
+
+    # 2. Check SQLite Database
     conn = get_connection(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM admin_users WHERE username = ?", (username.strip().lower(),))
+    cursor.execute("SELECT * FROM admin_users WHERE username = ?", (clean_u,))
     row = cursor.fetchone()
 
     if not row:
@@ -224,11 +261,10 @@ def authenticate_admin_user(
         return None
 
     user = dict(row)
-    if not verify_password(user["password_hash"], password):
+    if not verify_password(user["password_hash"], clean_p):
         conn.close()
         return None
 
-    now_iso = datetime.utcnow().isoformat()
     cursor.execute("UPDATE admin_users SET last_login = ? WHERE id = ?", (now_iso, user["id"]))
     conn.commit()
     conn.close()
@@ -366,13 +402,45 @@ def delete_admin_user(
 
 
 def list_admin_users(db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:
-    """Fetch list of all administrators and guest users."""
+    """Fetch list of all administrators (merging DB records with persistent Vercel Env Vars)."""
     conn = get_connection(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT id, username, role, created_at, last_login FROM admin_users ORDER BY id ASC")
     rows = cursor.fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    users = [dict(r) for r in rows]
+    usernames = {u["username"].lower() for u in users}
+
+    # Include any admins defined via environment variables
+    env_admin_u = os.environ.get("ADMIN_USERNAME", "").strip().lower()
+    if env_admin_u and env_admin_u not in usernames:
+        users.append({
+            "id": 1000,
+            "username": env_admin_u,
+            "role": "superadmin",
+            "created_at": "Vercel Environment Variable",
+            "last_login": None
+        })
+        usernames.add(env_admin_u)
+
+    env_users = os.environ.get("ADMIN_USERS", "")
+    if env_users:
+        for idx, entry in enumerate(env_users.split(",")):
+            parts = [p.strip() for p in entry.split(":") if p.strip()]
+            if len(parts) >= 2:
+                eu_name = parts[0].lower()
+                eu_role = parts[2].lower() if len(parts) >= 3 else "admin"
+                if eu_name not in usernames:
+                    users.append({
+                        "id": 1001 + idx,
+                        "username": eu_name,
+                        "role": eu_role,
+                        "created_at": "Vercel Environment Variable",
+                        "last_login": None
+                    })
+                    usernames.add(eu_name)
+
+    return users
 
 
 # ---------------- AUDIT LOGGING & ROLLBACK ----------------
