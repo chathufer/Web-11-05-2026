@@ -3098,7 +3098,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           </div>
           <div class="ov-head-badge">
             <span class="ov-dot"></span>
-            <span>Current Latest: <strong class="dyn-latest-ver">v2.2.0</strong></span>
+            <span>Current Latest: <strong class="dyn-latest-ver">v2.3.0</strong></span>
           </div>
         </div>
 
