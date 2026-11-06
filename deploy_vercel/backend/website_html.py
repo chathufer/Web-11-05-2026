@@ -1984,9 +1984,324 @@ WEBSITE_HTML = """<!DOCTYPE html>
       .btn { width: 100%; }
       .band-actions { flex-direction: column; }
     }
-  </style>
+  
+    /* ============================================================
+       RELEASES / UPDATES DROPDOWN & VERSION SELECTOR
+       ============================================================ */
+    .rel-dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .rel-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .rel-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      width: 420px;
+      max-width: 90vw;
+      background: var(--ink);
+      border: 2px solid var(--ink-line);
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+      padding: 16px;
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+    }
+
+    .rel-dropdown-menu.is-open {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .rel-dropdown-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--ink-line);
+    }
+
+    .rel-head-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--paper);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .rel-head-badge {
+      font-size: 11px;
+      color: var(--muted-d);
+      background: var(--ink-2);
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+
+    .rel-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .rel-item {
+      background: var(--ink-2);
+      border: 1.5px solid var(--ink-line);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color .2s var(--ease), background .2s var(--ease);
+    }
+
+    .rel-item:hover {
+      border-color: var(--gold);
+      background: var(--ink-3);
+    }
+
+    .rel-item.is-latest {
+      border-color: rgba(245, 184, 46, 0.5);
+      background: linear-gradient(135deg, rgba(245, 184, 46, 0.08), rgba(25, 195, 255, 0.04));
+    }
+
+    .rel-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .rel-ver-tag {
+      font-family: var(--font-mono, monospace);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--paper);
+    }
+
+    .rel-status-badge {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .rel-status-badge.badge-latest {
+      background: var(--gold);
+      color: #0b0b0b;
+    }
+
+    .rel-status-badge.badge-older {
+      background: var(--ink-3);
+      color: var(--muted-d);
+      border: 1px solid var(--ink-line);
+    }
+
+    .rel-item-meta {
+      font-size: 11px;
+      color: var(--muted-d);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rel-item-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--paper);
+      margin: 0;
+    }
+
+    .rel-item-notes {
+      font-size: 11px;
+      color: var(--muted-d);
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .rel-item-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 2px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--ink-line);
+    }
+
+    .rel-size {
+      font-size: 10.5px;
+      color: var(--muted-d);
+    }
+
+    .rel-dl-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0b0b0b;
+      background: var(--gold);
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: filter .15s var(--ease), transform .15s var(--ease);
+    }
+
+    .rel-dl-link:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .rel-dl-link.link-older {
+      background: var(--ink-3);
+      color: var(--paper);
+      border: 1px solid var(--ink-line);
+    }
+
+    .rel-dl-link.link-older:hover {
+      background: var(--paper);
+      color: #0b0b0b;
+    }
+
+    /* ============================================================
+       UPDATES & CHANGELOG SECTION
+       ============================================================ */
+    .updates-sec {
+      background: var(--ink);
+      border-top: 1px solid var(--ink-line);
+    }
+
+    .updates-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .update-card {
+      background: var(--ink-2);
+      border: 2px solid var(--ink-line);
+      border-radius: 20px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+    }
+
+    .update-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+
+    .update-card.is-latest {
+      border-color: rgba(245, 184, 46, 0.6);
+      background: linear-gradient(135deg, var(--ink-2), rgba(245, 184, 46, 0.04));
+      box-shadow: 0 0 25px rgba(245, 184, 46, 0.08);
+    }
+
+    .update-card-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .update-card-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .update-version {
+      font-family: var(--font-mono, monospace);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--paper);
+    }
+
+    .update-date {
+      font-size: 12.5px;
+      color: var(--muted-d);
+      font-weight: 600;
+    }
+
+    .update-size {
+      font-size: 11.5px;
+      color: var(--muted-d);
+      font-family: var(--font-mono, monospace);
+      background: var(--ink-3);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .update-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--paper);
+      margin: 2px 0 0 0;
+    }
+
+    .update-notes {
+      font-size: 13px;
+      color: var(--muted-d);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .update-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .update-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 20px 18px;
+      }
+      .update-card-right {
+        align-items: stretch;
+      }
+      .rel-dropdown-menu {
+        left: 0;
+        right: 0;
+        width: 100%;
+      }
+    }
+</style>
 </head>
 <body>
+  <!-- Top Promotional Banner -->
+  <aside class="promo-bar" style="background: linear-gradient(90deg, #d9990c 0%, #f5b82e 50%, #19c3ff 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
+    🎁 <strong>LIMITED PROMOTION:</strong> 7-Day Pro Free Trial included with Windows Installer! Enjoy 4K 60FPS, Playlists &amp; Turbo Speed on your PC (No Credit Card Required).
+    <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
+  </aside>
+
 
   <!-- ============================================================
        SVG SYMBOLS DEFINITION SHEET
@@ -2023,6 +2338,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <a href="#inspector">Analyzer</a>
         <a href="#workstation">Workstation</a>
         <a href="#principles">Architecture</a>
+        <a href="#updates">Updates</a>
         <a href="#pricing">Pricing</a>
       </nav>
 
@@ -2069,8 +2385,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <p class="tag reveal">
-          <span>Ultra HD CDN Ripper &middot; Windows 10 &amp; 11</span>
+        <p class="tag reveal" style="border-color: rgba(245, 184, 46, 0.4); background: rgba(245, 184, 46, 0.12);">
+          <span>🎁 SPECIAL PROMO: Includes 7-Day Pro Free Trial on 1 PC &middot; Windows 10 &amp; 11</span>
         </p>
 
         <h1 class="reveal" id="hero-title">
@@ -2089,10 +2405,29 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <div class="hero-actions reveal">
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold">
-            <span>Download Windows Installer</span>
+          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-download-latest" data-download-link="latest">
+            <span>Download Windows Setup (<span class="dyn-latest-ver">v2.2.0</span>)</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
+
+          <!-- Releases & Updates Dropdown Trigger -->
+          <div class="rel-dropdown-wrapper" id="heroRelDropdown">
+            <button type="button" class="btn btn-line rel-toggle-btn" id="btnToggleReleases" aria-haspopup="true" aria-expanded="false" title="View Version History & Previous Releases">
+              <span>▾ Updates &amp; Older Versions</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div class="rel-dropdown-menu" id="relDropdownMenu" role="menu">
+              <div class="rel-dropdown-head">
+                <span class="rel-head-title">Release History</span>
+                <span class="rel-head-badge">Google Drive</span>
+              </div>
+              <div class="rel-list-container" id="relListContainer">
+                <!-- Dynamically populated from APP_RELEASES -->
+              </div>
+            </div>
+          </div>
+
           <a href="#inspector" class="btn btn-line">
             <span>Test Stream Analyzer</span>
             <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
@@ -2704,6 +3039,30 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </section>
 
   <!-- ============================================================
+       RELEASE UPDATES & CHANGELOG
+       ============================================================ -->
+  <section class="section updates-sec" id="updates" aria-labelledby="up-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="sticker reveal"><span>Release History</span></p>
+          <h2 class="reveal" id="up-title">
+            <span>Updates &amp;</span>
+            <mark>Changelog.</mark>
+          </h2>
+        </div>
+        <p class="sec-note reveal">
+          Every new release uploaded to Google Drive automatically becomes the latest version for all download buttons. Older versions are preserved below with their release dates so you can download any previous build anytime.
+        </p>
+      </div>
+
+      <div class="updates-timeline" id="sectionUpdatesList">
+        <!-- Rendered dynamically from APP_RELEASES -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
        PRICING / LICENSE PASSES
        ============================================================ -->
   <section class="section pricing-sec" id="pricing" aria-labelledby="pr-title">
@@ -2717,8 +3076,21 @@ WEBSITE_HTML = """<!DOCTYPE html>
           </h2>
         </div>
         <p class="sec-note reveal">
-          Start for free with standard 1080p downloads, or unlock unlimited 8K speeds, batch queues, and lifetime updates.
+          Start free ($0) with standard 720p 30fps downloads + 7-Day Free Pro Trial for 1 PC, or choose Monthly ($1.99/mo), Annual ($14.99/yr), or Lifetime ($24.99).
         </p>
+      </div>
+
+            <!-- 7-Day Free Trial Promotion Banner -->
+      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(245, 184, 46, 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="max-width: 680px;">
+          <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
+          <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
+          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
+        </div>
+        <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
+          <span>Get Free Setup + Trial</span>
+          <svg class="ic"><use href="#i-download"></use></svg>
+        </a>
       </div>
 
       <div class="pricing-grid">
@@ -3331,7 +3703,159 @@ WEBSITE_HTML = """<!DOCTYPE html>
         });
       }
     })();
-  </script>
+  
+    // ============================================================
+    // CENTRALIZED RELEASE MANAGEMENT & DYNAMIC DOWNLOAD BINDING
+    // ============================================================
+    // APP_RELEASES_START
+    const APP_RELEASES = [
+      {
+            "version": "v2.2.0",
+            "date": "2026-11-06",
+            "date_formatted": "Nov 06, 2026",
+            "title": "Turbo Speed & QuickJS Challenge Solver Engine",
+            "is_latest": true,
+            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "size": "57.7 MB",
+            "notes": "Fixed YouTube CDN bandwidth throttling (50MB/s+ throughput), bundled lightweight QuickJS JS challenge runtime, 7-day trial recovery, completely silent launch without flashing CMD windows."
+      },
+      {
+            "version": "v2.1.0",
+            "date": "2026-11-05",
+            "date_formatted": "Nov 05, 2026",
+            "title": "Browse & Search with In-Queue Quality Selector",
+            "is_latest": false,
+            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "size": "57.5 MB",
+            "notes": "Added built-in YouTube Search & Browse workstation, in-queue quality resolution picker dialog, 6 calm theme color palettes, and eliminated download progress UI flickering."
+      },
+      {
+            "version": "v2.0.0",
+            "date": "2026-11-04",
+            "date_formatted": "Nov 04, 2026",
+            "title": "Initial Commercial Studio Edition Launch",
+            "is_latest": false,
+            "url": "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing",
+            "size": "56.9 MB",
+            "notes": "Official release of Media Downloader Pro with 4K 60FPS video streams, TikTok watermark-free ripper, HWID cryptographic licensing, and high-compression single Windows installer."
+      }
+];
+    // APP_RELEASES_END
+
+    function applyReleaseUpdates(releases) {
+      if (!Array.isArray(releases) || releases.length === 0) return;
+
+      const latest = releases[0];
+      latest.is_latest = true;
+
+      // 1. Update ALL default download buttons to point to the latest Google Drive release
+      const allLinks = document.querySelectorAll('a[href*="drive.google.com"], a[data-download-link="latest"], a.btn-download-latest');
+      allLinks.forEach(link => {
+        if (link.dataset.downloadSpecificVersion) return; // preserve older release download buttons
+        link.href = latest.url;
+      });
+
+      // 2. Update dynamic version text in header and hero
+      document.querySelectorAll('.dyn-latest-ver').forEach(el => {
+        el.textContent = latest.version;
+      });
+      document.querySelectorAll('.dyn-latest-date').forEach(el => {
+        el.textContent = latest.date_formatted || latest.date;
+      });
+
+      // 3. Render Hero Dropdown List
+      const container = document.getElementById('relListContainer');
+      if (container) {
+        container.innerHTML = releases.map((rel, idx) => {
+          const isLatest = idx === 0 || rel.is_latest;
+          return `
+            <div class="rel-item ${isLatest ? 'is-latest' : ''}">
+              <div class="rel-item-top">
+                <span class="rel-ver-tag">${rel.version}</span>
+                <span class="rel-status-badge ${isLatest ? 'badge-latest' : 'badge-older'}">
+                  ${isLatest ? '★ Latest Release' : 'Older Version'}
+                </span>
+              </div>
+              <p class="rel-item-title">${rel.title}</p>
+              <div class="rel-item-meta">
+                <span>📅 ${rel.date_formatted || rel.date}</span>
+                <span>📦 ${rel.size || 'Installer'}</span>
+              </div>
+              <p class="rel-item-notes">${rel.notes || ''}</p>
+              <div class="rel-item-actions">
+                <span class="rel-size">${isLatest ? 'Recommended build' : 'Preserved build'}</span>
+                <a href="${rel.url}" target="_blank" rel="noopener noreferrer" class="rel-dl-link ${isLatest ? '' : 'link-older'}" data-download-specific-version="${rel.version}">
+                  <span>Download ${rel.version}</span>
+                  <svg class="ic" style="width:11px;height:11px;"><use href="#i-download"></use></svg>
+                </a>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 4. Render Updates Section Cards
+      const sectionContainer = document.getElementById('sectionUpdatesList');
+      if (sectionContainer) {
+        sectionContainer.innerHTML = releases.map((rel, idx) => {
+          const isLatest = idx === 0 || rel.is_latest;
+          return `
+            <div class="update-card ${isLatest ? 'is-latest' : ''} reveal">
+              <div class="update-card-left">
+                <div class="update-card-head">
+                  <span class="update-version">${rel.version}</span>
+                  <span class="rel-status-badge ${isLatest ? 'badge-latest' : 'badge-older'}">
+                    ${isLatest ? '★ Latest Version' : 'Previous Release'}
+                  </span>
+                  <span class="update-date">📅 Released: ${rel.date_formatted || rel.date}</span>
+                  <span class="update-size">📦 ${rel.size || ''}</span>
+                </div>
+                <h3 class="update-title">${rel.title}</h3>
+                <p class="update-notes">${rel.notes || ''}</p>
+              </div>
+              <div class="update-card-right">
+                <a href="${rel.url}" target="_blank" rel="noopener noreferrer" class="btn ${isLatest ? 'btn-gold' : 'btn-line'} btn-sm" data-download-specific-version="${rel.version}" style="white-space:nowrap;">
+                  <span>Download ${rel.version}</span>
+                  <svg class="ic"><use href="#i-download"></use></svg>
+                </a>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Dropdown toggle & click outside behavior
+    const btnToggleReleases = document.getElementById('btnToggleReleases');
+    const relDropdownMenu = document.getElementById('relDropdownMenu');
+    if (btnToggleReleases && relDropdownMenu) {
+      btnToggleReleases.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = relDropdownMenu.classList.toggle('is-open');
+        btnToggleReleases.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!relDropdownMenu.contains(e.target) && e.target !== btnToggleReleases) {
+          relDropdownMenu.classList.remove('is-open');
+          btnToggleReleases.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Apply embedded releases immediately on DOM ready
+    applyReleaseUpdates(APP_RELEASES);
+
+    // Optionally fetch dynamic releases.json if hosted
+    fetch('/releases.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          applyReleaseUpdates(data);
+        }
+      })
+      .catch(() => {});
+</script>
 </body>
 </html>
 """

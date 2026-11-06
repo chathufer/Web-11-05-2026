@@ -77,11 +77,45 @@ def storefront():
     return render_template_string(WEBSITE_HTML)
 
 
+@app.route("/api/v1/releases", methods=["GET"])
+def api_releases():
+    """Return published releases list."""
+    rel_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "releases.json")
+    if not os.path.exists(rel_file):
+        rel_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "releases.json")
+    if os.path.exists(rel_file):
+        try:
+            with open(rel_file, "r", encoding="utf-8") as f:
+                return jsonify(json.load(f))
+        except Exception:
+            pass
+    return jsonify([])
+
+
 @app.route("/download", methods=["GET"])
 def download_installer():
-    """Serve the single standalone Windows setup installer or redirect to cloud CDN."""
-    direct_url = "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing"
-    return redirect(direct_url, code=302)
+    """Serve the single standalone Windows setup installer or redirect to Google Drive CDN."""
+    requested_v = request.args.get("v", "").strip().lower()
+    default_url = "https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing"
+
+    rel_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "releases.json")
+    if not os.path.exists(rel_file):
+        rel_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "releases.json")
+    if os.path.exists(rel_file):
+        try:
+            with open(rel_file, "r", encoding="utf-8") as f:
+                releases = json.load(f)
+                if requested_v:
+                    for r in releases:
+                        v_str = r.get("version", "").lower()
+                        if v_str == requested_v or v_str.lstrip("v") == requested_v:
+                            return redirect(r.get("url", default_url), code=302)
+                elif releases and isinstance(releases, list):
+                    return redirect(releases[0].get("url", default_url), code=302)
+        except Exception:
+            pass
+
+    return redirect(default_url, code=302)
 
 
 @app.route("/api/v1/checkout", methods=["POST"])
