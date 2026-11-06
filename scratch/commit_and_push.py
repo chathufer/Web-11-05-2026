@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "feat: add contact & WhatsApp VIP buyer group page, floating button, checkout modal integration and pricing buy links"
+commit_msg = "security(checkout): remove customer key generation, disable /api/v1/checkout, and route all purchases to official WhatsApp admin group"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)

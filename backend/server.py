@@ -118,44 +118,14 @@ def download_installer():
     return redirect(default_url, code=302)
 
 
-@app.route("/api/v1/checkout", methods=["POST"])
+@app.route("/api/v1/checkout", methods=["POST", "GET"])
 def api_checkout():
-    """Storefront checkout / instant license generation endpoint."""
-    data = request.get_json(silent=True) or {}
-    plan = data.get("plan", "pro_lifetime")
-    if plan not in PLAN_CODES:
-        plan = "pro_lifetime"
-
-    customer_name = data.get("name", "").strip() or "Valued Customer"
-    customer_email = data.get("email", "").strip() or ""
-    max_devices = 3 if plan == "pro_lifetime" else (2 if plan == "pro_yearly" else 1)
-
-    key = generate_license_key(plan)
-    exp = calculate_expiry(plan)
-
-    create_license(
-        license_key=key,
-        plan=plan,
-        customer_name=customer_name,
-        customer_email=customer_email,
-        expires_at=exp,
-        max_activations=max_devices,
-        notes="Downloader Pro Storefront Purchase"
-    )
-
-    exp_str = exp.strftime("%Y-%m-%d") if exp else "Lifetime (Never Expires)"
-
+    """Disabled public key generation. Customers must contact admins in WhatsApp group to buy."""
     return jsonify({
-        "status": "success",
-        "license_key": key,
-        "plan": plan,
-        "plan_title": PLAN_NAMES.get(plan, "Pro Plan"),
-        "customer_name": customer_name,
-        "customer_email": customer_email,
-        "expires_at": exp_str,
-        "max_devices": max_devices,
-        "download_url": "/download"
-    })
+        "status": "contact_admin",
+        "message": "Public license key generation is disabled. Please contact admins in our official WhatsApp group to purchase a plan.",
+        "whatsapp_url": "https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG"
+    }), 403
 
 
 @app.route("/api/v1/health", methods=["GET"])

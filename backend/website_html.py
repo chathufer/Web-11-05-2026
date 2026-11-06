@@ -3878,7 +3878,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
 
   <!-- ============================================================
-       CHECKOUT MODAL DIALOG
+       CHECKOUT MODAL DIALOG (WHATSAPP ADMIN PURCHASE ONLY)
        ============================================================ -->
   <dialog id="checkoutModal">
     <div class="modal-box">
@@ -3887,73 +3887,41 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </button>
 
       <div id="checkoutFormStep">
-        <h3 style="font-size: 24px; margin-bottom: 6px;">Unlock Downloader Pro</h3>
-        <p style="font-size: 14px; color: var(--muted-d); margin-bottom: 20px;">
-          Instant activation key delivered on screen and saved locally.
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          <svg class="ic" style="width: 28px; height: 28px; color: #25D366;"><use href="#i-whatsapp"></use></svg>
+          <h3 style="font-size: 22px; margin: 0; color: #ffffff;">Purchase Downloader Pro</h3>
+        </div>
+        <p style="font-size: 13.5px; color: var(--muted-d); margin-bottom: 20px; line-height: 1.5;">
+          All official license keys are generated and issued directly by admins. Join our official WhatsApp VIP group to complete your purchase and receive your license key.
         </p>
 
-        <!-- Direct WhatsApp Admin Purchase Box -->
-        <div class="modal-wa-box" style="background: rgba(37, 211, 102, 0.08); border: 1.5px solid rgba(37, 211, 102, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-            <svg class="ic" style="width:20px; height:20px; color:#25D366;"><use href="#i-whatsapp"></use></svg>
-            <strong style="color:#ffffff; font-size:13.5px;">Direct Purchase via WhatsApp</strong>
-          </div>
-          <p style="font-size:12.5px; color:var(--muted-d); margin:0 0 12px 0; line-height:1.45;">
-            Buyers must join our official WhatsApp group and contact the admins to purchase a license plan:
-          </p>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="width:100%; justify-content:center; padding:10px 18px; font-size:13px;">
-            <svg class="ic" style="width:17px; height:17px;"><use href="#i-whatsapp"></use></svg>
-            <span>Join WhatsApp Group &amp; Contact Admins &rarr;</span>
-          </a>
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label for="checkoutPlan" style="display: block; font-size: 13px; font-weight: 700; color: var(--paper); margin-bottom: 8px;">Selected Plan to Purchase</label>
+          <select id="checkoutPlan" class="form-input" style="cursor:pointer; width: 100%; padding: 12px 14px; background: var(--ink-2); border: 1.5px solid var(--ink-line); border-radius: 10px; color: var(--paper); font-size: 14px;">
+            <option value="pro_lifetime">Lifetime Master Pass ($24.99 one-time)</option>
+            <option value="pro_yearly">Annual Pro Pass ($14.99 / year)</option>
+            <option value="pro_monthly">Monthly Pro Pass ($1.99 / month)</option>
+          </select>
         </div>
 
-
-        <form id="checkoutForm">
-          <div class="form-group">
-            <label for="checkoutPlan">Selected Plan</label>
-            <select id="checkoutPlan" class="form-input" style="cursor:pointer;">
-              <option value="pro_lifetime">Lifetime Master Pass ($24.99 one-time)</option>
-              <option value="pro_yearly">Annual Pro Pass ($14.99 / year)</option>
-              <option value="pro_monthly">Monthly Pro Pass ($1.99 / month)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="custName">Your Name</label>
-            <input type="text" id="custName" class="form-input" placeholder="Media Creator" required>
-          </div>
-
-          <div class="form-group">
-            <label for="custEmail">Your Email</label>
-            <input type="email" id="custEmail" class="form-input" placeholder="creator@example.com" required>
-          </div>
-
-          <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 14px;" id="btnSubmitCheckout">
-            <span>Generate License &amp; Download</span>
-            <svg class="ic"><use href="#i-bolt"></use></svg>
-          </button>
-        </form>
-      </div>
-
-      <div class="key-display-box" id="keyResultBox">
-        <div style="text-align:center; margin-bottom: 12px;">
-          <span style="font-size: 11px; font-weight: 800; background: var(--gold); color: #0b0b0b; padding: 3px 8px; border-radius: 4px;">PURCHASE ACTIVATED</span>
-          <h4 style="font-size: 18px; margin-top: 8px;" id="resPlanTitle">Lifetime Master Pass</h4>
+        <div style="background: rgba(37, 211, 102, 0.08); border: 1.5px solid rgba(37, 211, 102, 0.35); border-radius: 14px; padding: 16px 18px; margin-bottom: 20px;">
+          <strong style="display: block; color: #ffffff; font-size: 13px; margin-bottom: 8px;">How to Buy from Admin:</strong>
+          <ol style="margin: 0; padding-left: 20px; color: var(--muted-d); font-size: 12.5px; line-height: 1.6;">
+            <li>Click the button below to join our official WhatsApp group.</li>
+            <li>Message any group admin with your selected plan name.</li>
+            <li>Complete payment, and the admin will generate and deliver your official license key immediately.</li>
+          </ol>
         </div>
 
-        <p style="font-size: 12px; color: var(--muted-d); text-align:center; margin-bottom: 6px;">Your Standalone License Key:</p>
-        <div class="key-display-val" id="resLicenseKey">MDP-LFT-XXXX-XXXX-XXXX</div>
+        <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" id="btnJoinWhatsAppModal" style="width: 100%; justify-content: center; padding: 14px 20px; font-size: 15px; box-sizing: border-box;">
+          <svg class="ic" style="width: 20px; height: 20px;"><use href="#i-whatsapp"></use></svg>
+          <span>Join WhatsApp Group to Buy Plan</span>
+          <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+        </a>
 
-        <div style="display:flex; gap: 10px;">
-          <button class="btn btn-line btn-sm" id="btnCopyKey" style="flex:1;">
-            <span>Copy Key</span>
-            <svg class="ic"><use href="#i-copy"></use></svg>
-          </button>
-          <a href="https://drive.google.com/file/d/1dvu3fgwbYFIF8ehQAUS74eqmNDyJ0wrN/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm" style="flex:1;">
-            <span>Download Setup</span>
-            <svg class="ic"><use href="#i-download"></use></svg>
-          </a>
-        </div>
+        <p style="text-align: center; font-size: 11.5px; color: var(--muted-d); margin-top: 14px; margin-bottom: 0;">
+          Direct Invite Link: <span style="color: #25D366; font-family: var(--font-mono, monospace);">chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG</span>
+        </p>
       </div>
     </div>
   </dialog>
@@ -4218,24 +4186,16 @@ WEBSITE_HTML = """<!DOCTYPE html>
         lbModal.addEventListener('click', (e) => { if (e.target === lbModal) lbModal.close(); });
       }
 
-      // ---------- Checkout Modal & Live License Generation ----------
+      // ---------- Checkout Modal (Direct to WhatsApp Group) ----------
       const checkoutModal = $('#checkoutModal');
       const modalCloseBtn = $('#modalCloseBtn');
       const checkoutPlanSelect = $('#checkoutPlan');
-      const checkoutForm = $('#checkoutForm');
-      const checkoutFormStep = $('#checkoutFormStep');
-      const keyResultBox = $('#keyResultBox');
-      const resPlanTitle = $('#resPlanTitle');
-      const resLicenseKey = $('#resLicenseKey');
-      const btnCopyKey = $('#btnCopyKey');
       const checkoutTriggers = $$('.trigger-checkout');
 
       checkoutTriggers.forEach(btn => {
         btn.addEventListener('click', () => {
           const plan = btn.dataset.plan || 'pro_lifetime';
           if (checkoutPlanSelect) checkoutPlanSelect.value = plan;
-          checkoutFormStep.style.display = 'block';
-          keyResultBox.classList.remove('is-active');
           if (checkoutModal && typeof checkoutModal.showModal === 'function') {
             checkoutModal.showModal();
           }
@@ -4245,64 +4205,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
       if (modalCloseBtn && checkoutModal) {
         modalCloseBtn.addEventListener('click', () => checkoutModal.close());
         checkoutModal.addEventListener('click', (e) => { if (e.target === checkoutModal) checkoutModal.close(); });
-      }
-
-      if (checkoutForm) {
-        checkoutForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const plan = checkoutPlanSelect.value;
-          const name = $('#custName').value.trim() || 'Media Creator';
-          const email = $('#custEmail').value.trim() || 'creator@example.com';
-          const btnSubmit = $('#btnSubmitCheckout');
-          btnSubmit.disabled = true;
-          btnSubmit.textContent = 'Generating License...';
-
-          let key = '';
-          let planTitle = 'Lifetime Master Pass ($24.99)'; if (plan === 'pro_yearly') planTitle = 'Annual Pro Pass ($14.99/yr)'; if (plan === 'pro_monthly') planTitle = 'Monthly Pro Pass ($1.99/mo)';
-
-          try {
-            const resp = await fetch('/api/v1/checkout', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ plan, name, email })
-            });
-            if (resp.ok) {
-              const data = await resp.json();
-              if (data.license_key) {
-                key = data.license_key;
-                planTitle = data.plan_title || planTitle;
-              }
-            }
-          } catch(err) {
-            console.warn('Backend server offline or static mode; fallback client generator');
-          }
-
-          // Fallback key generator if running as static HTML without backend
-          if (!key) {
-            const randHex = (n) => [...Array(n)].map(() => Math.floor(Math.random()*16).toString(16).toUpperCase()).join('');
-            let pfx = 'MDP-LFT'; if (plan === 'pro_yearly') pfx = 'MDP-YEA'; if (plan === 'pro_monthly') pfx = 'MDP-MON';
-            key = `${pfx}-${randHex(4)}-${randHex(4)}-${randHex(4)}`;
-          }
-
-          resPlanTitle.textContent = planTitle;
-          resLicenseKey.textContent = key;
-          checkoutFormStep.style.display = 'none';
-          keyResultBox.classList.add('is-active');
-          btnSubmit.disabled = false;
-          btnSubmit.innerHTML = '<span>Generate License &amp; Download</span>';
-          showToast('License Key generated successfully!');
-        });
-      }
-
-      if (btnCopyKey) {
-        btnCopyKey.addEventListener('click', () => {
-          const key = resLicenseKey.textContent;
-          navigator.clipboard.writeText(key).then(() => {
-            showToast('License key copied to clipboard!');
-          }).catch(() => {
-            showToast('Select text to copy: ' + key);
-          });
-        });
       }
     })();
   
