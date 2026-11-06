@@ -11,6 +11,7 @@ import json
 import time
 import shutil
 import threading
+import queue
 import subprocess
 import webbrowser
 from io import BytesIO
@@ -382,6 +383,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         self._last_window_w: int = 0
         self._last_window_h: int = 0
         self._rendered_thumb_w: int = 0
+        self._gui_queue = queue.Queue()
+        self.after(25, self._process_gui_queue)
         self.active_tab = "downloader" 
 
         # Queue Manager & Browse Search State
@@ -437,6 +440,25 @@ class YouTubeDownloaderApp(ctk.CTk):
 
         # Switch to Downloader Tab by Default
         self._switch_tab("downloader")
+
+    # ---------------- Thread-Safe GUI Dispatcher ----------------
+
+    def _process_gui_queue(self):
+        """Processes callbacks scheduled by worker threads safely on the main Tkinter thread."""
+        try:
+            while True:
+                fn, args, kwargs = self._gui_queue.get_nowait()
+                try:
+                    fn(*args, **kwargs)
+                except Exception as e:
+                    pass
+        except queue.Empty:
+            pass
+        self.after(25, self._process_gui_queue)
+
+    def run_on_ui_thread(self, fn, *args, **kwargs):
+        """100% thread-safe dispatcher from any background thread to the main GUI thread."""
+        self._gui_queue.put((fn, args, kwargs))
 
     # ---------------- Resolution & Geometry ----------------
 
@@ -2276,10 +2298,10 @@ class YouTubeDownloaderApp(ctk.CTk):
         def task():
             try:
                 results = self.downloader.search_youtube(query, limit=20)
-                self.after(0, self._on_search_results_loaded, results)
+                self.run_on_ui_thread(self._on_search_results_loaded, results)
             except Exception as e:
                 err_text = str(e)
-                self.after(0, self._on_search_error, err_text)
+                self.run_on_ui_thread(self._on_search_error, err_text)
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -2460,7 +2482,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                                 label_widget.configure(image=ctk_img, text="")
                         except Exception:
                             pass
-                    self.after(0, update)
+                    self.run_on_ui_thread(update)
             except Exception:
                 pass
         threading.Thread(target=task, daemon=True).start()
@@ -2911,7 +2933,7 @@ class YouTubeDownloaderApp(ctk.CTk):
     def _on_queue_updated_threadsafe(self):
         if not getattr(self, "_queue_refresh_scheduled", False):
             self._queue_refresh_scheduled = True
-            self.after(40, self._do_refresh_queue_ui)
+            self.run_on_ui_thread(self._do_refresh_queue_ui)
 
     def _do_refresh_queue_ui(self):
         self._queue_refresh_scheduled = False
@@ -2927,7 +2949,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             )
             self._update_telemetry_ui()
             self._update_queue_badge()
-        self.after(0, on_done)
+        self.run_on_ui_thread(on_done)
 
     def _update_queue_badge(self):
         stats = self.queue_mgr.get_stats()
@@ -3993,7 +4015,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                             "Software Up to Date",
                             f"You are currently running {APP_NAME} {APP_VERSION}.\n\nNo newer updates are available at this time."
                         )
-                self.after(0, on_done)
+                self.run_on_ui_thread(on_done)
             except Exception as e:
                 def on_err():
                     if hasattr(self, "settings_check_update_btn") and self.settings_check_update_btn.winfo_exists():
@@ -4125,7 +4147,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                             current_entry = self.url_var.get().strip()
                             if clip != current_entry:
                                 self._show_clipboard_banner(clip)
-                        self.after(0, on_valid_clip)
+                        self.run_on_ui_thread(on_valid_clip)
             except Exception:
                 pass
 
@@ -4230,10 +4252,10 @@ class YouTubeDownloaderApp(ctk.CTk):
         def task():
             try:
                 info = self.downloader.fetch_info(url)
-                self.after(0, self._on_info_fetched_success, info)
+                self.run_on_ui_thread(self._on_info_fetched_success, info)
             except Exception as e:
                 err_msg = str(e)
-                self.after(0, self._on_info_fetched_error, err_msg)
+                self.run_on_ui_thread(self._on_info_fetched_error, err_msg)
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -4280,6 +4302,9 @@ class YouTubeDownloaderApp(ctk.CTk):
             # ---------------- SINGLE VIDEO MODE (YouTube or TikTok) ----------------
             self.playlist_content.pack_forget()
             self.preview_content.pack(fill="both", expand=True)
+            self.preview_content.lift()
+            if hasattr(self, "thumb_label") and self.thumb_label.winfo_exists():
+                self.thumb_label.configure(image=None, text="⏳ Loading...", text_color=TEXT_MUTED)
 
             badge_text = "✓ TikTok Loaded (No Watermark)" if is_tiktok else "✓ Video Loaded"
             self.auto_badge.configure(text=badge_text, text_color=COLOR_SUCCESS, fg_color=COLOR_SUCCESS_BG)
@@ -4404,7 +4429,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                                 self.pl_thumb_label.configure(image=ctk_img, text="")
                         except Exception:
                             pass
-                    self.after(0, update_pl)
+                    self.run_on_ui_thread(update_pl)
             except Exception:
                 pass
 
@@ -4426,7 +4451,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 if resp.status_code == 200:
                     img_data = Image.open(BytesIO(resp.content))
                     self.raw_thumbnail_pil = img_data
-                    self.after(0, self._render_thumbnail_auto)
+                    self.run_on_ui_thread(self._render_thumbnail_auto)
             except Exception:
                 pass
 
@@ -5439,10 +5464,10 @@ class YouTubeDownloaderApp(ctk.CTk):
                         progress_callback=self._on_download_progress,
                         cancel_token=self.active_cancel_token
                     )
-                    self.after(0, self._on_playlist_download_success, files, format_type, quality)
+                    self.run_on_ui_thread(self._on_playlist_download_success, files, format_type, quality)
                 except Exception as e:
                     err_text = str(e)
-                    self.after(0, self._on_download_error, err_text)
+                    self.run_on_ui_thread(self._on_download_error, err_text)
 
             threading.Thread(target=playlist_task, daemon=True).start()
 
@@ -5465,15 +5490,15 @@ class YouTubeDownloaderApp(ctk.CTk):
                         progress_callback=self._on_download_progress,
                         cancel_token=self.active_cancel_token
                     )
-                    self.after(0, self._on_download_success, out_path, format_type, quality)
+                    self.run_on_ui_thread(self._on_download_success, out_path, format_type, quality)
                 except Exception as e:
                     err_text = str(e)
-                    self.after(0, self._on_download_error, err_text)
+                    self.run_on_ui_thread(self._on_download_error, err_text)
 
             threading.Thread(target=task, daemon=True).start()
 
     def _on_download_progress(self, data: Dict[str, Any]):
-        self.after(0, self._update_progress_ui, data)
+        self.run_on_ui_thread(self._update_progress_ui, data)
 
     def _update_progress_ui(self, data: Dict[str, Any]):
         is_pl = data.get("is_playlist", False)
