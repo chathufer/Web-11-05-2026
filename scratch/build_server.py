@@ -3,7 +3,8 @@ import os
 server_py_content = r'''"""
 Production License Server for Media Downloader Pro
 Provides secure REST APIs for activation, heartbeat verification, deactivation,
-key generation, automated CSV sales data sheet exports, and a full-featured Admin Control Center.
+key generation, automated CSV sales data sheet exports, gift/promotion management,
+and a full-featured Admin Control Center with Change History and 1-Click Rollback.
 """
 
 import os
@@ -39,6 +40,8 @@ from database import (
     revoke_license,
     unrevoke_license,
     delete_license,
+    list_history,
+    rollback_history,
     DEFAULT_PLAN_PRICES,
     DEFAULT_DB_PATH
 )
@@ -52,7 +55,7 @@ from keygen import (
 
 app = Flask(__name__)
 
-# Admin Security Key (defaults to master secret, can be set via env variable)
+# Admin Security Key
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "MDP_ADMIN_SECRET_KEY_2026")
 
 # Official Google Drive installer download link
@@ -317,6 +320,7 @@ def api_trial():
         customer_email="",
         customer_phone="",
         price_paid=0.0,
+        is_gift=1,
         payment_method="Free Promotion",
         expires_at=exp_str,
         max_activations=1,
@@ -393,7 +397,7 @@ def api_admin_license_details():
 @app.route("/api/v1/admin/generate", methods=["POST"])
 @require_admin
 def api_admin_generate():
-    """Generate single or batch customer licenses with sales tracking and WhatsApp delivery formatting."""
+    """Generate single or batch customer licenses with sales tracking, gift support, and WhatsApp delivery formatting."""
     data = request.get_json(silent=True) or {}
     plan = data.get("plan", "pro_lifetime")
     if plan not in PLAN_CODES:
@@ -402,11 +406,12 @@ def api_admin_generate():
     quantity = int(data.get("quantity", 1))
     quantity = max(1, min(quantity, 50))
 
+    is_gift = 1 if (data.get("is_gift") or data.get("payment_method") == "Gift / Promotional Giveaway") else 0
     customer_name = data.get("customer_name", "").strip()
     customer_phone = data.get("customer_phone", "").strip()
     customer_email = data.get("customer_email", "").strip()
-    price_paid = data.get("price_paid")
-    payment_method = data.get("payment_method", "WhatsApp Direct").strip()
+    price_paid = 0.0 if is_gift else data.get("price_paid")
+    payment_method = "Gift / Promotional Giveaway" if is_gift else data.get("payment_method", "WhatsApp Direct").strip()
     custom_days = data.get("custom_days")
     max_activations = int(data.get("max_activations", 3 if plan == "pro_lifetime" else (2 if plan == "pro_yearly" else 1)))
     notes = data.get("notes", "").strip()
@@ -424,6 +429,7 @@ def api_admin_generate():
             customer_email=customer_email,
             customer_phone=customer_phone,
             price_paid=float(price_paid) if (price_paid is not None and str(price_paid).strip() != "") else None,
+            is_gift=is_gift,
             payment_method=payment_method,
             expires_at=expires_at,
             max_activations=max_activations,
@@ -445,11 +451,15 @@ def api_admin_generate():
 @app.route("/api/v1/admin/update", methods=["POST"])
 @require_admin
 def api_admin_update():
-    """Update editable fields of an existing license."""
+    """Update editable fields of an existing license with audit logging."""
     data = request.get_json(silent=True) or {}
     key = data.get("key", "").strip()
     if not key:
         return jsonify({"status": "error", "message": "License key is required."}), 400
+
+    is_gift_val = None
+    if "is_gift" in data:
+        is_gift_val = 1 if data.get("is_gift") else 0
 
     success = update_license(
         license_key=key,
@@ -460,6 +470,7 @@ def api_admin_update():
         expires_at=data.get("expires_at"),
         max_activations=data.get("max_activations"),
         price_paid=data.get("price_paid"),
+        is_gift=is_gift_val,
         payment_method=data.get("payment_method"),
         notes=data.get("notes")
     )
@@ -560,6 +571,36 @@ def api_admin_export_csv():
     )
 
 
+@app.route("/api/v1/admin/history", methods=["GET"])
+@require_admin
+def api_admin_history():
+    """Fetch audit history log records."""
+    key = request.args.get("key", "").strip()
+    limit = int(request.args.get("limit", 100))
+    logs = list_history(license_key=key, limit=limit)
+    return jsonify({
+        "status": "success",
+        "count": len(logs),
+        "data": logs
+    })
+
+
+@app.route("/api/v1/admin/history/rollback", methods=["POST"])
+@require_admin
+def api_admin_history_rollback():
+    """Restore license to state prior to an accidental edit."""
+    data = request.get_json(silent=True) or {}
+    hist_id = data.get("history_id")
+    if not hist_id:
+        return jsonify({"status": "error", "message": "History record ID is required."}), 400
+
+    success, message = rollback_history(int(hist_id))
+    return jsonify({
+        "status": "success" if success else "error",
+        "message": message
+    }), (200 if success else 400)
+
+
 @app.route("/api/v1/admin/revoke", methods=["POST"])
 @require_admin
 def api_admin_revoke():
@@ -628,13 +669,14 @@ DASHBOARD_HTML = """
             --sapphire: #3b82f6;
             --ruby: #ef4444;
             --amber: #f59e0b;
+            --pink: #ec4899;
             --text-main: #f9fafb;
             --text-muted: #94a3b8;
             --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
         body { background: var(--bg-body); color: var(--text-main); min-height: 100vh; padding: 24px 16px 60px 16px; }
-        .container { max-width: 1380px; margin: 0 auto; }
+        .container { max-width: 1420px; margin: 0 auto; }
 
         /* Top Header */
         header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -704,6 +746,7 @@ DASHBOARD_HTML = """
         .pill-expired { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
         .pill-revoked { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
         .pill-trial { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+        .pill-gift { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
 
         .plan-tag { font-weight: 700; font-size: 12px; }
         .plan-lft { color: #f5a623; }
@@ -712,13 +755,17 @@ DASHBOARD_HTML = """
         .plan-tri { color: #2dd4bf; }
 
         /* Modals */
-        dialog { margin: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 14px; max-width: 600px; width: 92%; padding: 0; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); }
+        dialog { margin: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 14px; max-width: 650px; width: 92%; padding: 0; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); }
         dialog::backdrop { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
         .modal-body { padding: 24px; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
         .modal-header h3 { font-size: 18px; font-weight: 700; }
         .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
         .modal-close:hover { color: #fff; }
+
+        /* Checkbox styling */
+        .check-container { display: flex; align-items: center; gap: 10px; background: rgba(236, 72, 153, 0.08); border: 1.5px solid rgba(236, 72, 153, 0.3); padding: 10px 14px; border-radius: 8px; cursor: pointer; user-select: none; }
+        .check-container input[type="checkbox"] { width: 18px; height: 18px; accent-color: #ec4899; cursor: pointer; }
 
         /* Toast */
         .toast { position: fixed; bottom: 24px; right: 24px; background: #059669; color: #fff; padding: 12px 20px; border-radius: 8px; font-weight: 700; font-size: 13.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); z-index: 9999; display: none; }
@@ -748,7 +795,7 @@ DASHBOARD_HTML = """
                 <button class="btn" onclick="openKeyModal()" title="View or change current admin authorization key">
                     <span>🔑 Admin Key</span>
                 </button>
-                <button class="btn" onclick="fetchSummary(); fetchLicenses();" title="Refresh live records">
+                <button class="btn" onclick="fetchSummary(); fetchLicenses(); fetchHistory();" title="Refresh live records">
                     <span>🔄 Refresh</span>
                 </button>
             </div>
@@ -759,12 +806,17 @@ DASHBOARD_HTML = """
             <div class="kpi-card" style="--accent-bar: #f5a623;">
                 <div class="kpi-title">Gross Sales Revenue <span>💰</span></div>
                 <div class="kpi-val" id="kpi-total-rev" style="color: #f5a623;">$0.00</div>
-                <div class="kpi-sub" id="kpi-month-rev">This Month: $0.00</div>
+                <div class="kpi-sub" id="kpi-month-rev">This Month: $0.00 (Excl. Gifts)</div>
             </div>
             <div class="kpi-card" style="--accent-bar: #10b981;">
                 <div class="kpi-title">Active Pro Licenses <span>🔑</span></div>
                 <div class="kpi-val" id="kpi-active-lic" style="color: #34d399;">0</div>
                 <div class="kpi-sub" id="kpi-total-lic">Total Issued: 0</div>
+            </div>
+            <div class="kpi-card" style="--accent-bar: #ec4899;">
+                <div class="kpi-title">Gifts &amp; Promotions <span>🎁</span></div>
+                <div class="kpi-val" id="kpi-gift-lic" style="color: #f472b6;">0</div>
+                <div class="kpi-sub">$0.00 Revenue (Free Giveaways)</div>
             </div>
             <div class="kpi-card" style="--accent-bar: #3b82f6;">
                 <div class="kpi-title">Bound Devices (PCs) <span>💻</span></div>
@@ -772,8 +824,8 @@ DASHBOARD_HTML = """
                 <div class="kpi-sub">Physical Machines Active</div>
             </div>
             <div class="kpi-card" style="--accent-bar: #a78bfa;">
-                <div class="kpi-title">Tiers Breakdown <span>📦</span></div>
-                <div class="kpi-val" style="font-size: 15px; font-weight: 700; margin-top: 10px; line-height: 1.5;" id="kpi-tiers">
+                <div class="kpi-title">Paid Tiers Breakdown <span>📦</span></div>
+                <div class="kpi-val" style="font-size: 14px; font-weight: 700; margin-top: 8px; line-height: 1.5;" id="kpi-tiers">
                     Lifetime: 0 | Annual: 0<br>Monthly: 0 | Trial: 0
                 </div>
             </div>
@@ -783,6 +835,7 @@ DASHBOARD_HTML = """
         <div class="tabs-nav">
             <button class="tab-btn is-active" onclick="switchTab('tab-licenses')">📋 All Licenses &amp; Control Center</button>
             <button class="tab-btn" onclick="switchTab('tab-generate')">⚡ Generate &amp; Deliver Key</button>
+            <button class="tab-btn" onclick="switchTab('tab-history')">📜 Change History &amp; Rollback</button>
             <button class="tab-btn" onclick="switchTab('tab-sales')">📊 Sales Report &amp; Data Sheet</button>
             <button class="tab-btn" onclick="switchTab('tab-hwid')">🔍 HWID &amp; Device Inspector</button>
         </div>
@@ -803,8 +856,9 @@ DASHBOARD_HTML = """
                         <option value="pro_trial">7-Day Trial</option>
                     </select>
                     <select id="filter-status" onchange="fetchLicenses()" style="width: auto; padding: 8px 12px; font-size: 13px;">
-                        <option value="all">All Statuses</option>
-                        <option value="active">Active Only</option>
+                        <option value="all">All Categories</option>
+                        <option value="active">Active Paying Customers</option>
+                        <option value="gift">🎁 Gifts &amp; Promotions Only</option>
                         <option value="expired">Expired Only</option>
                         <option value="revoked">Revoked Only</option>
                         <option value="trial">Free Trials</option>
@@ -840,6 +894,19 @@ DASHBOARD_HTML = """
                     <span style="font-size: 12.5px; color: var(--text-muted);">Generate official key and prepare 1-click WhatsApp delivery message</span>
                 </div>
                 <form id="form-generate" onsubmit="handleGenerateKey(event)">
+                    <!-- Gift / Promotion Checkbox -->
+                    <div style="margin-bottom: 18px;">
+                        <label class="check-container">
+                            <input type="checkbox" id="gen-is-gift" onchange="toggleGenGift(this.checked)">
+                            <div>
+                                <strong style="color: #f472b6; font-size: 13.5px;">🎁 Mark as Gift / Promotional Giveaway</strong>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                    This key will be issued for free ($0.00) and strictly EXCLUDED from your Sales Revenue statistics.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Subscription Tier</label>
@@ -872,7 +939,7 @@ DASHBOARD_HTML = """
                                 <option value="Bank Transfer">Bank Transfer</option>
                                 <option value="Crypto">Crypto (USDT / BTC)</option>
                                 <option value="Card">Credit / Debit Card</option>
-                                <option value="Free Promo">Free Promo / Gift</option>
+                                <option value="Gift / Promotional Giveaway">Gift / Promotional Giveaway</option>
                             </select>
                         </div>
                     </div>
@@ -904,7 +971,7 @@ DASHBOARD_HTML = """
 
                     <div class="form-group" style="margin-bottom: 18px;">
                         <label>Internal Admin Notes (Optional)</label>
-                        <input type="text" id="gen-notes" placeholder="e.g. Paid via WhatsApp chat, invoice #402">
+                        <input type="text" id="gen-notes" placeholder="e.g. Giveaway contest winner, or paid via WhatsApp #402">
                     </div>
 
                     <button type="submit" class="btn btn-gold" style="padding: 12px 24px; font-size: 14px;">
@@ -914,7 +981,47 @@ DASHBOARD_HTML = """
             </div>
         </div>
 
-        <!-- TAB 3: SALES REPORT & DATA SHEET EXPORTS -->
+        <!-- TAB 3: AUDIT & CHANGE HISTORY WITH 1-CLICK ROLLBACK -->
+        <div class="tab-content" id="tab-history">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3>📜 Change History &amp; Accidental Edit Rollback</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                            Every license creation, modification, extension, revocation, and device reset is recorded below.
+                            If an accidental edit was made, click <strong>⏪ Restore State</strong> to immediately revert back.
+                        </p>
+                    </div>
+                    <button class="btn btn-sm" onclick="fetchHistory()">🔄 Refresh History</button>
+                </div>
+
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="history-search" placeholder="Filter history logs by Key or Summary..." oninput="renderHistoryTable()">
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp (UTC)</th>
+                                <th>License Key</th>
+                                <th>Action</th>
+                                <th>Change Summary</th>
+                                <th>Undo / Restore</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">Loading audit change history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: SALES REPORT & DATA SHEET EXPORTS -->
         <div class="tab-content" id="tab-sales">
             <div class="card">
                 <div class="card-header">
@@ -932,18 +1039,21 @@ DASHBOARD_HTML = """
                         <a href="/api/v1/admin/export_csv?scope=active" id="btnExportActive" class="btn">
                             <span>👥 Download Active Pro Users (.CSV)</span>
                         </a>
+                        <a href="/api/v1/admin/export_csv?scope=gifts" id="btnExportGifts" class="btn">
+                            <span>🎁 Download Gifts &amp; Promos (.CSV)</span>
+                        </a>
                     </div>
                 </div>
 
                 <div style="margin-top: 20px;">
-                    <h4 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Sales by Subscription Tier</h4>
+                    <h4 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Sales by Subscription Tier (Paid Sales Only)</h4>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Tier / Plan</th>
                                     <th>Standard Price</th>
-                                    <th>Licenses Sold</th>
+                                    <th>Paid Licenses Sold</th>
                                     <th>Total Revenue</th>
                                 </tr>
                             </thead>
@@ -956,7 +1066,7 @@ DASHBOARD_HTML = """
             </div>
         </div>
 
-        <!-- TAB 4: HWID & DEVICE INSPECTOR -->
+        <!-- TAB 5: HWID & DEVICE INSPECTOR -->
         <div class="tab-content" id="tab-hwid">
             <div class="card">
                 <div class="card-header">
@@ -1051,6 +1161,17 @@ DASHBOARD_HTML = """
             </div>
             <form onsubmit="handleSaveEdit(event)">
                 <input type="hidden" id="edit-key">
+
+                <div style="margin-bottom: 14px;">
+                    <label class="check-container">
+                        <input type="checkbox" id="edit-is-gift" onchange="toggleEditGift(this.checked)">
+                        <div>
+                            <strong style="color: #f472b6; font-size: 13px;">🎁 Mark as Gift / Promotional Giveaway</strong>
+                            <div style="font-size: 11.5px; color: var(--text-muted);">Excluded from sales revenue calculation.</div>
+                        </div>
+                    </label>
+                </div>
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Customer Name</label>
@@ -1126,6 +1247,7 @@ DASHBOARD_HTML = """
         let activeAdminKey = localStorage.getItem("mdp_admin_key") || DEFAULT_KEY;
         let currentModalKey = "";
         let searchTimer = null;
+        let historyLogs = [];
 
         function updateExportLinks() {
             const encoded = encodeURIComponent(activeAdminKey);
@@ -1133,10 +1255,12 @@ DASHBOARD_HTML = """
             const exp2 = document.getElementById('btnExportAll2');
             const exp3 = document.getElementById('btnExportMonth');
             const exp4 = document.getElementById('btnExportActive');
+            const exp5 = document.getElementById('btnExportGifts');
             if (exp1) exp1.href = '/api/v1/admin/export_csv?scope=all&admin_key=' + encoded;
             if (exp2) exp2.href = '/api/v1/admin/export_csv?scope=all&admin_key=' + encoded;
             if (exp3) exp3.href = '/api/v1/admin/export_csv?scope=month&admin_key=' + encoded;
             if (exp4) exp4.href = '/api/v1/admin/export_csv?scope=active&admin_key=' + encoded;
+            if (exp5) exp5.href = '/api/v1/admin/export_csv?scope=gifts&admin_key=' + encoded;
             document.cookie = "admin_key=" + encoded + "; path=/; max-age=2592000";
         }
 
@@ -1147,9 +1271,36 @@ DASHBOARD_HTML = """
             if (targetBtn) targetBtn.classList.add('is-active');
             const targetContent = document.getElementById(tabId);
             if (targetContent) targetContent.classList.add('is-active');
+
+            if (tabId === 'tab-history') {
+                fetchHistory();
+            }
+        }
+
+        function toggleGenGift(checked) {
+            const priceIn = document.getElementById('gen-price');
+            const methodIn = document.getElementById('gen-method');
+            if (checked) {
+                priceIn.value = '0.00';
+                methodIn.value = 'Gift / Promotional Giveaway';
+            } else {
+                updateGenPriceDefault();
+                methodIn.value = 'WhatsApp Direct';
+            }
+        }
+
+        function toggleEditGift(checked) {
+            const priceIn = document.getElementById('edit-price');
+            if (checked) {
+                priceIn.value = '0.00';
+            }
         }
 
         function updateGenPriceDefault() {
+            if (document.getElementById('gen-is-gift').checked) {
+                document.getElementById('gen-price').value = '0.00';
+                return;
+            }
             const plan = document.getElementById('gen-plan').value;
             const priceIn = document.getElementById('gen-price');
             const maxActs = document.getElementById('gen-max-acts');
@@ -1167,15 +1318,16 @@ DASHBOARD_HTML = """
                 if (json.status === 'success') {
                     const d = json.data;
                     document.getElementById('kpi-total-rev').innerText = '$' + d.total_revenue.toFixed(2);
-                    document.getElementById('kpi-month-rev').innerText = 'This Month: $' + d.month_revenue.toFixed(2);
+                    document.getElementById('kpi-month-rev').innerText = 'This Month: $' + d.month_revenue.toFixed(2) + ' (Excl. Gifts)';
                     document.getElementById('kpi-active-lic').innerText = d.active_licenses;
                     document.getElementById('kpi-total-lic').innerText = 'Total Issued: ' + d.total_licenses;
+                    document.getElementById('kpi-gift-lic').innerText = d.gift_licenses || 0;
                     document.getElementById('kpi-devices').innerText = d.total_active_devices;
 
                     const p = d.plans_breakdown;
                     document.getElementById('kpi-tiers').innerHTML = `
                         Lifetime: ${p.pro_lifetime.count} ($${p.pro_lifetime.revenue.toFixed(0)}) &middot; Annual: ${p.pro_yearly.count} ($${p.pro_yearly.revenue.toFixed(0)})<br>
-                        Monthly: ${p.pro_monthly.count} ($${p.pro_monthly.revenue.toFixed(0)}) &middot; Free Trials: ${p.pro_trial.count}
+                        Monthly: ${p.pro_monthly.count} ($${p.pro_monthly.revenue.toFixed(0)}) &middot; Trials: ${p.pro_trial.count}
                     `;
 
                     renderSalesBreakdown(p);
@@ -1247,7 +1399,8 @@ DASHBOARD_HTML = """
                 if (lic.plan === 'pro_trial') planClass = 'plan-tri';
 
                 const expStr = lic.expires_at ? lic.expires_at.split('T')[0] : 'Lifetime';
-                const priceStr = '$' + (lic.price_paid || 0).toFixed(2);
+                const isGift = lic.is_gift === 1;
+                const priceStr = isGift ? '<span style="color:#f472b6; font-weight:700;">$0.00 (Gift)</span>' : ('$' + (lic.price_paid || 0).toFixed(2));
 
                 tr.innerHTML = `
                     <td>
@@ -1255,6 +1408,7 @@ DASHBOARD_HTML = """
                             ${lic.license_key}
                             <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </span>
+                        ${isGift ? '<br><span class="pill pill-gift" style="margin-top:4px;">🎁 GIFT / PROMO</span>' : ''}
                     </td>
                     <td>
                         <strong>${lic.customer_name || 'Valued Customer'}</strong><br>
@@ -1277,7 +1431,7 @@ DASHBOARD_HTML = """
                             <button class="btn btn-sm btn-emerald" onclick="openWaModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${lic.plan_title}', '${expStr}', ${lic.max_activations})" title="Generate WhatsApp delivery message">
                                 📱 Deliver
                             </button>
-                            <button class="btn btn-sm" onclick="openEditModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${escapeJs(lic.customer_phone)}', '${escapeJs(lic.customer_email)}', '${lic.plan}', ${lic.price_paid || 0}, ${lic.max_activations}, '${escapeJs(lic.notes)}')">
+                            <button class="btn btn-sm" onclick="openEditModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${escapeJs(lic.customer_phone)}', '${escapeJs(lic.customer_email)}', '${lic.plan}', ${lic.price_paid || 0}, ${lic.is_gift || 0}, ${lic.max_activations}, '${escapeJs(lic.notes)}')">
                                 ✏️ Edit
                             </button>
                             <button class="btn btn-sm" onclick="extendKeyPrompt('${lic.license_key}')" title="Extend expiration or make lifetime">
@@ -1295,6 +1449,101 @@ DASHBOARD_HTML = """
             });
         }
 
+        async function fetchHistory() {
+            try {
+                const res = await fetch('/api/v1/admin/history?admin_key=' + encodeURIComponent(activeAdminKey) + '&limit=120');
+                if (res.status === 401) { openKeyModal(); return; }
+                const json = await res.json();
+                if (json.status === 'success') {
+                    historyLogs = json.data || [];
+                    renderHistoryTable();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-tbody');
+            const search = (document.getElementById('history-search')?.value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            const filtered = historyLogs.filter(h => {
+                if (!search) return true;
+                return (h.license_key + ' ' + h.summary + ' ' + h.action).toLowerCase().includes(search);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">No change history records logged yet.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(h => {
+                const tr = document.createElement('tr');
+                const dtStr = h.created_at ? h.created_at.replace('T', ' ').split('.')[0] : '';
+
+                let actColor = '#94a3b8';
+                if (h.action === 'CREATE') actColor = '#60a5fa';
+                else if (h.action === 'EDIT') actColor = '#f59e0b';
+                else if (h.action === 'EXTEND') actColor = '#a78bfa';
+                else if (h.action === 'REVOKE') actColor = '#ef4444';
+                else if (h.action === 'UNREVOKE') actColor = '#10b981';
+                else if (h.action === 'ROLLBACK') actColor = '#06b6d4';
+                else if (h.action.includes('DEVICE')) actColor = '#3b82f6';
+
+                const canRollback = !!h.previous_state;
+
+                tr.innerHTML = `
+                    <td><small style="color:var(--text-muted); font-family:var(--font-mono);">${dtStr}</small></td>
+                    <td>
+                        <span class="key-badge" onclick="copyKey('${h.license_key}')">
+                            ${h.license_key}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="pill" style="background: rgba(255,255,255,0.06); color: ${actColor}; border: 1px solid ${actColor}44;">
+                            ${h.action}
+                        </span>
+                    </td>
+                    <td>
+                        <strong style="color: #fff; font-size: 13px;">${h.summary}</strong>
+                    </td>
+                    <td>
+                        ${canRollback ?
+                            `<button class="btn btn-sm btn-gold" onclick="rollbackChange(${h.id}, '${h.license_key}')" title="Revert to state before this change">
+                                ⏪ Restore State
+                            </button>` :
+                            '<small style="color:var(--text-muted);">&mdash;</small>'
+                        }
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function rollbackChange(histId, key) {
+            if (!confirm(`Are you sure you want to REVERT accidental change on license ${key}? This will restore all fields to their exact values prior to this edit.`)) return;
+
+            try {
+                const res = await fetch('/api/v1/admin/history/rollback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    body: JSON.stringify({ history_id: histId })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast('License restored to previous state!');
+                    fetchHistory();
+                    fetchLicenses();
+                    fetchSummary();
+                } else {
+                    alert('Error: ' + json.message);
+                }
+            } catch (err) {
+                alert('Network error during rollback: ' + err);
+            }
+        }
+
         function escapeJs(str) {
             return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
@@ -1303,8 +1552,9 @@ DASHBOARD_HTML = """
             e.preventDefault();
             const plan = document.getElementById('gen-plan').value;
             const quantity = parseInt(document.getElementById('gen-qty').value) || 1;
-            const price_paid = parseFloat(document.getElementById('gen-price').value) || 0.0;
-            const payment_method = document.getElementById('gen-method').value;
+            const is_gift = document.getElementById('gen-is-gift').checked ? 1 : 0;
+            const price_paid = is_gift ? 0.0 : (parseFloat(document.getElementById('gen-price').value) || 0.0);
+            const payment_method = is_gift ? 'Gift / Promotional Giveaway' : document.getElementById('gen-method').value;
             const customer_name = document.getElementById('gen-name').value.trim();
             const customer_phone = document.getElementById('gen-phone').value.trim();
             const customer_email = document.getElementById('gen-email').value.trim();
@@ -1316,7 +1566,7 @@ DASHBOARD_HTML = """
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
                     body: JSON.stringify({
-                        plan, quantity, price_paid, payment_method,
+                        plan, quantity, price_paid, is_gift, payment_method,
                         customer_name, customer_phone, customer_email,
                         max_activations, notes
                     })
@@ -1326,6 +1576,7 @@ DASHBOARD_HTML = """
                     showToast(`Generated ${json.count} license key(s)!`);
                     fetchSummary();
                     fetchLicenses();
+                    fetchHistory();
 
                     if (json.count === 1) {
                         const d = json.data;
@@ -1424,6 +1675,7 @@ ${installerUrl}
                     openDevicesModal(currentModalKey);
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
                 } else {
                     alert('Error: ' + json.message);
                 }
@@ -1446,13 +1698,14 @@ ${installerUrl}
                     openDevicesModal(currentModalKey);
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
                 }
             } catch (err) {
                 alert('Error: ' + err);
             }
         }
 
-        function openEditModal(key, name, phone, email, plan, price, maxActs, notes) {
+        function openEditModal(key, name, phone, email, plan, price, isGift, maxActs, notes) {
             document.getElementById('edit-key').value = key;
             document.getElementById('edit-modal-key').innerText = key;
             document.getElementById('edit-name').value = name || '';
@@ -1460,6 +1713,7 @@ ${installerUrl}
             document.getElementById('edit-email').value = email || '';
             document.getElementById('edit-plan').value = plan || 'pro_lifetime';
             document.getElementById('edit-price').value = price || 0;
+            document.getElementById('edit-is-gift').checked = isGift === 1;
             document.getElementById('edit-max-acts').value = maxActs || 3;
             document.getElementById('edit-notes').value = notes || '';
             document.getElementById('modal-edit').showModal();
@@ -1472,7 +1726,9 @@ ${installerUrl}
             const customer_phone = document.getElementById('edit-phone').value.trim();
             const customer_email = document.getElementById('edit-email').value.trim();
             const plan = document.getElementById('edit-plan').value;
-            const price_paid = parseFloat(document.getElementById('edit-price').value) || 0;
+            const is_gift = document.getElementById('edit-is-gift').checked ? 1 : 0;
+            const price_paid = is_gift ? 0.0 : (parseFloat(document.getElementById('edit-price').value) || 0);
+            const payment_method = is_gift ? 'Gift / Promotional Giveaway' : 'WhatsApp / Admin';
             const max_activations = parseInt(document.getElementById('edit-max-acts').value) || 1;
             const notes = document.getElementById('edit-notes').value.trim();
 
@@ -1482,7 +1738,7 @@ ${installerUrl}
                     headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
                     body: JSON.stringify({
                         key, customer_name, customer_phone, customer_email,
-                        plan, price_paid, max_activations, notes
+                        plan, price_paid, is_gift, payment_method, max_activations, notes
                     })
                 });
                 const json = await res.json();
@@ -1491,6 +1747,7 @@ ${installerUrl}
                     document.getElementById('modal-edit').close();
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
                 } else {
                     alert('Error: ' + json.message);
                 }
@@ -1522,6 +1779,7 @@ ${installerUrl}
                 if (json.status === 'success') {
                     showToast(json.message);
                     fetchLicenses();
+                    fetchHistory();
                 } else {
                     alert('Error: ' + json.message);
                 }
@@ -1543,6 +1801,7 @@ ${installerUrl}
                     showToast('License terminated.');
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
                 }
             } catch (err) {
                 alert('Error: ' + err);
@@ -1561,6 +1820,7 @@ ${installerUrl}
                     showToast('License restored.');
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
                 }
             } catch (err) {
                 alert('Error: ' + err);
@@ -1580,6 +1840,9 @@ ${installerUrl}
                     showToast('License permanently deleted.');
                     fetchLicenses();
                     fetchSummary();
+                    fetchHistory();
+                } else {
+                    alert('Error: ' + json.message);
                 }
             } catch (err) {
                 alert('Error: ' + err);
@@ -1635,6 +1898,7 @@ ${installerUrl}
                 showToast('Admin key saved.');
                 fetchSummary();
                 fetchLicenses();
+                fetchHistory();
             }
         }
 
@@ -1655,6 +1919,7 @@ ${installerUrl}
         updateExportLinks();
         fetchSummary();
         fetchLicenses();
+        fetchHistory();
     </script>
 </body>
 </html>
@@ -1684,4 +1949,4 @@ if __name__ == "__main__":
 
 with open(r"backend\server.py", "w", encoding="utf-8") as f:
     f.write(server_py_content)
-print("backend/server.py written successfully!")
+print("backend/server.py built successfully!")

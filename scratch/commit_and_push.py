@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "feat(backend): full license control center, batch keygen, WhatsApp delivery generator, HWID manager, and CSV sales data sheet export"
+commit_msg = "feat(backend): add audit change history with 1-click rollback and gift/promotions revenue exclusion"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
