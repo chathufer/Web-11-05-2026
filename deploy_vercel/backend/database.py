@@ -1,13 +1,16 @@
 """
 SQLite Database Layer for Media Downloader Pro License Server.
 Stores licenses, device activations, expiration tracking, sales data,
-revocation states, gift/promotional flags, and complete audit change history with rollback capability.
+revocation states, gift/promotional flags, audit change history with rollback,
+and administrator user accounts with salted password hashing.
 """
 
 import os
 import sqlite3
 import json
 import shutil
+import hashlib
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
 
@@ -44,6 +47,23 @@ else:
     DEFAULT_DB_PATH = bundled_db
 
 
+def hash_password(password: str) -> str:
+    """Generate salted PBKDF2-HMAC-SHA256 password hash."""
+    salt = secrets.token_hex(16)
+    pw_hash = hashlib.pbkdf2_hmac("sha256", password.strip().encode("utf-8"), salt.encode("utf-8"), 100000).hex()
+    return f"{salt}:{pw_hash}"
+
+
+def verify_password(stored: str, provided: str) -> bool:
+    """Verify provided password against salted PBKDF2 hash."""
+    try:
+        salt, pw_hash = stored.strip().split(":", 1)
+        test_hash = hashlib.pbkdf2_hmac("sha256", provided.strip().encode("utf-8"), salt.encode("utf-8"), 100000).hex()
+        return secrets.compare_digest(pw_hash, test_hash)
+    except Exception:
+        return False
+
+
 def get_connection(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -51,7 +71,7 @@ def get_connection(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
 
 
 def init_db(db_path: str = DEFAULT_DB_PATH):
-    """Initialize database tables with indexes and safe schema migrations."""
+    """Initialize database tables with indexes, admin accounts, and safe schema migrations."""
     conn = get_connection(db_path)
     cursor = conn.cursor()
 
@@ -99,6 +119,17 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS admin_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'admin',
+        created_at TEXT NOT NULL,
+        last_login TEXT
+    )
+    """)
+
     # Safe schema migration for older DBs
     cursor.execute("PRAGMA table_info(licenses)")
     columns = [col[1] for col in cursor.fetchall()]
@@ -135,10 +166,197 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_activation_hwid ON activations(hwid)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_key ON license_history(license_key)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_created ON license_history(created_at)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_admin_username ON admin_users(username)")
+
+    # Seed default superadmin ('admin' / 'admin2026!') and guest ('guest' / 'guest123')
+    cursor.execute("SELECT COUNT(*) FROM admin_users")
+    if cursor.fetchone()[0] == 0:
+        now_iso = datetime.utcnow().isoformat()
+        admin_pw = hash_password("admin2026!")
+        guest_pw = hash_password("guest123")
+        cursor.execute("""
+            INSERT INTO admin_users (username, password_hash, role, created_at)
+            VALUES ('admin', ?, 'superadmin', ?)
+        """, (admin_pw, now_iso))
+        cursor.execute("""
+            INSERT INTO admin_users (username, password_hash, role, created_at)
+            VALUES ('guest', ?, 'guest', ?)
+        """, (guest_pw, now_iso))
 
     conn.commit()
     conn.close()
 
+
+# ---------------- ADMIN USER MANAGEMENT ----------------
+
+def authenticate_admin_user(
+    username: str,
+    password: str,
+    db_path: str = DEFAULT_DB_PATH
+) -> Optional[Dict[str, Any]]:
+    """Validate credentials and return user profile if correct."""
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM admin_users WHERE username = ?", (username.strip().lower(),))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return None
+
+    user = dict(row)
+    if not verify_password(user["password_hash"], password):
+        conn.close()
+        return None
+
+    now_iso = datetime.utcnow().isoformat()
+    cursor.execute("UPDATE admin_users SET last_login = ? WHERE id = ?", (now_iso, user["id"]))
+    conn.commit()
+    conn.close()
+
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "role": user["role"],
+        "created_at": user["created_at"],
+        "last_login": now_iso
+    }
+
+
+def create_admin_user(
+    username: str,
+    password: str,
+    role: str = "admin",
+    db_path: str = DEFAULT_DB_PATH
+) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
+    """Create a new administrator or guest account."""
+    clean_user = username.strip().lower()
+    if len(clean_user) < 3:
+        return False, "Username must be at least 3 characters long.", None
+    if len(password.strip()) < 6:
+        return False, "Password must be at least 6 characters long.", None
+    if role not in ["superadmin", "admin", "guest"]:
+        role = "admin"
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM admin_users WHERE username = ?", (clean_user,))
+    if cursor.fetchone():
+        conn.close()
+        return False, f"Username '{clean_user}' already exists.", None
+
+    now_iso = datetime.utcnow().isoformat()
+    pw_hash = hash_password(password.strip())
+
+    cursor.execute("""
+        INSERT INTO admin_users (username, password_hash, role, created_at)
+        VALUES (?, ?, ?, ?)
+    """, (clean_user, pw_hash, role, now_iso))
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
+
+    result = {
+        "id": new_id,
+        "username": clean_user,
+        "role": role,
+        "created_at": now_iso,
+        "last_login": None
+    }
+
+    log_history(
+        license_key="SYSTEM_AUTH",
+        action="ADMIN_CREATE",
+        summary=f"Created new admin account '{clean_user}' (Role: {role})",
+        previous_state=None,
+        new_state=result,
+        db_path=db_path
+    )
+
+    return True, f"Admin account '{clean_user}' created successfully.", result
+
+
+def reset_admin_password(
+    username: str,
+    new_password: str,
+    db_path: str = DEFAULT_DB_PATH
+) -> Tuple[bool, str]:
+    """Set a new password for an administrator account."""
+    clean_user = username.strip().lower()
+    if len(new_password.strip()) < 6:
+        return False, "New password must be at least 6 characters long."
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM admin_users WHERE username = ?", (clean_user,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return False, f"Admin user '{clean_user}' not found."
+
+    pw_hash = hash_password(new_password.strip())
+    cursor.execute("UPDATE admin_users SET password_hash = ? WHERE id = ?", (pw_hash, row["id"]))
+    conn.commit()
+    conn.close()
+
+    log_history(
+        license_key="SYSTEM_AUTH",
+        action="ADMIN_PW_RESET",
+        summary=f"Password was reset for admin account '{clean_user}'",
+        previous_state=None,
+        new_state={"username": clean_user},
+        db_path=db_path
+    )
+
+    return True, f"Password for '{clean_user}' has been updated successfully."
+
+
+def delete_admin_user(
+    username: str,
+    current_user: str = "",
+    db_path: str = DEFAULT_DB_PATH
+) -> Tuple[bool, str]:
+    """Remove an administrator account."""
+    clean_user = username.strip().lower()
+    if clean_user == "admin":
+        return False, "The primary superadmin account 'admin' cannot be deleted."
+    if current_user and clean_user == current_user.strip().lower():
+        return False, "You cannot delete your own currently active account."
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM admin_users WHERE username = ?", (clean_user,))
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+
+    if deleted:
+        log_history(
+            license_key="SYSTEM_AUTH",
+            action="ADMIN_DELETE",
+            summary=f"Deleted admin account '{clean_user}'",
+            previous_state={"username": clean_user},
+            new_state=None,
+            db_path=db_path
+        )
+        return True, f"Admin user '{clean_user}' deleted successfully."
+    return False, f"Admin user '{clean_user}' not found."
+
+
+def list_admin_users(db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:
+    """Fetch list of all administrators and guest users."""
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, role, created_at, last_login FROM admin_users ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+# ---------------- AUDIT LOGGING & ROLLBACK ----------------
 
 def log_history(
     license_key: str,
@@ -273,6 +491,8 @@ def rollback_history(history_id: int, db_path: str = DEFAULT_DB_PATH) -> Tuple[b
     conn.close()
     return True, f"Successfully restored license {key} back to state prior to log #{history_id}."
 
+
+# ---------------- LICENSE OPERATIONS ----------------
 
 def create_license(
     license_key: str,

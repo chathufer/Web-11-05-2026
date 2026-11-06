@@ -2,7 +2,7 @@
 Production License Server for Media Downloader Pro
 Provides secure REST APIs for activation, heartbeat verification, deactivation,
 key generation, automated CSV sales data sheet exports, gift/promotion management,
-and a full-featured Admin Control Center with Change History and 1-Click Rollback.
+audit change history with 1-click rollback, and role-based Admin / Guest authentication & user management.
 """
 
 import os
@@ -10,10 +10,13 @@ import io
 import csv
 import sys
 import json
+import hmac
+import hashlib
+import secrets
 from datetime import datetime
 from functools import wraps
 
-from flask import Flask, request, jsonify, render_template_string, send_file, redirect, Response
+from flask import Flask, request, jsonify, render_template_string, send_file, redirect, Response, make_response
 
 # Add parent directory to sys.path so backend modules import cleanly
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +43,11 @@ from database import (
     delete_license,
     list_history,
     rollback_history,
+    authenticate_admin_user,
+    create_admin_user,
+    reset_admin_password,
+    delete_admin_user,
+    list_admin_users,
     DEFAULT_PLAN_PRICES,
     DEFAULT_DB_PATH
 )
@@ -48,12 +56,13 @@ from keygen import (
     format_license_key,
     calculate_expiry,
     sign_license_payload,
-    PLAN_CODES
+    PLAN_CODES,
+    MASTER_SECRET
 )
 
 app = Flask(__name__)
 
-# Admin Security Key
+# Legacy Admin Security Key (still accepted for backwards compatibility with tests & scripts)
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "MDP_ADMIN_SECRET_KEY_2026")
 
 # Official Google Drive installer download link
@@ -72,17 +81,90 @@ PLAN_NAMES = {
 }
 
 
+# ---------------- CRYPTOGRAPHIC AUTH TOKEN UTILITIES ----------------
+
+def create_auth_token(username: str, role: str) -> str:
+    """Generate cryptographically HMAC-signed 30-day session token."""
+    exp = int(datetime.utcnow().timestamp()) + (30 * 86400)
+    data = f"{username}|{role}|{exp}"
+    sig = hmac.new(MASTER_SECRET, data.encode('utf-8'), hashlib.sha256).hexdigest()[:20]
+    return f"{data}|{sig}"
+
+
+def verify_auth_token(token: str):
+    """Verify auth token validity, expiration, and HMAC signature."""
+    try:
+        if not token or not isinstance(token, str):
+            return None
+        parts = token.strip().split("|")
+        if len(parts) != 4:
+            return None
+        username, role, exp_str, sig = parts
+        exp = int(exp_str)
+        if int(datetime.utcnow().timestamp()) > exp:
+            return None
+        data = f"{username}|{role}|{exp}"
+        expected_sig = hmac.new(MASTER_SECRET, data.encode('utf-8'), hashlib.sha256).hexdigest()[:20]
+        if secrets.compare_digest(sig, expected_sig):
+            return {"username": username, "role": role}
+    except Exception:
+        pass
+    return None
+
+
 def require_admin(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        key = (
-            request.headers.get("X-Admin-Key")
-            or request.args.get("admin_key")
-            or request.cookies.get("admin_key")
-            or (request.is_json and request.json.get("admin_key"))
-        )
-        if not key or key != ADMIN_API_KEY:
-            return jsonify({"status": "error", "message": "Unauthorized. Invalid Admin API Key."}), 401
+        # 1. Extract token from header, cookie, or query param
+        auth_header = request.headers.get("Authorization", "")
+        token = ""
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        if not token:
+            token = (
+                request.headers.get("X-Admin-Token")
+                or request.cookies.get("admin_token")
+                or request.args.get("token")
+            )
+
+        user_info = verify_auth_token(token) if token else None
+
+        # 2. Check legacy admin key for CLI / test script compatibility
+        if not user_info:
+            legacy_key = (
+                request.headers.get("X-Admin-Key")
+                or request.args.get("admin_key")
+                or request.cookies.get("admin_key")
+                or (request.is_json and request.json.get("admin_key"))
+            )
+            if legacy_key and legacy_key == ADMIN_API_KEY:
+                user_info = {"username": "admin", "role": "superadmin"}
+
+        if not user_info:
+            return jsonify({"status": "error", "message": "Unauthorized. Please log in with admin or guest credentials."}), 401
+
+        request.admin_user = user_info
+
+        # 3. Check guest permissions: Guests are strictly READ-ONLY
+        if user_info.get("role") == "guest" and request.method not in ["GET", "HEAD", "OPTIONS"]:
+            return jsonify({
+                "status": "error",
+                "message": "Permission denied. Guest accounts are in read-only mode and cannot modify licenses, system settings, or admin users."
+            }), 403
+
+        return f(*args, **kwargs)
+    return decorated
+
+
+def require_superadmin_or_admin(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user = getattr(request, "admin_user", None)
+        if not user or user.get("role") not in ["superadmin", "admin"]:
+            return jsonify({
+                "status": "error",
+                "message": "Permission denied. Administrator privileges required."
+            }), 403
         return f(*args, **kwargs)
     return decorated
 
@@ -348,7 +430,113 @@ def api_trial():
     })
 
 
-# ---------------- API ENDPOINTS (ADMIN CONTROL & SALES MANAGEMENT) ----------------
+# ---------------- ADMIN AUTHENTICATION & USER MANAGEMENT ENDPOINTS ----------------
+
+@app.route("/api/v1/admin/login", methods=["POST"])
+def api_admin_login():
+    """Authenticate admin or guest with username and password, returning 30-day token."""
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Username and password are required."}), 400
+
+    user = authenticate_admin_user(username, password)
+    if not user:
+        return jsonify({"status": "error", "message": "Invalid username or password."}), 401
+
+    token = create_auth_token(user["username"], user["role"])
+
+    resp = make_response(jsonify({
+        "status": "success",
+        "message": f"Welcome back, {user['username']}!",
+        "token": token,
+        "user": user
+    }))
+    # Set 30-day cookie for direct browser actions (CSV downloads)
+    resp.set_cookie("admin_token", token, max_age=2592000, path="/", samesite="Lax")
+    return resp
+
+
+@app.route("/api/v1/admin/logout", methods=["POST", "GET"])
+def api_admin_logout():
+    """Log out current session and clear cookie."""
+    resp = make_response(jsonify({"status": "success", "message": "Logged out successfully."}))
+    resp.delete_cookie("admin_token", path="/")
+    return resp
+
+
+@app.route("/api/v1/admin/me", methods=["GET"])
+@require_admin
+def api_admin_me():
+    """Return profile of currently authenticated admin or guest."""
+    return jsonify({
+        "status": "success",
+        "user": request.admin_user
+    })
+
+
+@app.route("/api/v1/admin/users/list", methods=["GET"])
+@require_admin
+@require_superadmin_or_admin
+def api_admin_users_list():
+    """List all administrator accounts (Admin privilege required)."""
+    users = list_admin_users()
+    return jsonify({
+        "status": "success",
+        "count": len(users),
+        "data": users
+    })
+
+
+@app.route("/api/v1/admin/users/create", methods=["POST"])
+@require_admin
+@require_superadmin_or_admin
+def api_admin_users_create():
+    """Create a new administrator or guest account."""
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    role = data.get("role", "admin").strip().lower()
+
+    ok, msg, new_user = create_admin_user(username, password, role)
+    if ok:
+        return jsonify({"status": "success", "message": msg, "user": new_user})
+    return jsonify({"status": "error", "message": msg}), 400
+
+
+@app.route("/api/v1/admin/users/reset_password", methods=["POST"])
+@require_admin
+@require_superadmin_or_admin
+def api_admin_users_reset_password():
+    """Reset the password for an admin or guest user."""
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    ok, msg = reset_admin_password(username, new_password)
+    if ok:
+        return jsonify({"status": "success", "message": msg})
+    return jsonify({"status": "error", "message": msg}), 400
+
+
+@app.route("/api/v1/admin/users/delete", methods=["POST"])
+@require_admin
+@require_superadmin_or_admin
+def api_admin_users_delete():
+    """Delete an administrator or guest account."""
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    current_username = request.admin_user.get("username", "")
+
+    ok, msg = delete_admin_user(username, current_user=current_username)
+    if ok:
+        return jsonify({"status": "success", "message": msg})
+    return jsonify({"status": "error", "message": msg}), 400
+
+
+# ---------------- API ENDPOINTS (LICENSE & SALES MANAGEMENT) ----------------
 
 @app.route("/api/v1/admin/summary", methods=["GET"])
 @require_admin
@@ -668,6 +856,7 @@ DASHBOARD_HTML = """
             --ruby: #ef4444;
             --amber: #f59e0b;
             --pink: #ec4899;
+            --cyan: #06b6d4;
             --text-main: #f9fafb;
             --text-muted: #94a3b8;
             --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -675,6 +864,12 @@ DASHBOARD_HTML = """
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
         body { background: var(--bg-body); color: var(--text-main); min-height: 100vh; padding: 24px 16px 60px 16px; }
         .container { max-width: 1420px; margin: 0 auto; }
+
+        /* Login Screen */
+        #login-view { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 36px 30px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); }
+        .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+        .login-logo { width: 42px; height: 42px; background: linear-gradient(135deg, #f5a623, #ff6b4a); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0a0a0e; font-size: 20px; box-shadow: 0 4px 14px var(--gold-glow); }
 
         /* Top Header */
         header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -692,7 +887,12 @@ DASHBOARD_HTML = """
         .btn-gold:hover { background: linear-gradient(135deg, #ffb53f, #f5a623); transform: translateY(-1px); }
         .btn-emerald { background: #059669; color: #fff; border: none; }
         .btn-emerald:hover { background: #047857; }
+        .btn-cyan { background: #0891b2; color: #fff; border: none; }
+        .btn-cyan:hover { background: #0e7490; }
         .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: 6px; }
+
+        /* Guest Warning Banner */
+        .guest-banner { background: rgba(6, 182, 212, 0.12); border: 1.5px solid rgba(6, 182, 212, 0.35); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; font-size: 13px; color: #67e8f9; display: flex; align-items: center; gap: 10px; }
 
         /* KPI Analytics Cards */
         .grid-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 24px; }
@@ -716,7 +916,7 @@ DASHBOARD_HTML = """
         .card-header { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .card-header h3 { font-size: 16px; font-weight: 700; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px; }
-        .form-group { display: flex; flex-direction: column; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 14px; }
         label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
         input, select, textarea { width: 100%; background: var(--bg-card-subtle); border: 1.5px solid var(--border); color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 13.5px; transition: border-color 0.15s ease; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold); background: var(--bg-card-hover); }
@@ -770,15 +970,59 @@ DASHBOARD_HTML = """
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 1. LOGIN SCREEN (Visible when unauthenticated) -->
+    <div id="login-view" style="display: none;">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="login-logo">DP</div>
+                <div>
+                    <h2 style="font-size: 19px; font-weight: 800; color: #fff;">Media Downloader Pro</h2>
+                    <span style="font-size: 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Admin Control Center</span>
+                </div>
+            </div>
+
+            <div id="login-error" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; font-weight: 600;"></div>
+
+            <form onsubmit="handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="admin or guest" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; margin-top: 6px;">
+                    <span>🔐 Sign In to Dashboard</span>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin: 18px 0; color: var(--text-muted); font-size: 12px; font-weight: 700;">
+                ── OR ──
+            </div>
+
+            <button type="button" class="btn btn-cyan" onclick="quickGuestLogin()" style="width: 100%; justify-content: center; padding: 11px; font-size: 13.5px;">
+                <span>👁️ Quick Guest Login (Read-Only Demo)</span>
+            </button>
+
+            <div style="margin-top: 24px; padding: 12px 14px; background: var(--bg-card-subtle); border-radius: 8px; border: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
+                <strong>Default Accounts:</strong><br>
+                &bull; Master Admin: <code style="color:#60a5fa;">admin</code> / <code style="color:#60a5fa;">admin2026!</code> (Full Control)<br>
+                &bull; Guest Access: <code style="color:#22d3ee;">guest</code> / <code style="color:#22d3ee;">guest123</code> (Read-Only)
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD (Visible when authenticated) -->
+    <div class="container" id="main-view" style="display: none;">
         <header>
             <div class="brand">
                 <div class="brand-logo">DP</div>
                 <div>
                     <h1>Media Downloader Pro <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">| License Server &amp; Sales Center</span></h1>
                     <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                        <span class="badge-live"><span class="live-dot"></span> Online Backend API</span>
-                        <span style="font-size: 11.5px; color: var(--text-muted);">Authenticated Admin Mode</span>
+                        <span class="badge-live"><span class="live-dot"></span> Live API</span>
+                        <span id="user-role-badge" class="pill pill-active">👤 Loading...</span>
                     </div>
                 </div>
             </div>
@@ -787,17 +1031,22 @@ DASHBOARD_HTML = """
                 <a href="/api/v1/admin/export_csv?scope=all" id="btnExportAllCsv" class="btn btn-emerald" title="Download spreadsheet of all customers and license keys">
                     <span>📊 Download Sales Sheet (.CSV)</span>
                 </a>
-                <button class="btn btn-gold" onclick="switchTab('tab-generate')">
+                <button class="btn btn-gold" id="btnIssueNewKeyHeader" onclick="switchTab('tab-generate')">
                     <span>⚡ Issue New Key</span>
-                </button>
-                <button class="btn" onclick="openKeyModal()" title="View or change current admin authorization key">
-                    <span>🔑 Admin Key</span>
                 </button>
                 <button class="btn" onclick="fetchSummary(); fetchLicenses(); fetchHistory();" title="Refresh live records">
                     <span>🔄 Refresh</span>
                 </button>
+                <button class="btn" onclick="handleLogout()" style="background:#20202a; color:#f87171;" title="Log out of admin session">
+                    <span>🚪 Log Out</span>
+                </button>
             </div>
         </header>
+
+        <!-- Guest Mode Alert Banner -->
+        <div id="guest-alert-banner" class="guest-banner" style="display: none;">
+            <span>👁️ <strong>Guest Mode Active:</strong> You are signed in with guest access (read-only). You can view all licenses, live sales stats, and audit history. Key generation, editing, and license modifications are restricted to administrators.</span>
+        </div>
 
         <!-- KPI Revenue & License Summary Cards -->
         <div class="grid-kpis">
@@ -832,10 +1081,11 @@ DASHBOARD_HTML = """
         <!-- Tab Controls -->
         <div class="tabs-nav">
             <button class="tab-btn is-active" onclick="switchTab('tab-licenses')">📋 All Licenses &amp; Control Center</button>
-            <button class="tab-btn" onclick="switchTab('tab-generate')">⚡ Generate &amp; Deliver Key</button>
+            <button class="tab-btn" id="tab-btn-generate" onclick="switchTab('tab-generate')">⚡ Generate &amp; Deliver Key</button>
             <button class="tab-btn" onclick="switchTab('tab-history')">📜 Change History &amp; Rollback</button>
             <button class="tab-btn" onclick="switchTab('tab-sales')">📊 Sales Report &amp; Data Sheet</button>
             <button class="tab-btn" onclick="switchTab('tab-hwid')">🔍 HWID &amp; Device Inspector</button>
+            <button class="tab-btn" id="tab-btn-admins" onclick="switchTab('tab-admins')">👥 Admin Accounts</button>
         </div>
 
         <!-- TAB 1: ALL LICENSES TABLE -->
@@ -972,7 +1222,7 @@ DASHBOARD_HTML = """
                         <input type="text" id="gen-notes" placeholder="e.g. Giveaway contest winner, or paid via WhatsApp #402">
                     </div>
 
-                    <button type="submit" class="btn btn-gold" style="padding: 12px 24px; font-size: 14px;">
+                    <button type="submit" class="btn btn-gold" id="btnSubmitGen" style="padding: 12px 24px; font-size: 14px;">
                         <span>⚡ Generate &amp; Prepare WhatsApp Delivery</span>
                     </button>
                 </form>
@@ -1094,7 +1344,86 @@ DASHBOARD_HTML = """
                 </div>
             </div>
         </div>
+
+        <!-- TAB 6: ADMIN USER MANAGEMENT -->
+        <div class="tab-content" id="tab-admins">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                <!-- Left: Admin Users Table -->
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h3>👥 Authorized Admin Accounts</h3>
+                        <button class="btn btn-sm" onclick="fetchAdminUsers()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-tbody">
+                                <tr><td colspan="4" style="text-align:center; padding:30px;">Loading admin users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: Create New Admin Account Form -->
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h3>➕ Create New Admin or Guest</h3>
+                    </div>
+                    <form onsubmit="handleCreateAdminUser(event)">
+                        <div class="form-group">
+                            <label>New Username</label>
+                            <input type="text" id="new-admin-user" placeholder="e.g. manager1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="new-admin-pw" placeholder="Minimum 6 characters" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Role &amp; Permissions</label>
+                            <select id="new-admin-role">
+                                <option value="admin" selected>Admin (Full Control: Create, Edit, Extend, Revoke)</option>
+                                <option value="guest">Guest (Read-Only: View Licenses, Analytics, CSV Export)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-gold" style="width: 100%; justify-content: center; padding: 11px; margin-top: 10px;">
+                            <span>➕ Create Admin Account</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- MODAL: Reset Admin Password -->
+    <dialog id="modal-reset-pw">
+        <div class="modal-body">
+            <div class="modal-header">
+                <div>
+                    <h3>Reset Administrator Password</h3>
+                    <small id="reset-modal-user" style="color: var(--gold); font-weight: 700;"></small>
+                </div>
+                <button class="modal-close" onclick="document.getElementById('modal-reset-pw').close()">&times;</button>
+            </div>
+            <form onsubmit="handleResetPasswordSubmit(event)">
+                <input type="hidden" id="reset-target-username">
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="reset-new-password" placeholder="Enter new password (min 6 chars)" required>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+                    <button type="submit" class="btn btn-gold">Save New Password</button>
+                    <button type="button" class="btn" onclick="document.getElementById('modal-reset-pw').close()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
 
     <!-- MODAL: WhatsApp Delivery Message Preview -->
     <dialog id="modal-wa">
@@ -1127,7 +1456,7 @@ DASHBOARD_HTML = """
                 <button class="modal-close" onclick="document.getElementById('modal-devices').close()">&times;</button>
             </div>
             <div style="display: flex; justify-content: flex-end; margin-bottom: 14px;">
-                <button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="resetAllDevicesForCurrentKey()">
+                <button class="btn btn-sm" id="btnResetDevSlots" style="background:#dc2626; color:#fff;" onclick="resetAllDevicesForCurrentKey()">
                     🔄 Reset All Device Slots
                 </button>
             </div>
@@ -1218,48 +1547,138 @@ DASHBOARD_HTML = """
         </div>
     </dialog>
 
-    <!-- MODAL: Admin Key Configuration -->
-    <dialog id="modal-key">
-        <div class="modal-body">
-            <div class="modal-header">
-                <h3>Admin Authorization Key</h3>
-                <button class="modal-close" onclick="document.getElementById('modal-key').close()">&times;</button>
-            </div>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-                Enter your secret Admin API Key to access management APIs and download reports:
-            </p>
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label>Admin Secret Key</label>
-                <input type="password" id="input-admin-key">
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn btn-gold" onclick="saveAdminKey()">Save &amp; Authenticate</button>
-            </div>
-        </div>
-    </dialog>
-
     <div class="toast" id="toast">Copied to clipboard!</div>
 
     <script>
-        const DEFAULT_KEY = "{{ admin_key }}";
-        let activeAdminKey = localStorage.getItem("mdp_admin_key") || DEFAULT_KEY;
+        let currentAuthToken = localStorage.getItem("mdp_auth_token") || "";
+        let currentUserProfile = null;
         let currentModalKey = "";
         let searchTimer = null;
         let historyLogs = [];
 
         function updateExportLinks() {
-            const encoded = encodeURIComponent(activeAdminKey);
+            const encoded = encodeURIComponent(currentAuthToken);
             const exp1 = document.getElementById('btnExportAllCsv');
             const exp2 = document.getElementById('btnExportAll2');
             const exp3 = document.getElementById('btnExportMonth');
             const exp4 = document.getElementById('btnExportActive');
             const exp5 = document.getElementById('btnExportGifts');
-            if (exp1) exp1.href = '/api/v1/admin/export_csv?scope=all&admin_key=' + encoded;
-            if (exp2) exp2.href = '/api/v1/admin/export_csv?scope=all&admin_key=' + encoded;
-            if (exp3) exp3.href = '/api/v1/admin/export_csv?scope=month&admin_key=' + encoded;
-            if (exp4) exp4.href = '/api/v1/admin/export_csv?scope=active&admin_key=' + encoded;
-            if (exp5) exp5.href = '/api/v1/admin/export_csv?scope=gifts&admin_key=' + encoded;
-            document.cookie = "admin_key=" + encoded + "; path=/; max-age=2592000";
+            if (exp1) exp1.href = '/api/v1/admin/export_csv?scope=all&token=' + encoded;
+            if (exp2) exp2.href = '/api/v1/admin/export_csv?scope=all&token=' + encoded;
+            if (exp3) exp3.href = '/api/v1/admin/export_csv?scope=month&token=' + encoded;
+            if (exp4) exp4.href = '/api/v1/admin/export_csv?scope=active&token=' + encoded;
+            if (exp5) exp5.href = '/api/v1/admin/export_csv?scope=gifts&token=' + encoded;
+            document.cookie = "admin_token=" + encoded + "; path=/; max-age=2592000";
+        }
+
+        async function checkAuthSession() {
+            if (!currentAuthToken) {
+                showLoginView();
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/v1/admin/me', {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
+                if (res.status === 200) {
+                    const json = await res.json();
+                    currentUserProfile = json.user;
+                    showMainDashboard();
+                } else {
+                    currentAuthToken = "";
+                    localStorage.removeItem("mdp_auth_token");
+                    showLoginView();
+                }
+            } catch (err) {
+                console.error(err);
+                showLoginView();
+            }
+        }
+
+        function showLoginView() {
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('main-view').style.display = 'none';
+        }
+
+        function showMainDashboard() {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
+
+            const userBadge = document.getElementById('user-role-badge');
+            const isGuest = currentUserProfile && currentUserProfile.role === 'guest';
+
+            if (isGuest) {
+                userBadge.className = 'pill pill-gift';
+                userBadge.innerText = '👁️ ' + currentUserProfile.username + ' (Guest - Read Only)';
+                document.getElementById('guest-alert-banner').style.display = 'flex';
+                document.getElementById('tab-btn-admins').style.display = 'none';
+                document.getElementById('tab-btn-generate').style.display = 'none';
+                document.getElementById('btnIssueNewKeyHeader').style.display = 'none';
+            } else {
+                userBadge.className = 'pill pill-active';
+                const roleLabel = currentUserProfile.role === 'superadmin' ? 'Superadmin' : 'Admin';
+                userBadge.innerText = '👤 ' + currentUserProfile.username + ' (' + roleLabel + ')';
+                document.getElementById('guest-alert-banner').style.display = 'none';
+                document.getElementById('tab-btn-admins').style.display = 'inline-block';
+                document.getElementById('tab-btn-generate').style.display = 'inline-block';
+                document.getElementById('btnIssueNewKeyHeader').style.display = 'inline-flex';
+            }
+
+            updateExportLinks();
+            fetchSummary();
+            fetchLicenses();
+            fetchHistory();
+            if (!isGuest) fetchAdminUsers();
+        }
+
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errBox = document.getElementById('login-error');
+            errBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/v1/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const json = await res.json();
+                if (res.status === 200 && json.token) {
+                    currentAuthToken = json.token;
+                    localStorage.setItem("mdp_auth_token", json.token);
+                    currentUserProfile = json.user;
+                    showMainDashboard();
+                    showToast(json.message);
+                } else {
+                    errBox.innerText = json.message || 'Login failed. Please check your credentials.';
+                    errBox.style.display = 'block';
+                }
+            } catch (err) {
+                errBox.innerText = 'Network error during login: ' + err;
+                errBox.style.display = 'block';
+            }
+        }
+
+        function quickGuestLogin() {
+            document.getElementById('login-username').value = 'guest';
+            document.getElementById('login-password').value = 'guest123';
+            const fakeEvent = { preventDefault: () => {} };
+            handleLoginSubmit(fakeEvent);
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/v1/admin/logout', { method: 'POST' });
+            } catch (err) {}
+            currentAuthToken = "";
+            currentUserProfile = null;
+            localStorage.removeItem("mdp_auth_token");
+            document.cookie = "admin_token=; path=/; max-age=0";
+            showLoginView();
+            showToast('Logged out successfully.');
         }
 
         function switchTab(tabId) {
@@ -1272,6 +1691,8 @@ DASHBOARD_HTML = """
 
             if (tabId === 'tab-history') {
                 fetchHistory();
+            } else if (tabId === 'tab-admins') {
+                fetchAdminUsers();
             }
         }
 
@@ -1310,8 +1731,10 @@ DASHBOARD_HTML = """
 
         async function fetchSummary() {
             try {
-                const res = await fetch('/api/v1/admin/summary?admin_key=' + encodeURIComponent(activeAdminKey));
-                if (res.status === 401) { openKeyModal(); return; }
+                const res = await fetch('/api/v1/admin/summary?token=' + encodeURIComponent(currentAuthToken), {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
+                if (res.status === 401) { handleLogout(); return; }
                 const json = await res.json();
                 if (json.status === 'success') {
                     const d = json.data;
@@ -1362,9 +1785,11 @@ DASHBOARD_HTML = """
             const status = document.getElementById('filter-status').value;
 
             try {
-                const url = `/api/v1/admin/list?admin_key=${encodeURIComponent(activeAdminKey)}&q=${encodeURIComponent(q)}&plan=${encodeURIComponent(plan)}&status=${encodeURIComponent(status)}`;
-                const res = await fetch(url);
-                if (res.status === 401) { openKeyModal(); return; }
+                const url = `/api/v1/admin/list?token=${encodeURIComponent(currentAuthToken)}&q=${encodeURIComponent(q)}&plan=${encodeURIComponent(plan)}&status=${encodeURIComponent(status)}`;
+                const res = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
+                if (res.status === 401) { handleLogout(); return; }
                 const json = await res.json();
                 if (json.status === 'success') {
                     renderTable(json.data);
@@ -1377,6 +1802,7 @@ DASHBOARD_HTML = """
         function renderTable(list) {
             const tbody = document.getElementById('licenses-tbody');
             tbody.innerHTML = '';
+            const isGuest = currentUserProfile && currentUserProfile.role === 'guest';
 
             if (list.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No licenses match your filter.</td></tr>';
@@ -1429,17 +1855,19 @@ DASHBOARD_HTML = """
                             <button class="btn btn-sm btn-emerald" onclick="openWaModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${lic.plan_title}', '${expStr}', ${lic.max_activations})" title="Generate WhatsApp delivery message">
                                 📱 Deliver
                             </button>
-                            <button class="btn btn-sm" onclick="openEditModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${escapeJs(lic.customer_phone)}', '${escapeJs(lic.customer_email)}', '${lic.plan}', ${lic.price_paid || 0}, ${lic.is_gift || 0}, ${lic.max_activations}, '${escapeJs(lic.notes)}')">
-                                ✏️ Edit
-                            </button>
-                            <button class="btn btn-sm" onclick="extendKeyPrompt('${lic.license_key}')" title="Extend expiration or make lifetime">
-                                ⏳ Extend
-                            </button>
-                            ${!lic.is_revoked ?
-                                `<button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="revokeKey('${lic.license_key}')">Revoke</button>` :
-                                `<button class="btn btn-sm btn-emerald" onclick="unrevokeKey('${lic.license_key}')">Restore</button>`
-                            }
-                            <button class="btn btn-sm" style="background:#20202a; color:#f87171;" onclick="deleteKey('${lic.license_key}')">🗑️</button>
+                            ${!isGuest ? `
+                                <button class="btn btn-sm" onclick="openEditModal('${lic.license_key}', '${escapeJs(lic.customer_name)}', '${escapeJs(lic.customer_phone)}', '${escapeJs(lic.customer_email)}', '${lic.plan}', ${lic.price_paid || 0}, ${lic.is_gift || 0}, ${lic.max_activations}, '${escapeJs(lic.notes)}')">
+                                    ✏️ Edit
+                                </button>
+                                <button class="btn btn-sm" onclick="extendKeyPrompt('${lic.license_key}')" title="Extend expiration or make lifetime">
+                                    ⏳ Extend
+                                </button>
+                                ${!lic.is_revoked ?
+                                    `<button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="revokeKey('${lic.license_key}')">Revoke</button>` :
+                                    `<button class="btn btn-sm btn-emerald" onclick="unrevokeKey('${lic.license_key}')">Restore</button>`
+                                }
+                                <button class="btn btn-sm" style="background:#20202a; color:#f87171;" onclick="deleteKey('${lic.license_key}')">🗑️</button>
+                            ` : '<small style="color:var(--text-muted); font-size:11px;">(Read-Only)</small>'}
                         </div>
                     </td>
                 `;
@@ -1449,8 +1877,10 @@ DASHBOARD_HTML = """
 
         async function fetchHistory() {
             try {
-                const res = await fetch('/api/v1/admin/history?admin_key=' + encodeURIComponent(activeAdminKey) + '&limit=120');
-                if (res.status === 401) { openKeyModal(); return; }
+                const res = await fetch('/api/v1/admin/history?token=' + encodeURIComponent(currentAuthToken) + '&limit=120', {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
+                if (res.status === 401) { handleLogout(); return; }
                 const json = await res.json();
                 if (json.status === 'success') {
                     historyLogs = json.data || [];
@@ -1465,6 +1895,7 @@ DASHBOARD_HTML = """
             const tbody = document.getElementById('history-tbody');
             const search = (document.getElementById('history-search')?.value || '').toLowerCase();
             tbody.innerHTML = '';
+            const isGuest = currentUserProfile && currentUserProfile.role === 'guest';
 
             const filtered = historyLogs.filter(h => {
                 if (!search) return true;
@@ -1488,8 +1919,9 @@ DASHBOARD_HTML = """
                 else if (h.action === 'UNREVOKE') actColor = '#10b981';
                 else if (h.action === 'ROLLBACK') actColor = '#06b6d4';
                 else if (h.action.includes('DEVICE')) actColor = '#3b82f6';
+                else if (h.action.includes('ADMIN')) actColor = '#ec4899';
 
-                const canRollback = !!h.previous_state;
+                const canRollback = !!h.previous_state && !isGuest;
 
                 tr.innerHTML = `
                     <td><small style="color:var(--text-muted); font-family:var(--font-mono);">${dtStr}</small></td>
@@ -1525,7 +1957,7 @@ DASHBOARD_HTML = """
             try {
                 const res = await fetch('/api/v1/admin/history/rollback', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ history_id: histId })
                 });
                 const json = await res.json();
@@ -1562,7 +1994,7 @@ DASHBOARD_HTML = """
             try {
                 const res = await fetch('/api/v1/admin/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({
                         plan, quantity, price_paid, is_gift, payment_method,
                         customer_name, customer_phone, customer_email,
@@ -1633,8 +2065,13 @@ ${installerUrl}
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading devices...</td></tr>';
             document.getElementById('modal-devices').showModal();
 
+            const isGuest = currentUserProfile && currentUserProfile.role === 'guest';
+            document.getElementById('btnResetDevSlots').style.display = isGuest ? 'none' : 'inline-flex';
+
             try {
-                const res = await fetch('/api/v1/admin/license_details?key=' + encodeURIComponent(key) + '&admin_key=' + encodeURIComponent(activeAdminKey));
+                const res = await fetch('/api/v1/admin/license_details?key=' + encodeURIComponent(key) + '&token=' + encodeURIComponent(currentAuthToken), {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
                 const json = await res.json();
                 if (json.status === 'success') {
                     const acts = json.data.activations || [];
@@ -1648,7 +2085,9 @@ ${installerUrl}
                                 <td><strong>${a.machine_name || 'PC'}</strong></td>
                                 <td><span style="font-family:var(--font-mono); font-size:12px; color:#60a5fa;">${a.hwid}</span></td>
                                 <td><small>${(a.activated_at || '').split('T')[0]}</small></td>
-                                <td><button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="deactivateDevice(${a.id})">Unbind PC</button></td>
+                                <td>
+                                    ${!isGuest ? `<button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="deactivateDevice(${a.id})">Unbind PC</button>` : '<small style="color:var(--text-muted);">(Read-Only)</small>'}
+                                </td>
                             `;
                             tbody.appendChild(tr);
                         });
@@ -1664,7 +2103,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/deactivate_device', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ activation_id: actId })
                 });
                 const json = await res.json();
@@ -1687,7 +2126,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/reset_devices', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ key: currentModalKey })
                 });
                 const json = await res.json();
@@ -1733,7 +2172,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/update', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({
                         key, customer_name, customer_phone, customer_email,
                         plan, price_paid, is_gift, payment_method, max_activations, notes
@@ -1770,7 +2209,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/extend', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ key, days, make_lifetime })
                 });
                 const json = await res.json();
@@ -1791,7 +2230,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/revoke', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ key })
                 });
                 const json = await res.json();
@@ -1810,7 +2249,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/unrevoke', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ key })
                 });
                 const json = await res.json();
@@ -1830,7 +2269,7 @@ ${installerUrl}
             try {
                 const res = await fetch('/api/v1/admin/delete', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': activeAdminKey },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
                     body: JSON.stringify({ key })
                 });
                 const json = await res.json();
@@ -1852,9 +2291,12 @@ ${installerUrl}
             if (!q) return;
             const tbody = document.getElementById('hwid-results-tbody');
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Searching database...</td></tr>';
+            const isGuest = currentUserProfile && currentUserProfile.role === 'guest';
 
             try {
-                const res = await fetch(`/api/v1/admin/lookup_hwid?q=${encodeURIComponent(q)}&admin_key=${encodeURIComponent(activeAdminKey)}`);
+                const res = await fetch(`/api/v1/admin/lookup_hwid?q=${encodeURIComponent(q)}&token=${encodeURIComponent(currentAuthToken)}`, {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
                 const json = await res.json();
                 if (json.status === 'success') {
                     const list = json.data || [];
@@ -1870,7 +2312,9 @@ ${installerUrl}
                                 <td><span class="key-badge" onclick="copyKey('${r.license_key}')">${r.license_key}</span></td>
                                 <td>${r.customer_name || 'N/A'}</td>
                                 <td><small>${(r.last_verified_at || '').split('T')[0]}</small></td>
-                                <td><button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="deactivateDevice(${r.activation_id})">Unbind</button></td>
+                                <td>
+                                    ${!isGuest ? `<button class="btn btn-sm" style="background:#dc2626; color:#fff;" onclick="deactivateDevice(${r.activation_id})">Unbind</button>` : '<small style="color:var(--text-muted);">(Read-Only)</small>'}
+                                </td>
                             `;
                             tbody.appendChild(tr);
                         });
@@ -1881,22 +2325,140 @@ ${installerUrl}
             }
         }
 
-        function openKeyModal() {
-            document.getElementById('input-admin-key').value = activeAdminKey;
-            document.getElementById('modal-key').showModal();
+        // ---------------- ADMIN USER MANAGEMENT CLIENT LOGIC ----------------
+
+        async function fetchAdminUsers() {
+            const tbody = document.getElementById('admins-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading admins...</td></tr>';
+
+            try {
+                const res = await fetch('/api/v1/admin/users/list', {
+                    headers: { 'Authorization': 'Bearer ' + currentAuthToken }
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    renderAdminsTable(json.data || []);
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#f87171; padding:20px;">${json.message}</td></tr>`;
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#f87171; padding:20px;">Error: ${err}</td></tr>`;
+            }
         }
 
-        function saveAdminKey() {
-            const val = document.getElementById('input-admin-key').value.trim();
-            if (val) {
-                activeAdminKey = val;
-                localStorage.setItem("mdp_admin_key", val);
-                updateExportLinks();
-                document.getElementById('modal-key').close();
-                showToast('Admin key saved.');
-                fetchSummary();
-                fetchLicenses();
-                fetchHistory();
+        function renderAdminsTable(users) {
+            const tbody = document.getElementById('admins-tbody');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                const lastLoginStr = u.last_login ? u.last_login.split('T')[0] : 'Never';
+                const roleBadge = u.role === 'superadmin' ?
+                    '<span class="pill" style="background:rgba(245,166,35,0.2); color:#f5a623;">SUPERADMIN</span>' :
+                    (u.role === 'admin' ? '<span class="pill pill-active">ADMIN</span>' : '<span class="pill pill-gift">GUEST</span>');
+
+                const isPrimaryAdmin = u.username === 'admin';
+                const isCurrentSelf = currentUserProfile && u.username === currentUserProfile.username;
+
+                tr.innerHTML = `
+                    <td><strong>👤 ${u.username}</strong></td>
+                    <td>${roleBadge}</td>
+                    <td><small style="color:var(--text-muted);">${lastLoginStr}</small></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-sm btn-cyan" onclick="openResetPasswordModal('${u.username}')">
+                                🔑 Reset PW
+                            </button>
+                            ${(!isPrimaryAdmin && !isCurrentSelf) ? `
+                                <button class="btn btn-sm" style="background:#20202a; color:#f87171;" onclick="deleteAdminUserAction('${u.username}')">
+                                    🗑️
+                                </button>
+                            ` : '<small style="color:var(--text-muted);">&mdash;</small>'}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function handleCreateAdminUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('new-admin-user').value.trim();
+            const password = document.getElementById('new-admin-pw').value.trim();
+            const role = document.getElementById('new-admin-role').value;
+
+            try {
+                const res = await fetch('/api/v1/admin/users/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast(`Admin account '${username}' created!`);
+                    document.getElementById('new-admin-user').value = '';
+                    document.getElementById('new-admin-pw').value = '';
+                    fetchAdminUsers();
+                    fetchHistory();
+                } else {
+                    alert('Error: ' + json.message);
+                }
+            } catch (err) {
+                alert('Network error: ' + err);
+            }
+        }
+
+        function openResetPasswordModal(username) {
+            document.getElementById('reset-target-username').value = username;
+            document.getElementById('reset-modal-user').innerText = 'User: ' + username;
+            document.getElementById('reset-new-password').value = '';
+            document.getElementById('modal-reset-pw').showModal();
+        }
+
+        async function handleResetPasswordSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('reset-target-username').value;
+            const new_password = document.getElementById('reset-new-password').value.trim();
+
+            try {
+                const res = await fetch('/api/v1/admin/users/reset_password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
+                    body: JSON.stringify({ username, new_password })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast(`Password for '${username}' updated!`);
+                    document.getElementById('modal-reset-pw').close();
+                    fetchHistory();
+                } else {
+                    alert('Error: ' + json.message);
+                }
+            } catch (err) {
+                alert('Network error: ' + err);
+            }
+        }
+
+        async function deleteAdminUserAction(username) {
+            if (!confirm(`Delete admin account '${username}'? They will immediately lose access.`)) return;
+
+            try {
+                const res = await fetch('/api/v1/admin/users/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentAuthToken },
+                    body: JSON.stringify({ username })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    showToast(`Account '${username}' deleted.`);
+                    fetchAdminUsers();
+                    fetchHistory();
+                } else {
+                    alert('Error: ' + json.message);
+                }
+            } catch (err) {
+                alert('Error: ' + err);
             }
         }
 
@@ -1913,11 +2475,8 @@ ${installerUrl}
             setTimeout(() => { t.style.display = 'none'; }, 2600);
         }
 
-        // Initialize dashboard
-        updateExportLinks();
-        fetchSummary();
-        fetchLicenses();
-        fetchHistory();
+        // Initialize dashboard session verification
+        checkAuthSession();
     </script>
 </body>
 </html>
@@ -1927,8 +2486,7 @@ ${installerUrl}
 @app.route("/admin", methods=["GET"])
 def admin_dashboard():
     """Web Admin Dashboard route."""
-    key = request.args.get("key") or request.cookies.get("admin_key") or ADMIN_API_KEY
-    return render_template_string(DASHBOARD_HTML, admin_key=key)
+    return render_template_string(DASHBOARD_HTML)
 
 
 if __name__ == "__main__":
@@ -1938,7 +2496,8 @@ if __name__ == "__main__":
     print("=" * 64)
     print(f"Server Port:       {port}")
     print(f"Admin Dashboard:   http://localhost:{port}/admin")
-    print(f"Admin Secret Key:  {ADMIN_API_KEY}")
+    print("Default Superadmin: admin / admin2026!")
+    print("Default Guest:      guest / guest123")
     print(f"Download Setup:    {LATEST_INSTALLER_URL}")
     print(f"VIP WhatsApp:      {WHATSAPP_GROUP_URL}")
     print("=" * 64)
