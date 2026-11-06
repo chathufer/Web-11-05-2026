@@ -1985,6 +1985,208 @@
     }
   
     /* ============================================================
+       OLDER VERSIONS & PREVIOUS BUILDS ARCHIVE
+       ============================================================ */
+    .older-versions-sec {
+      margin-top: 48px;
+      padding: 36px 36px 32px 36px;
+      background: var(--ink-2);
+      border: 2px solid var(--ink-line);
+      border-radius: 24px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    .ov-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 22px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--ink-line);
+      flex-wrap: wrap;
+    }
+
+    .ov-head-left {
+      max-width: 680px;
+    }
+
+    .ov-title {
+      font-size: clamp(1.4rem, 1.2rem + 1vw, 1.85rem);
+      font-weight: 800;
+      color: var(--paper);
+      margin: 10px 0 6px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .ov-desc {
+      font-size: 13.5px;
+      color: var(--muted-d);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .ov-head-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 184, 46, 0.1);
+      border: 1px solid rgba(245, 184, 46, 0.35);
+      color: var(--paper);
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 12.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .ov-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ec9b0;
+      box-shadow: 0 0 10px #4ec9b0;
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .ov-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ov-card {
+      background: #141418;
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      transition: transform .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+    }
+
+    .ov-card:hover {
+      border-color: var(--gold);
+      background: #191920;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .ov-card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ov-card-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .ov-ver-tag {
+      font-family: var(--font-mono, monospace);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--paper);
+    }
+
+    .ov-badge-status {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.04em;
+      background: var(--ink-3);
+      color: var(--muted-d);
+      border: 1px solid var(--ink-line);
+    }
+
+    .ov-date {
+      font-size: 12px;
+      color: var(--muted-d);
+      font-weight: 600;
+    }
+
+    .ov-size {
+      font-size: 11px;
+      color: var(--muted-d);
+      font-family: var(--font-mono, monospace);
+      background: var(--ink-3);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .ov-card-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--paper);
+      margin: 0;
+    }
+
+    .ov-card-notes {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .ov-card-action {
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .older-versions-sec {
+        padding: 24px 18px;
+        margin-top: 36px;
+      }
+      .ov-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 20px 16px;
+        gap: 16px;
+      }
+      .ov-card-action .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* ============================================================
+       RESPONSIVE BREAKPOINTS
+       ============================================================ */
+    @media (max-width: 960px) {
+      .nav, .theme-picker { display: none; }
+      .menu-btn { display: flex; }
+      .hero-panel { left: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 92%); opacity: .12; }
+      .hero-in { grid-template-columns: 1fr; }
+      .hero-art { max-width: 440px; margin-top: 20px; }
+      .mf-in { grid-template-columns: 1fr; }
+      .featured { grid-template-columns: 1fr; }
+      .band-in { grid-template-columns: 1fr; }
+      .band-stamp { display: none; }
+      .shots-grid { grid-template-columns: 1fr; }
+      .footer-in { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .footer-in { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+      .band-actions { flex-direction: column; }
+    }
+  
+    /* ============================================================
        RELEASES / UPDATES DROPDOWN & VERSION SELECTOR
        ============================================================ */
     .rel-dropdown-wrapper {
@@ -2371,7 +2573,7 @@
         <a href="#inspector">Analyzer</a>
         <a href="#workstation">Workstation</a>
         <a href="#principles">Architecture</a>
-        <a href="#updates">Updates</a>
+        <a href="#older-versions">Older Versions</a>
         <a href="#pricing">Pricing</a>
       </nav>
 
@@ -2443,23 +2645,9 @@
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
 
-          <!-- Releases & Updates Dropdown Trigger -->
-          <div class="rel-dropdown-wrapper" id="heroRelDropdown">
-            <button type="button" class="btn btn-line rel-toggle-btn" id="btnToggleReleases" aria-haspopup="true" aria-expanded="false" title="View Version History & Previous Releases">
-              <span>▾ Updates &amp; Older Versions</span>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div class="rel-dropdown-menu" id="relDropdownMenu" role="menu">
-              <div class="rel-dropdown-head">
-                <span class="rel-head-title">Release History</span>
-                <span class="rel-head-badge">Google Drive</span>
-              </div>
-              <div class="rel-list-container" id="relListContainer">
-                <!-- Dynamically populated from APP_RELEASES -->
-              </div>
-            </div>
-          </div>
+          <a href="#older-versions" class="btn btn-line" title="View all previous builds and changelog archive">
+            <span>Older Versions &amp; Archive &darr;</span>
+          </a>
 
           <a href="#inspector" class="btn btn-line">
             <span>Test Stream Analyzer</span>
@@ -2858,6 +3046,29 @@
           </div>
         </div>
       </div>
+
+      <!-- ============================================================
+           OLDER VERSIONS & PREVIOUS BUILDS ARCHIVE
+           ============================================================ -->
+      <div class="older-versions-sec reveal" id="older-versions">
+        <div class="ov-head">
+          <div class="ov-head-left">
+            <span class="sticker"><span>Build Archive</span></span>
+            <h3 class="ov-title">Older Versions</h3>
+            <p class="ov-desc">
+              Whenever a new update is released, the latest build becomes the default download across the site. All previous releases are preserved here with full changelogs and direct Google Drive download links.
+            </p>
+          </div>
+          <div class="ov-head-badge">
+            <span class="ov-dot"></span>
+            <span>Current Latest: <strong class="dyn-latest-ver">v2.2.0</strong></span>
+          </div>
+        </div>
+
+        <div class="ov-cards-list" id="olderVersionsList">
+          <!-- Dynamically populated from APP_RELEASES -->
+        </div>
+      </div>
     </div>
   </section>
 
@@ -3067,30 +3278,6 @@
             Streaming sites frequently update their manifest obfuscation algorithms. Browser extensions rely on injected DOM scripts that get blocked by security policies. Downloader Pro uses a decoupled manifest scraper that auto-updates format definitions without breaking your workflow.
           </p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       RELEASE UPDATES & CHANGELOG
-       ============================================================ -->
-  <section class="section updates-sec" id="updates" aria-labelledby="up-title">
-    <div class="wrap">
-      <div class="sec-head">
-        <div>
-          <p class="sticker reveal"><span>Release History</span></p>
-          <h2 class="reveal" id="up-title">
-            <span>Updates &amp;</span>
-            <mark>Changelog.</mark>
-          </h2>
-        </div>
-        <p class="sec-note reveal">
-          Every new release uploaded to Google Drive automatically becomes the latest version for all download buttons. Older versions are preserved below with their release dates so you can download any previous build anytime.
-        </p>
-      </div>
-
-      <div class="updates-timeline" id="sectionUpdatesList">
-        <!-- Rendered dynamically from APP_RELEASES -->
       </div>
     </div>
   </section>
@@ -3796,94 +3983,39 @@
         el.textContent = latest.date_formatted || latest.date;
       });
 
-      // 3. Render Hero Dropdown List
-      const container = document.getElementById('relListContainer');
-      if (container) {
-        container.innerHTML = releases.map((rel, idx) => {
-          const isLatest = idx === 0 || rel.is_latest;
-          return `
-            <div class="rel-item ${isLatest ? 'is-latest' : ''}">
-              <div class="rel-item-top">
-                <span class="rel-ver-tag">${rel.version}</span>
-                <span class="rel-status-badge ${isLatest ? 'badge-latest' : 'badge-older'}">
-                  ${isLatest ? '★ Latest Release' : 'Older Version'}
-                </span>
-              </div>
-              <p class="rel-item-title">${rel.title}</p>
-              <div class="rel-item-meta">
-                <span>📅 ${rel.date_formatted || rel.date}</span>
-                <span>📦 ${rel.size || 'Installer'}</span>
-              </div>
-              <p class="rel-item-notes">${rel.notes || ''}</p>
-              <div class="rel-item-actions">
-                <span class="rel-size">${isLatest ? 'Recommended build' : 'Preserved build'}</span>
-                <a href="${rel.url}" target="_blank" rel="noopener noreferrer" class="rel-dl-link ${isLatest ? '' : 'link-older'}" data-download-specific-version="${rel.version}">
-                  <span>Download ${rel.version}</span>
-                  <svg class="ic" style="width:11px;height:11px;"><use href="#i-download"></use></svg>
-                </a>
-              </div>
+      // 3. Render Older Versions Cards in the Formats Archive Section
+      const ovContainer = document.getElementById('olderVersionsList');
+      if (ovContainer) {
+        const olderReleases = releases.filter(r => !r.is_latest && r.version !== latest.version);
+        if (olderReleases.length === 0) {
+          ovContainer.innerHTML = `
+            <div style="text-align:center; padding: 24px; color: var(--muted-d); font-size: 13.5px;">
+              All download buttons are delivering the latest flagship release (${latest.version}). No older releases are archived yet.
             </div>
           `;
-        }).join('');
-      }
-
-      // 4. Render Updates Section Cards
-      const sectionContainer = document.getElementById('sectionUpdatesList');
-      if (sectionContainer) {
-        sectionContainer.innerHTML = releases.map((rel, idx) => {
-          const isLatest = idx === 0 || rel.is_latest;
-          return `
-            <div class="update-card ${isLatest ? 'is-latest' : ''} reveal">
-              <div class="update-card-left">
-                <div class="update-card-head">
-                  <span class="update-version">${rel.version}</span>
-                  <span class="rel-status-badge ${isLatest ? 'badge-latest' : 'badge-older'}">
-                    ${isLatest ? '★ Latest Version' : 'Previous Release'}
-                  </span>
-                  <span class="update-date">📅 Released: ${rel.date_formatted || rel.date}</span>
-                  <span class="update-size">📦 ${rel.size || ''}</span>
+        } else {
+          ovContainer.innerHTML = olderReleases.map(rel => `
+            <div class="ov-card reveal">
+              <div class="ov-card-info">
+                <div class="ov-card-meta">
+                  <span class="ov-ver-tag">${rel.version}</span>
+                  <span class="ov-badge-status">Preserved Release</span>
+                  <span class="ov-date">📅 Released: ${rel.date_formatted || rel.date}</span>
+                  <span class="ov-size">📦 ${rel.size || 'Installer'}</span>
                 </div>
-                <h3 class="update-title">${rel.title}</h3>
-                <p class="update-notes">${rel.notes || ''}</p>
+                <h4 class="ov-card-title">${rel.title}</h4>
+                <p class="ov-card-notes">${rel.notes || ''}</p>
               </div>
-              <div class="update-card-right">
-                <a href="${rel.url}" target="_blank" rel="noopener noreferrer" class="btn ${isLatest ? 'btn-gold' : 'btn-line'} btn-sm" data-download-specific-version="${rel.version}" style="white-space:nowrap;">
+              <div class="ov-card-action">
+                <a href="${rel.url}" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" data-download-specific-version="${rel.version}">
                   <span>Download ${rel.version}</span>
                   <svg class="ic"><use href="#i-download"></use></svg>
                 </a>
               </div>
             </div>
-          `;
-        }).join('');
+          `).join('');
+        }
       }
-    }
-
-    // Dropdown toggle & click outside behavior with auto-alignment
-    const btnToggleReleases = document.getElementById('btnToggleReleases');
-    const relDropdownMenu = document.getElementById('relDropdownMenu');
-    if (btnToggleReleases && relDropdownMenu) {
-      btnToggleReleases.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = relDropdownMenu.classList.toggle('is-open');
-        btnToggleReleases.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        if (isOpen) {
-          const rect = relDropdownMenu.getBoundingClientRect();
-          if (rect.right > window.innerWidth - 16) {
-            relDropdownMenu.style.left = 'auto';
-            relDropdownMenu.style.right = '0';
-          } else {
-            relDropdownMenu.style.left = '0';
-            relDropdownMenu.style.right = 'auto';
-          }
-        }
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!relDropdownMenu.contains(e.target) && e.target !== btnToggleReleases) {
-          relDropdownMenu.classList.remove('is-open');
-          btnToggleReleases.setAttribute('aria-expanded', 'false');
-        }
-      });
     }
 
     // Apply embedded releases immediately on DOM ready

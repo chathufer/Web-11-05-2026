@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "fix(ui): give release updates dropdown generous spacing, padding and stacking z-index separation"
+commit_msg = "feat: move older versions archive below formats grid, eliminate packed dropdown, and add in-app update detector with direct download redirect"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)
