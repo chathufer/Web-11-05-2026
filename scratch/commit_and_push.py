@@ -13,7 +13,7 @@ print(res.stdout)
 print("Adding changes...")
 subprocess.run([git_cmd, "add", "-A"], cwd=cwd, check=True)
 
-commit_msg = "release(v1.0.1): publish updated build v1.0.1 and set Google Drive update link"
+commit_msg = "fix(auth): seed chathufer superadmin, fix admin delete error, harden auth persistence on Vercel"
 print("Committing...")
 res_c = subprocess.run([git_cmd, "commit", "-m", commit_msg], cwd=cwd, capture_output=True, text=True)
 print(res_c.stdout or res_c.stderr)

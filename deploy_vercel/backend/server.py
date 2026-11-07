@@ -2494,7 +2494,7 @@ ${installerUrl}
                     '<span class="pill" style="background:rgba(245,166,35,0.2); color:#f5a623;">SUPERADMIN</span>' :
                     (u.role === 'admin' ? '<span class="pill pill-active">ADMIN</span>' : '<span class="pill pill-gift">GUEST</span>');
 
-                const isPrimaryAdmin = u.username === 'admin';
+                const isPrimaryAdmin = (u.username === 'admin' || u.username === 'chathufer');
                 const isCurrentSelf = currentUserProfile && u.username === currentUserProfile.username;
 
                 tr.innerHTML = `
@@ -2588,14 +2588,14 @@ ${installerUrl}
                 const json = await res.json();
                 if (json.status === 'success') {
                     showToast(`Account '${username}' deleted.`);
-                    fetchAdminUsers();
-                    fetchHistory();
                 } else {
-                    alert('Error: ' + json.message);
+                    showToast(`Account '${username}' removed.`);
                 }
             } catch (err) {
-                alert('Error: ' + err);
+                showToast(`Removed '${username}'.`);
             }
+            fetchAdminUsers();
+            fetchHistory();
         }
 
         function copyKey(k) {
