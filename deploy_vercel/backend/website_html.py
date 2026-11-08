@@ -2757,7 +2757,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
   <!-- Top Promotional Banner -->
   <aside class="promo-bar" style="background: linear-gradient(90deg, #d9990c 0%, #f5b82e 50%, #19c3ff 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
     🎁 <strong>LIMITED PROMOTION:</strong> 7-Day Pro Free Trial included with Windows Installer! Enjoy 4K 60FPS, Playlists &amp; Turbo Speed on your PC (No Credit Card Required).
-    <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
+    <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
   </aside>
 
 
@@ -2809,7 +2809,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <button class="theme-dot" data-t="cyan" title="Cyber Cyan" aria-label="Cyber Cyan"></button>
         </div>
 
-        <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
+        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
           <span>Download Free</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -2830,7 +2830,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
     <a href="#principles">Architecture Principles</a>
     <a href="#older-versions">Older Versions Archive</a>
     <a href="#contact">Contact &amp; Buy Plan</a>
-    <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
+    <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="margin-top: 14px;">
       <span>Download Setup v1.0</span>
       <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
     </a>
@@ -2865,7 +2865,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <div class="hero-actions reveal">
-          <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-download-latest" data-download-link="latest">
+          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-download-latest" data-download-link="latest">
             <span>Download Windows Setup (<span class="dyn-latest-ver">v1.0.0</span>)</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -3079,7 +3079,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
           <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; color: var(--muted-d);">Status: <span class="u-gold" id="analyzeStatus">Idle</span></span>
-            <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
+            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
               <span>Download Selected Format</span>
               <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
             </a>
@@ -3114,7 +3114,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
           <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
         </div>
-        <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
+        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
           <span>Get Free Setup + Trial</span>
           <svg class="ic"><use href="#i-download"></use></svg>
         </a>
@@ -3144,7 +3144,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </ul>
           </div>
 
-          <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
+          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
             <span>Download Free ($0)</span>
             <svg class="ic"><use href="#i-download"></use></svg>
           </a>
@@ -3260,7 +3260,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           No monthly subscription traps. Download the standalone Windows installer or unlock the Lifetime Pass for unlimited multi-device access with priority updates.
         </p>
         <div class="band-actions">
-          <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
+          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
             <span>Download Windows Setup v1.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
           </a>
@@ -3484,7 +3484,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             <p style="color: var(--muted-d); font-size: 13.5px; max-width: 520px; margin: 0 auto 18px auto; line-height: 1.5;">
               All direct download buttons across the site are delivering the primary launch build. When future updates are released, previous builds will be archived here.
             </p>
-            <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm" style="display: inline-flex; align-items: center; gap: 8px;">
+            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm" style="display: inline-flex; align-items: center; gap: 8px;">
               <span>Download First Version (v1.0.0)</span>
               <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
             </a>
@@ -3577,7 +3577,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         Download the setup installer now or get your Lifetime Pass. Works immediately with zero configuration.
       </p>
       <div class="closing-actions reveal">
-        <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
+        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-ink">
           <span>Download Setup v1.0</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
@@ -3613,7 +3613,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
       <div class="footer-col">
         <p class="footer-h">Downloads</p>
-        <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
+        <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer">Windows Installer (.exe)</a>
         <a href="/download?type=zip">Portable ZIP Package</a>
         <a href="#pricing">Upgrade to Pro</a>
       </div>
@@ -3636,7 +3636,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
   </footer>
 
   <!-- Floating Action Button -->
-  <a href="https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
+  <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="fab" id="fabBtn" title="Quick Download Setup" aria-label="Quick Download Setup">
     <svg class="ic" style="width:24px; height:24px;" aria-hidden="true"><use href="#i-download"></use></svg>
   </a>
 
@@ -3988,7 +3988,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "date_formatted": "Nov 06, 2026",
             "title": "Media Downloader Pro Turbo Update",
             "is_latest": true,
-            "url": "https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing",
+            "url": "https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe",
             "size": "57.8 MB",
             "notes": "Latest updated release: Streamlined 4K 60FPS video downloading, TikTok watermark-free extraction, persistent 7-day trial engine, and human-friendly error messages."
       },
@@ -3998,7 +3998,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "date_formatted": "Nov 06, 2026",
             "title": "Media Downloader Pro Official Launch",
             "is_latest": false,
-            "url": "https://drive.google.com/file/d/1qCbln3MrCcKbd_eNP3jFBlhDlpn4uhas/view?usp=sharing",
+            "url": "https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.0/MediaDownloaderPro_Setup.exe",
             "size": "57.8 MB",
             "notes": "First official release of Media Downloader Pro: 4K 60FPS video downloads, TikTok watermark-free extractor, lossless MP3 conversion, playlist batching, and single-file Windows installer."
       }
@@ -4010,8 +4010,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
       const latest = releases[0];
       latest.is_latest = true;
 
-      // 1. Update ALL default download buttons to point to the latest Google Drive release
-      const allLinks = document.querySelectorAll('a[href*="drive.google.com"], a[data-download-link="latest"], a.btn-download-latest');
+      // 1. Update ALL default download buttons to point to the latest GitHub release
+      const allLinks = document.querySelectorAll('a[href*="github.com"], a[href*="drive.google.com"], a[data-download-link="latest"], a.btn-download-latest');
       allLinks.forEach(link => {
         if (link.dataset.downloadSpecificVersion) return; // preserve older release download buttons
         link.href = latest.url;

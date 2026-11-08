@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Release Management Utility for Downloader Pro.
-Enables adding new Google Drive releases and automatically updating:
+Enables adding new GitHub releases and automatically updating:
 1. releases.json across all project locations
 2. index.html and public copies
 3. backend/website_html.py and deploy_vercel copies
@@ -161,7 +161,7 @@ def main():
     # Add command
     add_parser = subparsers.add_parser("add", help="Add a new Google Drive release as the latest version")
     add_parser.add_argument("--version", "-v", required=True, help="Version string (e.g. v2.3.0)")
-    add_parser.add_argument("--url", "-u", required=True, help="Google Drive shared download link")
+    add_parser.add_argument("--url", "-u", required=True, help="GitHub release direct download link")
     add_parser.add_argument("--title", "-t", default="", help="Release title / headline")
     add_parser.add_argument("--size", "-s", default="58.0 MB", help="File size (e.g. 57.7 MB)")
     add_parser.add_argument("--notes", "-n", default="", help="Changelog notes or highlights")

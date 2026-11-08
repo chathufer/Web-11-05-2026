@@ -67,8 +67,8 @@ app = Flask(__name__)
 # Legacy Admin Security Key (still accepted for backwards compatibility with tests & scripts)
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "MDP_ADMIN_SECRET_KEY_2026")
 
-# Official Google Drive installer download link
-LATEST_INSTALLER_URL = "https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing"
+# Official GitHub Release installer download link
+LATEST_INSTALLER_URL = "https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe"
 WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG"
 
 # Initialize database on startup
@@ -2162,7 +2162,7 @@ DASHBOARD_HTML = """
 
         function openWaModal(key, name, planTitle, exp, maxActs) {
             const customerName = name || 'Valued Creator';
-            const installerUrl = "https://drive.google.com/file/d/1WPsoALq5xDoEnGVAl0-ALGYkp_Ww3fp0/view?usp=sharing";
+            const installerUrl = "https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe";
 
             const msg = `🎉 *Welcome to Media Downloader Pro VIP!*
 
