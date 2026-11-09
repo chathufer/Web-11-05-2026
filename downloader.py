@@ -902,7 +902,7 @@ class YouTubeDownloader:
                     f'best[height<={max_h}]/best'
                 )
             else:
-                # UNRESTRICTED PRO / 7-DAY TRIAL: 8K, 4K, 1440p, 1080p, 60fps
+                # UNRESTRICTED PRO / 7-DAY TRIAL: 4K, 1440p, 1080p, 60fps
                 if quality == "best":
                     ydl_opts['format'] = 'bestvideo*+bestaudio/best'
                 else:

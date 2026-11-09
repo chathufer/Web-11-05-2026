@@ -219,6 +219,51 @@ def download_installer():
     return redirect(LATEST_INSTALLER_URL, code=302)
 
 
+@app.route("/Videos/<path:filename>", methods=["GET"])
+def serve_video(filename):
+    """Serve videos and posters from Videos directory with HTTP range support."""
+    vid_dirs = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Videos"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Videos"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "Videos"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "public", "Videos"),
+    ]
+    for d in vid_dirs:
+        fp = os.path.join(d, filename)
+        if os.path.exists(fp) and os.path.isfile(fp):
+            mime = "video/mp4" if filename.lower().endswith(".mp4") else ("image/jpeg" if filename.lower().endswith((".jpg", ".jpeg")) else None)
+            return send_file(fp, mimetype=mime, conditional=True)
+    return "File not found", 404
+
+
+@app.route("/img/<path:filename>", methods=["GET"])
+def serve_img(filename):
+    """Serve images from img and public/img directories with proper MIME types."""
+    img_dirs = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "img"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "img"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "img"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "public", "img"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "img"),
+    ]
+    for d in img_dirs:
+        fp = os.path.join(d, filename)
+        if os.path.exists(fp) and os.path.isfile(fp):
+            ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+            mime_map = {
+                "webp": "image/webp",
+                "jpg": "image/jpeg",
+                "jpeg": "image/jpeg",
+                "png": "image/png",
+                "svg": "image/svg+xml",
+                "ico": "image/x-icon",
+                "gif": "image/gif"
+            }
+            return send_file(fp, mimetype=mime_map.get(ext, "application/octet-stream"))
+    return "Image not found", 404
+
+
+
 @app.route("/api/v1/checkout", methods=["POST", "GET"])
 def api_checkout():
     """Disabled public key generation. Customers must contact admins in WhatsApp group to buy."""

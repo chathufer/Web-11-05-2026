@@ -7,14 +7,14 @@ WEBSITE_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Downloader Pro — 8K 60FPS Video, TikTok Clean & Studio 320k MP3 Ripper</title>
-  <meta name="description" content="Ultra HD multi-threaded media ripper. Download pristine 8K 60FPS YouTube video, TikTok clips with zero watermarks, and studio-grade 320kbps MP3s in seconds.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Downloader Pro — 4K 60FPS Video, TikTok Clean & Studio 320k MP3 Ripper</title>
+  <meta name="description" content="Ultra HD multi-threaded media ripper. Download pristine 4K 60FPS YouTube video, TikTok clips with zero watermarks, and studio-grade 320kbps MP3s in seconds.">
   <meta name="theme-color" content="#0b0b0b">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Downloader Pro — Ultra HD Media Ripper">
-  <meta property="og:description" content="Download YouTube 8K 60FPS, TikTok clean MP4, and 320kbps MP3s at uncapped speeds.">
+  <meta property="og:description" content="Download YouTube 4K 60FPS, TikTok clean MP4, and 320kbps MP3s at uncapped speeds.">
   <meta property="og:type" content="website">
 
   <link rel="icon" type="image/png" href="icon.png">
@@ -83,6 +83,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-h) + 20px);
+      -webkit-text-size-adjust: 100%;
       background: var(--ink);
       color: var(--white);
       font-family: var(--font);
@@ -429,23 +431,36 @@ WEBSITE_HTML = """<!DOCTYPE html>
       width: 22px;
       height: 2px;
       background: currentColor;
-      transition: transform .25s var(--ease);
+      transition: transform .25s var(--ease), opacity .2s var(--ease);
+      transform-origin: center;
+    }
+
+    .menu-btn[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(4px) rotate(45deg);
+    }
+
+    .menu-btn[aria-expanded="true"] span:nth-child(2) {
+      transform: translateY(-4px) rotate(-45deg);
     }
 
     /* Mobile Flyout Menu */
     .mobile-menu {
       position: fixed;
       inset: var(--header-h) 0 0 0;
-      background: var(--ink);
+      background: rgba(11, 11, 11, 0.98);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       z-index: 89;
       display: flex;
       flex-direction: column;
-      padding: 32px var(--gutter);
-      gap: 22px;
+      padding: 28px var(--gutter) 40px var(--gutter);
+      gap: 18px;
       border-top: 1px solid var(--ink-line);
       transform: translateY(-100%);
       opacity: 0;
       pointer-events: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       transition: transform .35s var(--ease), opacity .35s var(--ease);
     }
 
@@ -627,201 +642,363 @@ WEBSITE_HTML = """<!DOCTYPE html>
       color: var(--muted-d);
     }
 
-    /* Hero Art & Interactive Fan */
+    /* ============================================================
+       HERO ART & INTRO VIDEO WORKSTATION FRAME
+       ============================================================ */
     .hero-art {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1;
-      max-width: 540px;
+      max-width: 600px;
       margin-inline: auto;
     }
 
-    .fan {
-      position: absolute;
-      inset: 0;
-      --px: 0;
-      --py: 0;
-    }
-
-    .fan-card {
-      position: absolute;
+    .video-workstation {
+      position: relative;
+      width: 100%;
       background: var(--ink-2);
       border: 3px solid var(--ink);
-      border-radius: 20px;
-      box-shadow: 8px 8px 0 var(--ink);
+      border-radius: 22px;
+      box-shadow: 10px 10px 0 var(--ink), 0 24px 50px rgba(0, 0, 0, 0.55);
+      outline: 2px solid var(--gold);
       overflow: hidden;
-      transition: transform .6s var(--ease);
+      transition: transform .4s var(--ease), box-shadow .4s var(--ease), outline-color .3s var(--ease);
     }
 
-    .fan-1 {
-      left: 0;
-      top: 4%;
-      width: 52%;
-      aspect-ratio: 4 / 3.4;
-      rotate: -9deg;
-      z-index: 1;
-      transform: translate(calc(var(--px) * -16px), calc(var(--py) * -12px));
+    .video-workstation:hover {
+      transform: translateY(-3px);
+      box-shadow: 12px 14px 0 var(--ink), 0 30px 60px rgba(0, 0, 0, 0.65);
     }
 
-    .fan-2 {
-      right: 0;
-      top: 2%;
-      width: 48%;
-      aspect-ratio: 4 / 3.5;
-      rotate: 8deg;
-      z-index: 1;
-      transform: translate(calc(var(--px) * -12px), calc(var(--py) * -10px));
+    [data-theme="cyan"] .video-workstation {
+      outline-color: var(--gold);
+      box-shadow: 10px 10px 0 var(--ink), 0 0 35px rgba(25, 195, 255, 0.25);
     }
 
-    .fan-3 {
-      left: 8%;
-      top: 28%;
-      width: 84%;
-      aspect-ratio: 16 / 11;
-      rotate: -2.5deg;
-      z-index: 2;
-      transform: translate(calc(var(--px) * 20px), calc(var(--py) * 14px));
-      box-shadow: 10px 10px 0 var(--ink);
+    [data-theme="red"] .video-workstation {
+      outline-color: var(--gold);
+      box-shadow: 10px 10px 0 var(--ink), 0 0 35px rgba(255, 42, 95, 0.25);
     }
 
-    /* Card Mock Content */
-    .mock-header {
+    .video-frame-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 14px;
+      padding: 11px 16px;
       background: var(--ink-3);
       border-bottom: 2px solid var(--ink);
+      user-select: none;
     }
 
     .mock-dots {
       display: flex;
-      gap: 5px;
+      gap: 6px;
     }
 
     .mock-dots span {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: rgba(255, 255, 255, .25);
+      display: inline-block;
     }
 
     .mock-dots span:nth-child(1) { background: #ff5f56; }
     .mock-dots span:nth-child(2) { background: #ffbd2e; }
     .mock-dots span:nth-child(3) { background: #27c93f; }
 
-    .mock-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted-d);
-      letter-spacing: .05em;
-    }
-
-    .mock-body {
-      padding: 14px;
+    .video-frame-title {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .mock-badge {
-      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 8px;
-      background: var(--gold);
-      color: var(--ink);
-      font-size: 11px;
+      gap: 8px;
+      font-size: 11.5px;
       font-weight: 800;
-      border-radius: 6px;
-      width: fit-content;
+      letter-spacing: .06em;
+      color: var(--white);
     }
 
-    .mock-progress {
-      height: 6px;
-      background: rgba(255, 255, 255, .1);
-      border-radius: 999px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .mock-progress-bar {
-      height: 100%;
+    .video-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
       background: var(--gold);
-      width: 84%;
-      border-radius: 999px;
+      box-shadow: 0 0 8px var(--gold);
+      animation: pulseLive 1.8s infinite;
+      display: inline-block;
     }
 
-    /* Wobbling Burst Star Badge */
-    .burst {
-      position: absolute;
-      z-index: 4;
-      top: 18%;
-      right: -4%;
-      width: clamp(100px, 9vw, 126px);
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--ink);
-      color: var(--gold);
-      clip-path: polygon(50.0% 0.0%, 56.7% 7.5%, 65.5% 2.4%, 69.5% 11.7%, 79.4% 9.5%, 80.4% 19.6%, 90.5% 20.6%, 88.3% 30.5%, 97.6% 34.5%, 92.5% 43.3%, 100.0% 50.0%, 92.5% 56.7%, 97.6% 65.5%, 88.3% 69.5%, 90.5% 79.4%, 80.4% 80.4%, 79.4% 90.5%, 69.5% 88.3%, 65.5% 97.6%, 56.7% 92.5%, 50.0% 100.0%, 43.3% 92.5%, 34.5% 97.6%, 30.5% 88.3%, 20.6% 90.5%, 19.6% 80.4%, 9.5% 79.4%, 11.7% 69.5%, 2.4% 65.5%, 7.5% 56.7%, 0.0% 50.0%, 7.5% 43.3%, 2.4% 34.5%, 11.7% 30.5%, 9.5% 20.6%, 19.6% 19.6%, 20.6% 9.5%, 30.5% 11.7%, 34.5% 2.4%, 43.3% 7.5%);
-      box-shadow: 4px 4px 0 var(--gold);
-      animation: burst-wobble 6s ease-in-out infinite;
-      transition: color .3s var(--ease);
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .35; transform: scale(.8); }
     }
 
-    @keyframes burst-wobble {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(6deg) scale(1.05); }
-    }
-
-    .burst b {
-      font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.3rem);
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .burst span {
+    .video-frame-badge {
       font-size: 10px;
       font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--white);
-      margin-top: 3px;
-    }
-
-    /* Speech Bubble */
-    .bubble {
-      position: absolute;
-      z-index: 4;
-      left: -2%;
-      bottom: -2%;
-      max-width: 260px;
-      padding: 12px 18px;
-      background: var(--white);
+      background: var(--gold);
       color: var(--ink);
-      border: 2.5px solid var(--ink);
-      border-radius: 18px;
-      box-shadow: 6px 6px 0 var(--ink);
-      font-size: 14.5px;
-      font-weight: 800;
-      line-height: 1.3;
-      letter-spacing: -.01em;
-      rotate: -3deg;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: .04em;
+      display: inline-block;
     }
 
-    .bubble::after {
-      content: "";
-      position: absolute;
-      left: 32px;
-      top: -13px;
-      width: 20px;
-      height: 14px;
-      background: var(--ink);
-      clip-path: polygon(0 100%, 30% 0, 100% 100%);
+    .video-frame-body {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      overflow: hidden;
+      cursor: pointer;
     }
+
+    .video-frame-body video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+
+    /* Center Big Play / Pause Splash Indicator */
+    .video-center-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(11, 11, 11, 0.82);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s var(--ease), transform .25s var(--snap), background .2s, border-color .2s;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 184, 46, 0.25);
+    }
+
+    .video-workstation.is-paused .video-center-btn,
+    .video-frame-body:hover .video-center-btn {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+
+    .video-center-btn:hover {
+      background: var(--gold);
+      color: var(--ink);
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .video-center-btn svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .video-center-btn .ic-pause { display: none; }
+    .video-center-btn .ic-play { display: block; margin-left: 3px; }
+
+    .video-workstation:not(.is-paused) .video-center-btn .ic-pause { display: block; margin-left: 0; }
+    .video-workstation:not(.is-paused) .video-center-btn .ic-play { display: none; }
+
+    /* Unmute Quick Pill Notice */
+    .video-unmute-pill {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      background: rgba(11, 11, 11, 0.85);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 6;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      transition: transform .2s, background .2s, opacity .3s;
+    }
+
+    .video-unmute-pill:hover {
+      background: var(--gold);
+      color: var(--ink);
+      transform: scale(1.05);
+    }
+
+    .video-unmute-pill.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.9);
+    }
+
+    /* Bottom Glass Control Bar */
+    .video-control-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: linear-gradient(180deg, transparent 0%, rgba(11, 11, 11, 0.94) 100%);
+      backdrop-filter: blur(8px);
+      z-index: 6;
+      transition: opacity .3s var(--ease), transform .3s var(--ease);
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .video-frame-body:hover .video-control-bar,
+    .video-workstation.is-paused .video-control-bar,
+    .video-workstation.controls-active .video-control-bar,
+    .video-control-bar:focus-within {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .v-btn {
+      min-width: 38px;
+      min-height: 38px;
+      background: none;
+      border: none;
+      padding: 6px;
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: color .2s, transform .15s, background .2s;
+      touch-action: manipulation;
+    }
+
+    .v-btn:hover, .v-btn:focus-visible {
+      color: var(--gold);
+      background: rgba(255, 255, 255, 0.08);
+      outline: none;
+    }
+
+    .v-btn:active {
+      transform: scale(0.92);
+    }
+
+    .v-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Pause / Play button icon states */
+    .v-btn-playpause .ic-v-play { display: none; }
+    .v-btn-playpause .ic-v-pause { display: block; }
+    .video-workstation.is-paused .v-btn-playpause .ic-v-play { display: block; }
+    .video-workstation.is-paused .v-btn-playpause .ic-v-pause { display: none; }
+
+    /* Sound button icon states */
+    .v-btn-sound .ic-v-unmuted { display: none; }
+    .v-btn-sound .ic-v-muted { display: block; }
+    .video-workstation.is-unmuted .v-btn-sound .ic-v-unmuted { display: block; }
+    .video-workstation.is-unmuted .v-btn-sound .ic-v-muted { display: none; }
+
+    /* Timeline / Scrubber */
+    .video-timeline-wrap {
+      flex: 1;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .video-timeline-track {
+      position: relative;
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      transition: height .15s;
+    }
+
+    .video-timeline-wrap:hover .video-timeline-track {
+      height: 7px;
+    }
+
+    .video-timeline-buffer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      transition: width .2s;
+    }
+
+    .video-timeline-prog {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--gold);
+      border-radius: 999px;
+      box-shadow: 0 0 8px var(--gold);
+      transition: width .08s linear;
+    }
+
+    .video-time-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    /* Video Art Caption / Badge underneath */
+    .video-art-caption {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .video-art-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      background: var(--ink-2);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      box-shadow: 5px 5px 0 var(--ink);
+      font-size: 12px;
+      color: var(--white);
+    }
+
+    .video-art-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+      display: inline-block;
+    }
+
+    .video-art-pill b {
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
 
     /* ============================================================
        TICKER MARQUEE
@@ -914,161 +1091,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
       max-width: 440px;
       line-height: 1.6;
     }
-
-    /* ============================================================
-       MADE FOR SECTION & INTERACTIVE INSPECTOR
-       ============================================================ */
-    .madefor {
-      padding-block: clamp(60px, 8vw, 100px);
-      border-bottom: 1px solid var(--ink-line);
-      background: var(--ink-2);
-    }
-
-    .mf-in {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-      gap: clamp(36px, 6vw, 70px);
-      align-items: center;
-    }
-
-    .mf-head h2 {
-      font-size: clamp(1.8rem, 1.2rem + 2vw, 2.8rem);
-      line-height: 1.15;
-      margin-top: 16px;
-      margin-bottom: 24px;
-    }
-
-    .audience-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .aud-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 18px;
-      background: var(--ink);
-      border: 1px solid var(--ink-line);
-      border-radius: 14px;
-      transition: transform .2s var(--ease), border-color .2s var(--ease);
-    }
-
-    .aud-item:hover {
-      transform: translateX(6px);
-      border-color: var(--gold);
-    }
-
-    .aud-num {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--gold);
-      background: rgba(245, 184, 46, .1);
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-
-    .aud-txt b {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .aud-txt small {
-      display: block;
-      font-size: 12.5px;
-      color: var(--muted-d);
-    }
-
-    /* Interactive Link Analyzer Terminal */
-    .inspector-card {
-      background: var(--ink);
-      border: 3px solid var(--ink-3);
-      border-radius: 24px;
-      box-shadow: 8px 8px 0 rgba(0, 0, 0, .6);
-      padding: clamp(20px, 3.5vw, 32px);
-      position: relative;
-    }
-
-    .inspector-card::before {
-      content: "STREAM ENGINE";
-      position: absolute;
-      top: -12px;
-      right: 24px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .14em;
-      background: var(--gold);
-      color: var(--ink);
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 2px solid var(--ink);
-    }
-
-    .inspect-input-box {
-      display: flex;
-      gap: 10px;
-      margin-block: 16px;
-    }
-
-    .inspect-input {
-      flex: 1;
-      background: var(--ink-2);
-      border: 2px solid var(--ink-line);
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: var(--white);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      transition: border-color .2s var(--ease);
-    }
-
-    .inspect-input:focus {
-      border-color: var(--gold);
-    }
-
-    .inspect-tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .inspect-chip {
-      padding: 5px 12px;
-      border-radius: 8px;
-      background: var(--ink-2);
-      border: 1px solid var(--ink-line);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--muted-d);
-      cursor: pointer;
-      transition: all .2s var(--ease);
-    }
-
-    .inspect-chip.is-active, .inspect-chip:hover {
-      background: var(--gold);
-      color: var(--ink);
-      border-color: var(--gold);
-    }
-
-    .stream-readout {
-      background: #060606;
-      border: 1px solid var(--ink-line);
-      border-radius: 12px;
-      padding: 14px;
-      font-family: ui-monospace, SFMono-Regular, "Courier New", monospace;
-      font-size: 12.5px;
-      line-height: 1.6;
-      min-height: 120px;
-      color: #9cdcfe;
-    }
-
-    .stream-readout .log-hi { color: var(--gold); font-weight: bold; }
-    .stream-readout .log-succ { color: #4ec9b0; }
 
     /* ============================================================
        COURSES / FORMATS SECTION
@@ -1434,8 +1456,30 @@ WEBSITE_HTML = """<!DOCTYPE html>
       font-weight: 800;
       background: var(--gold);
       color: var(--ink);
-      padding: 3px 8px;
+      padding: 3.5px 9px;
       border-radius: 6px;
+      z-index: 2;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .shot-img-box picture {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .shot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .35s var(--ease), filter .35s var(--ease);
+    }
+
+    .shot-card:hover .shot-img {
+      transform: scale(1.05);
+      filter: brightness(1.08);
     }
 
     .shot-meta {
@@ -1547,18 +1591,36 @@ WEBSITE_HTML = """<!DOCTYPE html>
       border-top: 1px solid var(--ink-line);
     }
 
+    .pricing-sec .wrap {
+      max-width: 1440px;
+    }
+
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 26px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 22px;
       align-items: stretch;
+    }
+
+    @media (max-width: 1300px) {
+      .pricing-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
     }
 
     .price-card {
       background: var(--ink);
       border: 2.5px solid var(--ink-3);
       border-radius: 24px;
-      padding: 34px 28px;
+      padding: clamp(28px, 2.5vw, 36px) clamp(20px, 2vw, 26px);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -1579,19 +1641,29 @@ WEBSITE_HTML = """<!DOCTYPE html>
       box-shadow: 8px 8px 0 var(--gold);
     }
 
-    .price-badge-top {
-      position: absolute;
-      top: -13px;
-      right: 24px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      background: var(--gold);
-      color: var(--ink);
-      border-radius: 999px;
-      border: 2px solid var(--ink);
+    .price-card .btn {
+      width: 100%;
+      min-height: 50px;
+      padding: 13px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      gap: 6px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      justify-content: center;
+      box-sizing: border-box;
+      box-shadow: none;
+    }
+
+    .price-card .btn .ic {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .price-card .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(245, 184, 46, 0.25);
     }
 
     .price-head {
@@ -1908,15 +1980,65 @@ WEBSITE_HTML = """<!DOCTYPE html>
       position: relative;
     }
 
+    .lb-box {
+      width: 92vw;
+      max-width: 960px;
+      background: var(--ink-2);
+      border: 3px solid var(--gold);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+    }
+
     .lb-content {
       width: 100%;
-      aspect-ratio: 16 / 10;
       background: var(--ink);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 30px;
+      padding: clamp(16px, 2.5vw, 24px);
+      gap: 16px;
+    }
+
+    .lb-media {
+      width: 100%;
+      max-height: 56vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--ink-line);
+      background: #000;
+    }
+
+    .lb-img {
+      width: 100%;
+      height: 100%;
+      max-height: 56vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .lb-info {
+      text-align: center;
+      max-width: 680px;
+    }
+
+    .lb-title {
+      font-size: clamp(20px, 1.2rem + 1vw, 28px);
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 6px;
+      letter-spacing: .02em;
+    }
+
+    .lb-desc {
+      font-size: 14px;
+      color: var(--muted-d);
+      line-height: 1.5;
     }
 
     .lb-nav {
@@ -1966,15 +2088,31 @@ WEBSITE_HTML = """<!DOCTYPE html>
     }
 
     /* ============================================================
-       RESPONSIVE BREAKPOINTS
+       RESPONSIVE BREAKPOINTS (PC, TABLET & MOBILE)
        ============================================================ */
+    @media (max-width: 1080px) {
+      .hero-in {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 32px;
+      }
+    }
+
     @media (max-width: 960px) {
       .nav, .theme-picker { display: none; }
       .menu-btn { display: flex; }
       .hero-panel { left: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 92%); opacity: .12; }
-      .hero-in { grid-template-columns: 1fr; }
-      .hero-art { max-width: 440px; margin-top: 20px; }
-      .mf-in { grid-template-columns: 1fr; }
+      .hero-in {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+      .hero-copy {
+        max-width: 100%;
+      }
+      .hero-art {
+        max-width: 580px;
+        width: 100%;
+        margin-top: 8px;
+      }
       .featured { grid-template-columns: 1fr; }
       .band-in { grid-template-columns: 1fr; }
       .band-stamp { display: none; }
@@ -1982,11 +2120,125 @@ WEBSITE_HTML = """<!DOCTYPE html>
       .footer-in { grid-template-columns: 1fr 1fr; }
     }
 
+    @media (max-width: 768px) {
+      .ticker {
+        margin-top: 20px;
+        padding-block: 14px;
+      }
+      .video-workstation {
+        border-radius: 18px;
+      }
+      .pricing-grid {
+        gap: 20px;
+      }
+    }
+
     @media (max-width: 600px) {
-      .footer-in { grid-template-columns: 1fr; }
-      .hero-actions { flex-direction: column; align-items: stretch; }
-      .btn { width: 100%; }
-      .band-actions { flex-direction: column; }
+      :root {
+        --gutter: 16px;
+        --h1: clamp(2.1rem, 1.2rem + 4.6vw, 2.85rem);
+        --h2: clamp(1.8rem, 1.0rem + 3.2vw, 2.35rem);
+      }
+      .site-header {
+        height: 68px;
+      }
+      .promo-bar {
+        font-size: 0.8rem !important;
+        padding: 8px 12px !important;
+        line-height: 1.45 !important;
+      }
+      .promo-bar a {
+        display: inline-block;
+        margin-top: 3px;
+      }
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+      }
+      .shields {
+        gap: 12px 16px;
+      }
+      .shield-item {
+        gap: 10px;
+      }
+      .shield {
+        width: 52px;
+        height: 52px;
+      }
+      .shield b {
+        font-size: 13.5px;
+      }
+      .shield small {
+        font-size: 8px;
+      }
+      .video-workstation {
+        border-radius: 16px;
+        border-width: 2.5px;
+        box-shadow: 6px 6px 0 var(--ink), 0 16px 36px rgba(0, 0, 0, 0.55);
+      }
+      .video-frame-header {
+        padding: 8px 12px;
+      }
+      .video-frame-title {
+        font-size: 10.5px;
+      }
+      .video-center-btn {
+        width: 56px;
+        height: 56px;
+      }
+      .video-center-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+      .video-control-bar {
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .video-time-lbl {
+        font-size: 10px;
+      }
+      .video-art-pill {
+        font-size: 11px;
+        padding: 6px 14px;
+        text-align: center;
+      }
+      .fab {
+        width: 50px;
+        height: 50px;
+        right: 16px;
+        bottom: 16px;
+      }
+      .footer-in {
+        grid-template-columns: 1fr;
+      }
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .band-actions {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .video-frame-badge {
+        display: none;
+      }
+      .video-unmute-pill {
+        top: 8px;
+        right: 8px;
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+      .video-time-lbl {
+        display: none;
+      }
     }
   
     /* ============================================================
@@ -2196,29 +2448,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
       }
     }
 
-    /* ============================================================
-       RESPONSIVE BREAKPOINTS
-       ============================================================ */
-    @media (max-width: 960px) {
-      .nav, .theme-picker { display: none; }
-      .menu-btn { display: flex; }
-      .hero-panel { left: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 92%); opacity: .12; }
-      .hero-in { grid-template-columns: 1fr; }
-      .hero-art { max-width: 440px; margin-top: 20px; }
-      .mf-in { grid-template-columns: 1fr; }
-      .featured { grid-template-columns: 1fr; }
-      .band-in { grid-template-columns: 1fr; }
-      .band-stamp { display: none; }
-      .shots-grid { grid-template-columns: 1fr; }
-      .footer-in { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 600px) {
-      .footer-in { grid-template-columns: 1fr; }
-      .hero-actions { flex-direction: column; align-items: stretch; }
-      .btn { width: 100%; }
-      .band-actions { flex-direction: column; }
-    }
+    /* Consolidated responsive rules above */
   
     /* ============================================================
        RELEASES / UPDATES DROPDOWN & VERSION SELECTOR
@@ -2793,7 +3023,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </a>
 
       <nav class="nav" aria-label="Main Navigation">
-        <a href="#inspector">Analyzer</a>
         <a href="#pricing">Pricing</a>
         <a href="#workstation">Workstation</a>
         <a href="#principles">Architecture</a>
@@ -2824,7 +3053,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
 
   <!-- Mobile Flyout Menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#inspector">Stream Analyzer</a>
     <a href="#pricing">License Passes</a>
     <a href="#workstation">Workstation Showcase</a>
     <a href="#principles">Architecture Principles</a>
@@ -2850,7 +3078,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <h1 class="reveal" id="hero-title">
-          <span>Rip in 8K.</span>
+          <span>Rip in 4K.</span>
           <mark>Zero</mark>
           <span class="h1-end">buffering.</span>
         </h1>
@@ -2861,7 +3089,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </p>
 
         <p class="lead reveal">
-          Downloader Pro extracts pristine 4K &amp; 8K 60FPS video, TikTok clips with zero watermarks, and studio-grade 320kbps MP3s in seconds. Built with 16 parallel TCP threads and GPU-accelerated FFmpeg muxing.
+          Downloader Pro extracts pristine Ultra HD 4K 60FPS video, TikTok clips with zero watermarks, and studio-grade 320kbps MP3s in seconds. Built with 16 parallel TCP threads and GPU-accelerated FFmpeg muxing.
         </p>
 
         <div class="hero-actions reveal">
@@ -2873,18 +3101,13 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <a href="#older-versions" class="btn btn-line" title="View all previous builds and changelog archive">
             <span>Older Versions &amp; Archive &darr;</span>
           </a>
-
-          <a href="#inspector" class="btn btn-line">
-            <span>Test Stream Analyzer</span>
-            <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
-          </a>
         </div>
 
         <!-- Campus Shield Badges -->
         <ul class="shields reveal">
           <li class="shield-item">
             <div class="shield">
-              <b>8K</b>
+              <b>4K</b>
               <small>60FPS</small>
             </div>
             <div class="shield-txt">
@@ -2917,67 +3140,112 @@ WEBSITE_HTML = """<!DOCTYPE html>
         </ul>
       </div>
 
-      <!-- Hero Art with Interactive Pointer Leaning Fan -->
+      <!-- Hero Art with Interactive Video Workstation Frame -->
       <div class="hero-art reveal">
-        <div class="fan" id="heroFan">
-          <!-- Fan Card 1: 8K Video -->
-          <div class="fan-card fan-1">
-            <div class="mock-header">
-              <div class="mock-dots"><span></span><span></span><span></span></div>
-              <span class="mock-title">YOUTUBE DASH</span>
+        <div class="video-workstation" id="videoWorkstation">
+          <!-- Window Header / Frame Top -->
+          <div class="video-frame-header">
+            <div class="mock-dots">
+              <span></span><span></span><span></span>
             </div>
-            <div class="mock-body">
-              <span class="mock-badge">4320p &middot; 8K HDR</span>
-              <p style="font-size:12px; font-weight:700; line-height:1.3;">Nature Showcase (60 FPS CineMaster)</p>
-              <div class="mock-progress"><div class="mock-progress-bar" style="width: 92%;"></div></div>
-              <small style="font-size: 10px; color: var(--muted-d);">142.4 MB/s &middot; Remuxing to MP4</small>
+            <div class="video-frame-title">
+              <span class="video-live-dot"></span>
+              <span class="video-title-text">MEDIA DOWNLOADER PRO &middot; OFFICIAL PREVIEW</span>
             </div>
-          </div>
-
-          <!-- Fan Card 2: TikTok Clean -->
-          <div class="fan-card fan-2">
-            <div class="mock-header">
-              <div class="mock-dots"><span></span><span></span><span></span></div>
-              <span class="mock-title">TIKTOK HD</span>
-            </div>
-            <div class="mock-body">
-              <span class="mock-badge" style="background:#fff; color:#0b0b0b;">NO OVERLAYS</span>
-              <p style="font-size:12px; font-weight:700; line-height:1.3;">@creative_motion &middot; Clean Video</p>
-              <div class="mock-progress"><div class="mock-progress-bar" style="width: 100%;"></div></div>
-              <small style="font-size: 10px; color: #4ec9b0;">Done &middot; Watermark removed</small>
+            <div class="video-frame-badge">
+              <span>HD 60FPS</span>
             </div>
           </div>
 
-          <!-- Fan Card 3: Main Downloader Pro Workstation -->
-          <div class="fan-card fan-3">
-            <div class="mock-header">
-              <div class="mock-dots"><span></span><span></span><span></span></div>
-              <span class="mock-title">DOWNLOADER PRO v1.0 TURBO</span>
-              <span style="font-size: 9px; font-weight:800; background:var(--gold); color:#0b0b0b; padding:2px 6px; border-radius:4px;">GPU READY</span>
-            </div>
-            <div class="mock-body" style="gap: 12px;">
-              <div style="background:#000; border:1px solid rgba(255,255,255,.15); padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11px; color:#9cdcfe; font-family:monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80%;">https://youtube.com/watch?v=dQw4w9WgXcQ</span>
-                <span style="font-size:10px; font-weight:800; color:var(--gold);">16 CONCURRENT</span>
+          <!-- Video Viewport -->
+          <div class="video-frame-body" title="Click to Pause / Play">
+            <video id="heroIntroVideo"
+                   playsinline
+                   autoplay
+                   muted
+                   loop
+                   preload="auto"
+                   poster="Videos/intro-poster.jpg"
+                   title="Media Downloader Pro Official Intro">
+              <source src="Videos/intro.mp4" type="video/mp4">
+              <source src="Videos/intro-opt.mp4" type="video/mp4">
+              <source src="Videos/Untitled_Scene_11-09_00_29_21_20261109013043.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+
+            <!-- Center Big Play/Pause Button -->
+            <button class="video-center-btn" id="videoCenterBtn" type="button" aria-label="Play or Pause Video" title="Click to Pause / Play">
+              <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+            </button>
+
+            <!-- Unmute Quick Pill Notice -->
+            <button class="video-unmute-pill" id="videoUnmutePill" type="button" aria-label="Unmute Video Audio">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px;">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+              <span>Click for Sound</span>
+            </button>
+
+            <!-- Bottom Control Bar -->
+            <div class="video-control-bar" id="videoControlBar">
+              <!-- Play / Pause Button -->
+              <button class="v-btn v-btn-playpause" id="videoPlayPauseBtn" type="button" aria-label="Pause Video" title="Pause / Play (Space)">
+                <svg class="ic-v-pause" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                <svg class="ic-v-play" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+
+              <!-- Timeline / Progress Scrubber -->
+              <div class="video-timeline-wrap" id="videoTimelineWrap" title="Seek video position">
+                <div class="video-timeline-track">
+                  <div class="video-timeline-buffer" id="videoTimelineBuffer"></div>
+                  <div class="video-timeline-prog" id="videoTimelineProg"></div>
+                </div>
               </div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:12px; font-weight:700;">Streams Muxed: 4K Video + Opus 320k</span>
-                <span style="font-size:12px; font-weight:800; color:var(--gold);">184 MB / 184 MB</span>
-              </div>
-              <div class="mock-progress" style="height:8px;"><div class="mock-progress-bar" style="width:100%;"></div></div>
+
+              <!-- Time Display -->
+              <span class="video-time-lbl" id="videoTimeLbl">00:00 / 00:30</span>
+
+              <!-- Mute / Unmute Button -->
+              <button class="v-btn v-btn-sound" id="videoSoundBtn" type="button" aria-label="Mute / Unmute Audio" title="Mute / Unmute (M)">
+                <svg class="ic-v-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg class="ic-v-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+              </button>
+
+              <!-- Fullscreen Button -->
+              <button class="v-btn v-btn-fs" id="videoFsBtn" type="button" aria-label="Toggle Fullscreen" title="Fullscreen (F)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- 24-point Wobbling Burst Star Badge -->
-        <div class="burst">
-          <b>v1.0</b>
-          <span>TURBO</span>
-        </div>
-
-        <!-- Tilted Speech Bubble -->
-        <div class="bubble">
-          Zero watermarks. Full 320kbps bitrate. Own your files.
+        <!-- Decorative Caption Pill Underneath Matching Theme -->
+        <div class="video-art-caption">
+          <div class="video-art-pill">
+            <span class="video-art-dot"></span>
+            <b>WATCH IN ACTION:</b>
+            <span>Single-Click 4K 60FPS Downloader &amp; Clean Muxer</span>
+          </div>
         </div>
       </div>
     </div>
@@ -2990,7 +3258,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
     <div class="ticker-band">
       <div class="ticker-track">
         <ul class="ticker-list">
-          <li class="ticker-item">YOUTUBE 8K 60FPS<span class="ticker-diamond"></span></li>
+          <li class="ticker-item">YOUTUBE 4K 60FPS<span class="ticker-diamond"></span></li>
           <li class="ticker-item">TIKTOK NO WATERMARK<span class="ticker-diamond"></span></li>
           <li class="ticker-item">STUDIO 320KBPS MP3<span class="ticker-diamond"></span></li>
           <li class="ticker-item">BATCH PLAYLISTS<span class="ticker-diamond"></span></li>
@@ -3000,7 +3268,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
           <li class="ticker-item">ID3 ALBUM ART EMBEDDING<span class="ticker-diamond"></span></li>
         </ul>
         <ul class="ticker-list">
-          <li class="ticker-item">YOUTUBE 8K 60FPS<span class="ticker-diamond"></span></li>
+          <li class="ticker-item">YOUTUBE 4K 60FPS<span class="ticker-diamond"></span></li>
           <li class="ticker-item">TIKTOK NO WATERMARK<span class="ticker-diamond"></span></li>
           <li class="ticker-item">STUDIO 320KBPS MP3<span class="ticker-diamond"></span></li>
           <li class="ticker-item">BATCH PLAYLISTS<span class="ticker-diamond"></span></li>
@@ -3012,83 +3280,6 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </div>
     </div>
   </div>
-
-  <!-- ============================================================
-       MADE FOR SECTION & INTERACTIVE STREAM ANALYZER
-       ============================================================ -->
-  <section class="madefor" id="inspector" aria-labelledby="mf-title">
-    <div class="wrap">
-      <div class="mf-in">
-        <div class="mf-head">
-          <p class="tag reveal"><span>Target Audiences</span></p>
-          <h2 class="reveal" id="mf-title">Engineered for heavy media workloads &amp; creators.</h2>
-          <p style="color:var(--muted-d); line-height:1.6;" class="reveal">
-            Whether you edit 4K footage in DaVinci Resolve, produce DJ sample packs, or curate offline research lectures, Downloader Pro bypasses web throttles and saves files directly to your storage.
-          </p>
-
-          <ul class="audience-list reveal">
-            <li class="aud-item">
-              <span class="aud-num">01</span>
-              <div class="aud-txt">
-                <b>Video Editors &amp; Motion Designers</b>
-                <small>Extract raw 4K &amp; 8K clips without compression artifacts</small>
-              </div>
-            </li>
-            <li class="aud-item">
-              <span class="aud-num">02</span>
-              <div class="aud-txt">
-                <b>DJs &amp; Audio Curators</b>
-                <small>Pristine 320kbps MP3s with automated ID3 album art</small>
-              </div>
-            </li>
-            <li class="aud-item">
-              <span class="aud-num">03</span>
-              <div class="aud-txt">
-                <b>Content Creators &amp; Archivists</b>
-                <small>TikTok clips with zero overlays, plus full channel queues</small>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Interactive Stream Analyzer Terminal -->
-        <div class="inspector-card reveal">
-          <h3 style="font-size: 20px; margin-bottom: 6px;">Live Stream Analyzer</h3>
-          <p style="font-size: 13px; color: var(--muted-d); margin-bottom: 14px;">Paste any video or TikTok URL to inspect CDN stream manifests:</p>
-
-          <div class="inspect-tabs" id="formatTabs">
-            <button class="inspect-chip is-active" data-fmt="8k">8K 60FPS Video</button>
-            <button class="inspect-chip" data-fmt="4k">4K Ultra HD</button>
-            <button class="inspect-chip" data-fmt="1080p">1080p FHD</button>
-            <button class="inspect-chip" data-fmt="mp3">MP3 320k Audio</button>
-            <button class="inspect-chip" data-fmt="tiktok">TikTok Clean</button>
-          </div>
-
-          <div class="inspect-input-box">
-            <input type="text" class="inspect-input" id="streamUrlInput" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=L_LUpnjgPso">
-            <button class="btn btn-gold btn-sm" id="btnAnalyze" style="flex:none;">
-              <span>Analyze</span>
-              <svg class="ic" aria-hidden="true"><use href="#i-bolt"></use></svg>
-            </button>
-          </div>
-
-          <div class="stream-readout" id="streamLog">
-            [CDN-CORE] Ready for manifest inspection.<br>
-            &gt; Enter URL and click <span class="log-hi">Analyze</span> to resolve video &amp; audio streams...
-          </div>
-
-          <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: var(--muted-d);">Status: <span class="u-gold" id="analyzeStatus">Idle</span></span>
-            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" id="btnQuickDl" style="display:none;">
-              <span>Download Selected Format</span>
-              <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ============================================================
        PRICING / LICENSE PASSES
        ============================================================ -->
@@ -3112,7 +3303,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div style="max-width: 680px;">
           <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
           <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
-          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>4K &amp; 8K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
+          <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>Ultra HD 4K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
         </div>
         <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold" style="white-space: nowrap;">
           <span>Get Free Setup + Trial</span>
@@ -3165,7 +3356,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </div>
 
             <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K 60FPS</b> UHD downloads</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>4 parallel queue workers</span></li>
@@ -3195,7 +3386,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
             </div>
 
             <ul class="price-perks">
-              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K &amp; 8K 60FPS</b> UHD downloads</span></li>
+              <li><svg class="ic"><use href="#i-check"></use></svg><span>Full <b>4K 60FPS</b> UHD downloads</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Studio <b>320kbps MP3</b> + Album art</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>TikTok <b>Zero-Watermark</b> ripper</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>8 parallel queue workers</span></li>
@@ -3302,10 +3493,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="0">
           <div class="shot-img-box">
             <span class="shot-num">01</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">DASHBOARD</div>
-              <small style="font-size:11px; color:var(--muted-d);">Single-Input Auto Detection</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-01-dashboard.webp" type="image/webp">
+              <img src="/img/shots/module-01-dashboard.jpg" alt="Dashboard - One-Click Paste &amp; Rip" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>One-Click Paste &amp; Rip</h4>
@@ -3317,10 +3508,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="1">
           <div class="shot-img-box">
             <span class="shot-num">02</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">8K SELECTOR</div>
-              <small style="font-size:11px; color:var(--muted-d);">Dynamic Bitrate Breakdown</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-02-4k-selector.webp" type="image/webp">
+              <img src="/img/shots/module-02-4k-selector.jpg" alt="4K Selector - Format &amp; Quality Matrix" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>Format &amp; Quality Matrix</h4>
@@ -3332,10 +3523,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="2">
           <div class="shot-img-box">
             <span class="shot-num">03</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">QUEUE ENGINE</div>
-              <small style="font-size:11px; color:var(--muted-d);">16 Parallel Workers</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-03-queue-engine.webp" type="image/webp">
+              <img src="/img/shots/module-03-queue-engine.jpg" alt="Queue Engine - Batch Queue Manager" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>Batch Queue Manager</h4>
@@ -3347,10 +3538,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="3">
           <div class="shot-img-box">
             <span class="shot-num">04</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">AUDIO STUDIO</div>
-              <small style="font-size:11px; color:var(--muted-d);">320kbps CBR Converter</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-04-audio-studio.webp" type="image/webp">
+              <img src="/img/shots/module-04-audio-studio.jpg" alt="Audio Studio - Studio 320k Audio Ripper" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>Studio 320k Audio Ripper</h4>
@@ -3362,10 +3553,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="4">
           <div class="shot-img-box">
             <span class="shot-num">05</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">TIKTOK CLEAN</div>
-              <small style="font-size:11px; color:var(--muted-d);">Zero Overlays</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-05-tiktok-clean.webp" type="image/webp">
+              <img src="/img/shots/module-05-tiktok-clean.jpg" alt="TikTok Clean - No-Watermark Extraction" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>No-Watermark Extraction</h4>
@@ -3377,10 +3568,10 @@ WEBSITE_HTML = """<!DOCTYPE html>
         <div class="shot-card reveal" data-lb="5">
           <div class="shot-img-box">
             <span class="shot-num">06</span>
-            <div style="text-align:center; padding: 20px;">
-              <div style="font-size:28px; font-weight:800; color:var(--gold);">GPU HARDWARE</div>
-              <small style="font-size:11px; color:var(--muted-d);">NVENC &middot; QuickSync &middot; AMF</small>
-            </div>
+            <picture>
+              <source srcset="/img/shots/module-06-gpu-hardware.webp" type="image/webp">
+              <img src="/img/shots/module-06-gpu-hardware.jpg" alt="GPU Hardware - Hardware Acceleration" class="shot-img" loading="lazy" width="1376" height="768">
+            </picture>
           </div>
           <div class="shot-meta">
             <h4>Hardware Acceleration</h4>
@@ -3597,13 +3788,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
       <div class="footer-brand">
         <span class="wordmark">Downloader<span class="wm-period">.</span></span>
         <p>
-          High-performance 8K video, TikTok clean MP4, and studio 320kbps MP3 ripper for Windows 10 &amp; 11.
+          High-performance 4K 60FPS video, TikTok clean MP4, and studio 320kbps MP3 ripper for Windows 10 &amp; 11.
         </p>
       </div>
 
       <nav class="footer-col" aria-label="Explore Links">
         <p class="footer-h">Explore</p>
-        <a href="#inspector">Stream Analyzer</a>
         <a href="#pricing">License Passes</a>
         <a href="#workstation">Workstation Modules</a>
         <a href="#principles">Architecture Guarantees</a>
@@ -3706,9 +3896,12 @@ WEBSITE_HTML = """<!DOCTYPE html>
       </button>
 
       <div class="lb-content" id="lbContent">
-        <div style="text-align:center; padding: 40px 20px;">
-          <div style="font-size: 48px; font-weight:800; color:var(--gold);" id="lbBigTitle">MODULE PREVIEW</div>
-          <p style="font-size: 16px; color: var(--white); margin-top: 10px; max-width: 500px;" id="lbDesc">Module description text goes here.</p>
+        <div class="lb-media">
+          <img src="/img/shots/module-01-dashboard.webp" alt="Module Preview" id="lbImg" class="lb-img">
+        </div>
+        <div class="lb-info">
+          <div class="lb-title" id="lbBigTitle">ONE-CLICK WORKSTATION</div>
+          <p class="lb-desc" id="lbDesc">Single input bar with automatic DASH manifest detection, instant stream query, and dark mode interface.</p>
         </div>
       </div>
 
@@ -3768,36 +3961,176 @@ WEBSITE_HTML = """<!DOCTYPE html>
       const menuBtn = $('#menuBtn');
       const mobileMenu = $('#mobileMenu');
       if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener('click', () => {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const isOpen = mobileMenu.classList.toggle('is-open');
           menuBtn.setAttribute('aria-expanded', String(isOpen));
+          document.body.style.overflow = isOpen ? 'hidden' : '';
         });
         $$('a', mobileMenu).forEach(a => {
           a.addEventListener('click', () => {
             mobileMenu.classList.remove('is-open');
             menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
           });
+        });
+        document.addEventListener('click', (e) => {
+          if (mobileMenu.classList.contains('is-open') && !mobileMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+            mobileMenu.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+          }
         });
       }
 
-      // ---------- Hero Pointer Parallax Fan ----------
-      const hero = $('.hero');
-      const heroFan = $('#heroFan');
-      if (hero && heroFan && window.matchMedia('(pointer: fine)').matches) {
-        let raf = 0;
-        hero.addEventListener('pointermove', (e) => {
-          if (raf) return;
-          raf = requestAnimationFrame(() => {
-            raf = 0;
-            const r = hero.getBoundingClientRect();
-            heroFan.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
-            heroFan.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+      // ---------- Hero Intro Video Controller ----------
+      const videoEl = document.getElementById('heroIntroVideo');
+      const workstationEl = document.getElementById('videoWorkstation');
+      const centerBtn = document.getElementById('videoCenterBtn');
+      const playPauseBtn = document.getElementById('videoPlayPauseBtn');
+      const soundBtn = document.getElementById('videoSoundBtn');
+      const unmutePill = document.getElementById('videoUnmutePill');
+      const progEl = document.getElementById('videoTimelineProg');
+      const bufferEl = document.getElementById('videoTimelineBuffer');
+      const timeLbl = document.getElementById('videoTimeLbl');
+      const timelineWrap = document.getElementById('videoTimelineWrap');
+      const fsBtn = document.getElementById('videoFsBtn');
+
+      if (videoEl && workstationEl) {
+        const formatTime = (sec) => {
+          if (isNaN(sec)) return '00:00';
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        };
+
+        let controlsTimer = null;
+        const showControlsBriefly = () => {
+          workstationEl.classList.add('controls-active');
+          if (controlsTimer) clearTimeout(controlsTimer);
+          if (!videoEl.paused) {
+            controlsTimer = setTimeout(() => {
+              workstationEl.classList.remove('controls-active');
+            }, 3500);
+          }
+        };
+
+        const togglePlay = (e) => {
+          if (e) e.stopPropagation();
+          if (videoEl.paused || videoEl.ended) {
+            videoEl.play();
+            showControlsBriefly();
+          } else {
+            videoEl.pause();
+            workstationEl.classList.add('controls-active');
+          }
+        };
+
+        const toggleSound = (e) => {
+          if (e) e.stopPropagation();
+          videoEl.muted = !videoEl.muted;
+          workstationEl.classList.toggle('is-unmuted', !videoEl.muted);
+          if (unmutePill) unmutePill.classList.toggle('is-hidden', !videoEl.muted);
+        };
+
+        if (centerBtn) centerBtn.addEventListener('click', togglePlay);
+        if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlay);
+        const bodyEl = workstationEl.querySelector('.video-frame-body');
+        if (bodyEl) {
+          bodyEl.addEventListener('click', (e) => {
+            if (e.target.closest('#videoControlBar') || e.target.closest('#videoUnmutePill')) return;
+            // On mobile touch, if controls are hidden, show them first; if already shown, toggle play
+            if (window.matchMedia('(pointer: coarse)').matches) {
+              if (!workstationEl.classList.contains('controls-active') && !videoEl.paused) {
+                showControlsBriefly();
+              } else {
+                togglePlay(e);
+              }
+            } else {
+              togglePlay(e);
+            }
           });
+          bodyEl.addEventListener('pointerenter', () => {
+            if (window.matchMedia('(pointer: fine)').matches) {
+              workstationEl.classList.add('controls-active');
+            }
+          });
+          bodyEl.addEventListener('pointerleave', () => {
+            if (window.matchMedia('(pointer: fine)').matches && !videoEl.paused) {
+              workstationEl.classList.remove('controls-active');
+            }
+          });
+        }
+
+        if (soundBtn) soundBtn.addEventListener('click', toggleSound);
+        if (unmutePill) unmutePill.addEventListener('click', toggleSound);
+
+        videoEl.addEventListener('play', () => {
+          workstationEl.classList.remove('is-paused');
         });
-        hero.addEventListener('pointerleave', () => {
-          heroFan.style.setProperty('--px', '0');
-          heroFan.style.setProperty('--py', '0');
+        videoEl.addEventListener('pause', () => {
+          workstationEl.classList.add('is-paused');
         });
+
+        videoEl.addEventListener('timeupdate', () => {
+          if (!videoEl.duration) return;
+          const pct = (videoEl.currentTime / videoEl.duration) * 100;
+          if (progEl) progEl.style.width = pct + '%';
+          if (timeLbl) timeLbl.textContent = formatTime(videoEl.currentTime) + ' / ' + formatTime(videoEl.duration);
+        });
+
+        videoEl.addEventListener('progress', () => {
+          if (videoEl.buffered.length > 0 && videoEl.duration) {
+            const bufEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
+            if (bufferEl) bufferEl.style.width = (bufEnd / videoEl.duration * 100) + '%';
+          }
+        });
+
+        if (timelineWrap) {
+          const seek = (e) => {
+            const rect = timelineWrap.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            if (videoEl.duration) {
+              videoEl.currentTime = pos * videoEl.duration;
+            }
+          };
+          timelineWrap.addEventListener('click', seek);
+        }
+
+        if (fsBtn) {
+          fsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+              if (workstationEl.requestFullscreen) workstationEl.requestFullscreen();
+              else if (videoEl.requestFullscreen) videoEl.requestFullscreen();
+            } else {
+              if (document.exitFullscreen) document.exitFullscreen();
+            }
+          });
+        }
+
+        // Global hotkeys for video when focused or anywhere on hero
+        window.addEventListener('keydown', (e) => {
+          if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+          if (e.code === 'Space') {
+            const heroRect = workstationEl.getBoundingClientRect();
+            if (heroRect.top < window.innerHeight && heroRect.bottom > 0) {
+              e.preventDefault();
+              togglePlay();
+            }
+          } else if (e.key === 'm' || e.key === 'M') {
+            toggleSound();
+          }
+        });
+
+        // Autoplay on page visit
+        videoEl.muted = true;
+        const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            workstationEl.classList.add('is-paused');
+          });
+        }
       }
 
       // ---------- Scroll Reveal Observer ----------
@@ -3830,70 +4163,7 @@ WEBSITE_HTML = """<!DOCTYPE html>
         });
       });
 
-      // ---------- Interactive Stream Analyzer Widget ----------
-      const btnAnalyze = $('#btnAnalyze');
-      const streamInput = $('#streamUrlInput');
-      const streamLog = $('#streamLog');
-      const analyzeStatus = $('#analyzeStatus');
-      const btnQuickDl = $('#btnQuickDl');
-      const formatTabs = $$('#formatTabs .inspect-chip');
-      let activeFormat = '8k';
-
-      formatTabs.forEach(chip => {
-        chip.addEventListener('click', () => {
-          formatTabs.forEach(c => c.classList.remove('is-active'));
-          chip.classList.add('is-active');
-          activeFormat = chip.dataset.fmt;
-        });
-      });
-
-      if (btnAnalyze && streamInput) {
-        btnAnalyze.addEventListener('click', () => {
-          const url = streamInput.value.trim();
-          if (!url) return;
-          analyzeStatus.textContent = 'Resolving CDN...';
-          analyzeStatus.style.color = 'var(--gold)';
-          streamLog.innerHTML = `[CDN-CONNECT] Handshake with YouTube/TikTok Edge CDN...<br>&gt; Parsing URL: <span class="log-hi">${url}</span>`;
-
-          setTimeout(() => {
-            const isTikTok = url.includes('tiktok.com');
-            if (isTikTok || activeFormat === 'tiktok') {
-              streamLog.innerHTML = `
-[SUCCESS] TikTok Direct Source Stream Resolved!<br>
-&gt; <span class="log-succ">Video Codec:</span> H.264 High Profile (1080 &times; 1920)<br>
-&gt; <span class="log-succ">Watermark Overlay:</span> <span class="log-hi">BYPASS CONFIRMED (Pure Source MP4)</span><br>
-&gt; <span class="log-succ">Audio Stream:</span> AAC 48kHz Stereo @ 256kbps<br>
-&gt; <span class="log-succ">Estimated Size:</span> 28.4 MB (No compression artifacts)
-              `;
-            } else if (activeFormat === '8k') {
-              streamLog.innerHTML = `
-[SUCCESS] YouTube 8K Cinema Stream Manifest Parsed!<br>
-&gt; <span class="log-succ">Video Stream:</span> VP9 / AV1 @ 7680 &times; 4320 (60.00 FPS HDR)<br>
-&gt; <span class="log-succ">Audio Stream:</span> Opus 320kbps Lossless (24-bit studio stereo)<br>
-&gt; <span class="log-succ">Muxing Container:</span> MP4 with FastStart flag<br>
-&gt; <span class="log-succ">CDN Sockets:</span> 16 Parallel chunks available
-              `;
-            } else if (activeFormat === 'mp3') {
-              streamLog.innerHTML = `
-[SUCCESS] High-Definition Audio Track Found!<br>
-&gt; <span class="log-succ">Audio Bitrate:</span> 320kbps Constant Bitrate (CBR)<br>
-&gt; <span class="log-succ">ID3 Tagger:</span> Auto-extracting Title, Artist, &amp; 1080p Album Artwork<br>
-&gt; <span class="log-succ">Target File:</span> Studio Master .mp3 (Zero clipping)
-              `;
-            } else {
-              streamLog.innerHTML = `
-[SUCCESS] DASH Video Manifest Ready!<br>
-&gt; <span class="log-succ">Resolution:</span> 4K UHD 3840 &times; 2160 @ 60 FPS<br>
-&gt; <span class="log-succ">Audio Codec:</span> AAC-LC / Opus Dual Channels<br>
-&gt; <span class="log-succ">Hardware Mux:</span> NVIDIA NVENC / Intel QuickSync Enabled
-              `;
-            }
-            analyzeStatus.textContent = 'Stream Ready';
-            analyzeStatus.style.color = '#4ec9b0';
-            btnQuickDl.style.display = 'inline-flex';
-          }, 600);
-        });
-      }
+      
 
       // ---------- Floating Action Button Scroll Visibility ----------
       const fabBtn = $('#fabBtn');
@@ -3919,27 +4189,32 @@ WEBSITE_HTML = """<!DOCTYPE html>
       const lbCloseBtn = $('#lbCloseBtn');
       const lbPrevBtn = $('#lbPrevBtn');
       const lbNextBtn = $('#lbNextBtn');
+      const lbImg = $('#lbImg');
       const lbBigTitle = $('#lbBigTitle');
       const lbDesc = $('#lbDesc');
       const lbCounter = $('#lbCounter');
       const shotCards = $$('.shot-card');
 
       const galleryData = [
-        { title: "ONE-CLICK WORKSTATION", desc: "Single input bar with automatic DASH manifest detection, instant stream query, and dark mode interface." },
-        { title: "8K 60FPS SELECTOR", desc: "Dynamic format selector listing exact bitrates, audio codecs, and file sizes before initiating download." },
-        { title: "16x BATCH QUEUE", desc: "Multi-socket TCP connection pool downloading entire channel libraries or playlists with auto-resume." },
-        { title: "320KBPS AUDIO RIPPER", desc: "Extract pure studio-quality MP3 and M4A audio tracks with embedded ID3 artwork and metadata." },
-        { title: "TIKTOK WATERMARK STRIPPER", desc: "Pulls clean video files directly from CDN edge nodes before watermark layers are applied." },
-        { title: "GPU HARDWARE REMUXING", desc: "Zero CPU load remuxing using NVIDIA NVENC, AMD AMF, and Intel QuickSync graphics acceleration." }
+        { img: "/img/shots/module-01-dashboard.webp", title: "DASHBOARD · SINGLE-INPUT AUTO DETECTION", desc: "Paste any video or TikTok URL to instantly query CDN stream manifests in 200ms with dark mode clarity." },
+        { img: "/img/shots/module-02-4k-selector.webp", title: "4K SELECTOR · DYNAMIC BITRATE MATRIX", desc: "Inspect resolution tiers from 4K 60FPS to 720p HD with exact file size estimation and Opus 320kbps audio muxing." },
+        { img: "/img/shots/module-03-queue-engine.webp", title: "QUEUE ENGINE · 16 PARALLEL WORKERS", desc: "Multi-socket TCP download queue manager with independent speed gauges, pause/resume, and auto-retry." },
+        { img: "/img/shots/module-04-audio-studio.webp", title: "AUDIO STUDIO · 320KBPS CBR CONVERTER", desc: "Studio-master 320kbps MP3 audio ripper featuring automated ID3 metadata tagging and high-res album art embedding." },
+        { img: "/img/shots/module-05-tiktok-clean.webp", title: "TIKTOK CLEAN · ZERO OVERLAYS", desc: "Pure MP4 source video stream pulled directly from edge CDN without watermark layers, plus audio extraction." },
+        { img: "/img/shots/module-06-gpu-hardware.webp", title: "GPU HARDWARE · NVENC / QUICKSYNC / AMF", desc: "Hardware-accelerated muxing and transcoding delegated to your dedicated graphics card with zero CPU overhead." }
       ];
 
       let curLbIdx = 0;
       const showLbSlide = (idx) => {
         curLbIdx = (idx + galleryData.length) % galleryData.length;
         const item = galleryData[curLbIdx];
-        lbBigTitle.textContent = item.title;
-        lbDesc.textContent = item.desc;
-        lbCounter.textContent = `${curLbIdx + 1} / ${galleryData.length}`;
+        if (lbImg) {
+          lbImg.src = item.img;
+          lbImg.alt = item.title;
+        }
+        if (lbBigTitle) lbBigTitle.textContent = item.title;
+        if (lbDesc) lbDesc.textContent = item.desc;
+        if (lbCounter) lbCounter.textContent = `${curLbIdx + 1} / ${galleryData.length}`;
       };
 
       shotCards.forEach((card, idx) => {
@@ -3981,7 +4256,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
     // ============================================================
     // CENTRALIZED RELEASE MANAGEMENT & DYNAMIC DOWNLOAD BINDING
     // ============================================================
-        // APP_RELEASES_START\n    const APP_RELEASES = [
+        // APP_RELEASES_START
+    const APP_RELEASES = [
       {
             "version": "v1.0.1",
             "date": "2026-11-06",
@@ -4002,7 +4278,8 @@ WEBSITE_HTML = """<!DOCTYPE html>
             "size": "57.8 MB",
             "notes": "First official release of Media Downloader Pro: 4K 60FPS video downloads, TikTok watermark-free extractor, lossless MP3 conversion, playlist batching, and single-file Windows installer."
       }
-];\n    // APP_RELEASES_END
+];
+    // APP_RELEASES_END
 
     function applyReleaseUpdates(releases) {
       if (!Array.isArray(releases) || releases.length === 0) return;
