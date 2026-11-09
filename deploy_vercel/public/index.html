@@ -1001,18 +1001,20 @@
     .ticker {
       position: relative;
       z-index: 10;
-      margin-top: -30px;
-      padding-block: 16px 20px;
+      margin-top: clamp(6px, 1vw, 20px);
+      margin-bottom: clamp(6px, 1vw, 20px);
+      padding-block: clamp(40px, 4vw, 75px);
       overflow: hidden;
     }
 
     .ticker-band {
-      margin-inline: -3vw;
+      margin-inline: -5vw;
       background: var(--gold);
       color: var(--ink);
-      border-block: 3px solid var(--ink);
-      transform: rotate(-1.6deg);
-      box-shadow: 0 8px 0 rgba(0, 0, 0, .35);
+      border-block: 3.5px solid var(--ink);
+      transform: rotate(-1.2deg);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
+      padding-block: 15px;
       transition: background .3s var(--ease);
     }
 
@@ -1047,6 +1049,7 @@
       letter-spacing: -.01em;
       text-transform: uppercase;
       white-space: nowrap;
+      line-height: 1.25;
     }
 
     .ticker-diamond {
@@ -2117,8 +2120,9 @@
 
     @media (max-width: 768px) {
       .ticker {
-        margin-top: 20px;
-        padding-block: 14px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding-block: 34px;
       }
       .video-workstation {
         border-radius: 18px;
