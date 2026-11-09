@@ -1621,10 +1621,42 @@
       padding: clamp(28px, 2.5vw, 36px) clamp(20px, 2vw, 26px);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       position: relative;
       box-shadow: 6px 6px 0 var(--ink-3);
       transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .price-badge-top {
+      position: absolute;
+      top: -13px;
+      right: 24px;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(245, 184, 46, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    .price-card-body {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .price-card-footer {
+      margin-top: auto;
+      width: 100%;
+      padding-top: 16px;
+      display: flex;
+      flex-direction: column;
     }
 
     .price-card:hover {
@@ -1641,16 +1673,20 @@
 
     .price-card .btn {
       width: 100%;
-      min-height: 50px;
-      padding: 13px 14px;
+      min-height: 52px;
+      height: 52px;
+      padding: 0 16px;
       font-size: 14px;
       font-weight: 700;
       gap: 6px;
       letter-spacing: -0.01em;
       white-space: nowrap;
       justify-content: center;
+      align-items: center;
+      display: inline-flex;
       box-sizing: border-box;
       box-shadow: none;
+      margin-top: auto;
     }
 
     .price-card .btn .ic {
@@ -3313,7 +3349,7 @@
       <div class="pricing-grid">
         <!-- Plan 1: Free Starter ($0) -->
         <div class="price-card reveal">
-          <div>
+          <div class="price-card-body">
             <div class="price-head">
               <h3>Free Starter</h3>
               <p>Standard edition for 720p 30fps media and basic MP3 rips.</p>
@@ -3334,15 +3370,17 @@
             </ul>
           </div>
 
-          <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
-            <span>Download Free ($0)</span>
-            <svg class="ic"><use href="#i-download"></use></svg>
-          </a>
+          <div class="price-card-footer">
+            <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-line" style="width: 100%;">
+              <span>Download Free ($0)</span>
+              <svg class="ic"><use href="#i-download"></use></svg>
+            </a>
+          </div>
         </div>
 
         <!-- Plan 2: Monthly Pro ($1.99 USD) -->
         <div class="price-card reveal">
-          <div>
+          <div class="price-card-body">
             <div class="price-head">
               <h3>Monthly Pro Pass</h3>
               <p>Low-cost flexible access. Cancel anytime.</p>
@@ -3363,16 +3401,17 @@
             </ul>
           </div>
 
-          <button class="btn btn-line trigger-checkout" data-plan="pro_monthly" style="width: 100%;">
-            <span>Get Monthly Pass ($1.99)</span>
-            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
+          <div class="price-card-footer">
+            <button class="btn btn-line trigger-checkout" data-plan="pro_monthly" style="width: 100%;">
+              <span>Get Monthly Pass ($1.99)</span>
+              <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Plan 3: Annual Pro ($14.99 USD) -->
         <div class="price-card reveal">
-          <div>
+          <div class="price-card-body">
             <div class="price-head">
               <h3>Annual Pro Pass</h3>
               <p>Best for active creators. Save 37% vs monthly.</p>
@@ -3393,18 +3432,19 @@
             </ul>
           </div>
 
-          <button class="btn btn-line trigger-checkout" data-plan="pro_yearly" style="width: 100%;">
-            <span>Get Annual Pass ($14.99)</span>
-            <svg class="ic"><use href="#i-arrow-ne"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
+          <div class="price-card-footer">
+            <button class="btn btn-line trigger-checkout" data-plan="pro_yearly" style="width: 100%;">
+              <span>Get Annual Pass ($14.99)</span>
+              <svg class="ic"><use href="#i-arrow-ne"></use></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Plan 4: Lifetime Master ($24.99 USD) -->
         <div class="price-card featured-plan reveal">
           <span class="price-badge-top">BEST VALUE &middot; ONE-TIME</span>
 
-          <div>
+          <div class="price-card-body">
             <div class="price-head">
               <h3 style="color:var(--gold);">Lifetime Master</h3>
               <p>Pay once, own forever. All present and future updates included.</p>
@@ -3426,11 +3466,12 @@
             </ul>
           </div>
 
-          <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="width: 100%;">
-            <span>Get Lifetime License ($24.99)</span>
-            <svg class="ic"><use href="#i-arrow"></use></svg>
-          </button>
-          <a href="https://chat.whatsapp.com/GwABzhDv3z8CAIXINR1hMG" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; font-size:12px; color:#25D366; margin-top:10px; font-weight:700; text-decoration:none;"><span style="text-decoration:underline;">💬 Buy via WhatsApp Group</span> &rarr;</a>
+          <div class="price-card-footer">
+            <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="width: 100%;">
+              <span>Get Lifetime License ($24.99)</span>
+              <svg class="ic"><use href="#i-arrow"></use></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -4195,12 +4236,12 @@
       const shotCards = $$('.shot-card');
 
       const galleryData = [
-        { img: "/img/shots/module-01-dashboard.webp", title: "DASHBOARD · SINGLE-INPUT AUTO DETECTION", desc: "Paste any video or TikTok URL to instantly query CDN stream manifests in 200ms with dark mode clarity." },
-        { img: "/img/shots/module-02-4k-selector.webp", title: "4K SELECTOR · DYNAMIC BITRATE MATRIX", desc: "Inspect resolution tiers from 4K 60FPS to 720p HD with exact file size estimation and Opus 320kbps audio muxing." },
-        { img: "/img/shots/module-03-queue-engine.webp", title: "QUEUE ENGINE · 16 PARALLEL WORKERS", desc: "Multi-socket TCP download queue manager with independent speed gauges, pause/resume, and auto-retry." },
-        { img: "/img/shots/module-04-audio-studio.webp", title: "AUDIO STUDIO · 320KBPS CBR CONVERTER", desc: "Studio-master 320kbps MP3 audio ripper featuring automated ID3 metadata tagging and high-res album art embedding." },
-        { img: "/img/shots/module-05-tiktok-clean.webp", title: "TIKTOK CLEAN · ZERO OVERLAYS", desc: "Pure MP4 source video stream pulled directly from edge CDN without watermark layers, plus audio extraction." },
-        { img: "/img/shots/module-06-gpu-hardware.webp", title: "GPU HARDWARE · NVENC / QUICKSYNC / AMF", desc: "Hardware-accelerated muxing and transcoding delegated to your dedicated graphics card with zero CPU overhead." }
+        { img: "/img/shots/module-01-dashboard.webp", title: "DASHBOARD - SINGLE-INPUT AUTO DETECTION", desc: "Paste any video or TikTok URL to instantly query CDN stream manifests in 200ms with dark mode clarity." },
+        { img: "/img/shots/module-02-4k-selector.webp", title: "4K SELECTOR - DYNAMIC BITRATE MATRIX", desc: "Inspect resolution tiers from 4K 60FPS to 720p HD with exact file size estimation and Opus 320kbps audio muxing." },
+        { img: "/img/shots/module-03-queue-engine.webp", title: "QUEUE ENGINE - 16 PARALLEL WORKERS", desc: "Multi-socket TCP download queue manager with independent speed gauges, pause/resume, and auto-retry." },
+        { img: "/img/shots/module-04-audio-studio.webp", title: "AUDIO STUDIO - 320KBPS CBR CONVERTER", desc: "Studio-master 320kbps MP3 audio ripper featuring automated ID3 metadata tagging and high-res album art embedding." },
+        { img: "/img/shots/module-05-tiktok-clean.webp", title: "TIKTOK CLEAN - ZERO OVERLAYS", desc: "Pure MP4 source video stream pulled directly from edge CDN without watermark layers, plus audio extraction." },
+        { img: "/img/shots/module-06-gpu-hardware.webp", title: "GPU HARDWARE - NVENC / QUICKSYNC / AMF", desc: "Hardware-accelerated muxing and transcoding delegated to your dedicated graphics card with zero CPU overhead." }
       ];
 
       let curLbIdx = 0;
