@@ -25,18 +25,31 @@
        CAMPUS DESIGN SYSTEM TOKENS & RESET
        ============================================================ */
     :root {
-      --ink: #0b0b0b;
-      --ink-2: #141414;
-      --ink-3: #1d1d1d;
-      --ink-line: rgba(255, 255, 255, .13);
-      --gold: #f5b82e;
-      --gold-hi: #ffc94f;
-      --gold-deep: #d9990c;
-      --paper: #fff8ea;
-      --paper-2: #f5e9cf;
+      /* Dark Pastel System - Midnight Slate Surfaces */
+      --ink: #0e121a;
+      --ink-2: #161b26;
+      --ink-3: #202637;
+      --ink-line: rgba(203, 213, 225, .14);
+
+      /* Primary Pastel Accent: Soft Honey Amber / Peach */
+      --gold: #f0c674;
+      --gold-hi: #f9d8a6;
+      --gold-deep: #cca268;
+      --accent-rgb: 240, 198, 116;
+
+      /* Pastel Palette Extensions */
+      --pastel-lavender: #c4b5fd;
+      --pastel-mint: #99e2b4;
+      --pastel-rose: #fca5a5;
+      --pastel-sky: #93c5fd;
+      --pastel-peach: #fed7aa;
+
+      /* Soft Pearl Paper & Typography */
+      --paper: #f1f5f9;
+      --paper-2: #e2e8f0;
       --white: #ffffff;
-      --muted-d: rgba(255, 255, 255, .72);
-      --muted-l: #5c5345;
+      --muted-d: rgba(226, 232, 240, .76);
+      --muted-l: #94a3b8;
 
       --font: "Sora", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --h1: clamp(2.5rem, 1.1rem + 4.8vw, 5.2rem);
@@ -50,24 +63,28 @@
       --r: 24px;
       --ease: cubic-bezier(.2, .8, .2, 1);
       --snap: cubic-bezier(.34, 1.45, .55, 1);
-      --btn-shadow: #ffffff;
-      --shadow-ink: 6px 6px 0 var(--ink);
+      --btn-shadow: #c4b5fd;
+      --shadow-ink: 6px 6px 0 #07090e;
     }
 
+    /* Dark Pastel Theme: Pastel Rose & Blush */
     [data-theme="red"] {
-      --gold: #ff2a5f;
-      --gold-hi: #ff547e;
-      --gold-deep: #d41443;
-      --paper: #fff0f3;
-      --paper-2: #fed7e0;
+      --gold: #fca5a5;
+      --gold-hi: #fed7aa;
+      --gold-deep: #e07a5f;
+      --accent-rgb: 252, 165, 165;
+      --paper: #fff1f2;
+      --paper-2: #ffe4e6;
     }
 
+    /* Dark Pastel Theme: Pastel Mint & Ice Sky */
     [data-theme="cyan"] {
-      --gold: #19c3ff;
-      --gold-hi: #54d4ff;
-      --gold-deep: #009acc;
-      --paper: #ecf9ff;
-      --paper-2: #cbeeff;
+      --gold: #99e2b4;
+      --gold-hi: #a7f3d0;
+      --gold-deep: #5eead4;
+      --accent-rgb: 153, 226, 180;
+      --paper: #f0fdf4;
+      --paper-2: #dcfce7;
     }
 
     *, *::before, *::after {
@@ -170,8 +187,8 @@
       letter-spacing: .12em;
       text-transform: uppercase;
       color: var(--gold);
-      background: rgba(245, 184, 46, .08);
-      border: 1.5px solid rgba(245, 184, 46, .45);
+      background: rgba(var(--accent-rgb), .08);
+      border: 1.5px solid rgba(var(--accent-rgb), .45);
       border-radius: 999px;
       transition: all .3s var(--ease);
     }
@@ -244,10 +261,10 @@
       letter-spacing: .12em;
       text-transform: uppercase;
       color: var(--gold);
-      background: rgba(245, 184, 46, .12);
+      background: rgba(var(--accent-rgb), .12);
       padding: 3px 8px;
       border-radius: 6px;
-      border: 1px solid rgba(245, 184, 46, .35);
+      border: 1px solid rgba(var(--accent-rgb), .35);
       margin-left: 8px;
       transition: all .3s var(--ease);
     }
@@ -399,9 +416,9 @@
       position: relative;
     }
 
-    .theme-dot[data-t="gold"] { background: #f5b82e; }
-    .theme-dot[data-t="red"] { background: #ff2a5f; }
-    .theme-dot[data-t="cyan"] { background: #19c3ff; }
+    .theme-dot[data-t="gold"] { background: #f0c674; box-shadow: 0 0 10px rgba(240, 198, 116, 0.45); }
+    .theme-dot[data-t="red"] { background: #fca5a5; box-shadow: 0 0 10px rgba(252, 165, 165, 0.45); }
+    .theme-dot[data-t="cyan"] { background: #99e2b4; box-shadow: 0 0 10px rgba(153, 226, 180, 0.45); }
 
     .theme-dot.is-active {
       transform: scale(1.18);
@@ -492,12 +509,21 @@
       inset: 0;
       right: 0;
       left: 38%;
-      background: var(--gold);
+      background: linear-gradient(145deg, #151a26 0%, #1a2030 50%, #161b28 100%);
+      border-left: 2px solid rgba(var(--accent-rgb), 0.28);
       clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
       pointer-events: none;
       z-index: 1;
-      opacity: 0.96;
-      transition: background .3s var(--ease);
+      opacity: 0.98;
+      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.6);
+      transition: all .3s var(--ease);
+    }
+    .hero-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 65% 45%, rgba(var(--accent-rgb), 0.12) 0%, transparent 65%);
+      pointer-events: none;
     }
 
     .hero-panel::before {
@@ -775,7 +801,7 @@
       transition: opacity .25s var(--ease), transform .25s var(--snap), background .2s, border-color .2s;
       z-index: 5;
       backdrop-filter: blur(8px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 184, 46, 0.25);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--accent-rgb), 0.25);
     }
 
     .video-workstation.is-paused .video-center-btn,
@@ -1639,7 +1665,7 @@
       letter-spacing: .05em;
       padding: 4px 12px;
       border-radius: 999px;
-      box-shadow: 0 4px 12px rgba(245, 184, 46, 0.35);
+      box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.35);
       border: 1px solid rgba(0, 0, 0, 0.2);
       text-transform: uppercase;
       z-index: 2;
@@ -1697,7 +1723,7 @@
 
     .price-card .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(245, 184, 46, 0.25);
+      box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.25);
     }
 
     .price-head {
@@ -2111,6 +2137,10 @@
 
     /* Scroll Reveal */
     .reveal {
+      /* preview visibility */
+      opacity: 1;
+      transform: none;
+
       opacity: 0;
       transform: translateY(22px);
       transition: opacity .7s var(--ease), transform .7s var(--ease);
@@ -2322,8 +2352,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(245, 184, 46, 0.1);
-      border: 1px solid rgba(245, 184, 46, 0.35);
+      background: rgba(var(--accent-rgb), 0.1);
+      border: 1px solid rgba(var(--accent-rgb), 0.35);
       color: var(--paper);
       padding: 8px 16px;
       border-radius: 100px;
@@ -2378,14 +2408,14 @@
       border-radius: 10px;
       text-decoration: none;
       transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
-      box-shadow: 0 4px 14px rgba(245, 184, 46, 0.25);
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
       white-space: nowrap;
     }
 
     .ov-dl-btn:hover {
       filter: brightness(1.15);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(245, 184, 46, 0.4);
+      box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.4);
     }
 
     .ov-dl-btn svg {
@@ -2603,9 +2633,9 @@
     }
 
     .rel-item.is-latest {
-      border-color: rgba(245, 184, 46, 0.65);
+      border-color: rgba(var(--accent-rgb), 0.65);
       background: linear-gradient(145deg, #181714 0%, #13171b 100%);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 25px rgba(245, 184, 46, 0.09);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 25px rgba(var(--accent-rgb), 0.09);
     }
 
     .rel-item-top {
@@ -2750,9 +2780,9 @@
     }
 
     .update-card.is-latest {
-      border-color: rgba(245, 184, 46, 0.6);
-      background: linear-gradient(135deg, var(--ink-2), rgba(245, 184, 46, 0.04));
-      box-shadow: 0 0 25px rgba(245, 184, 46, 0.08);
+      border-color: rgba(var(--accent-rgb), 0.6);
+      background: linear-gradient(135deg, var(--ink-2), rgba(var(--accent-rgb), 0.04));
+      box-shadow: 0 0 25px rgba(var(--accent-rgb), 0.08);
     }
 
     .update-card-left {
@@ -3023,7 +3053,7 @@
     .tutorial-sec {
       padding-block: clamp(70px, 9vw, 120px);
       position: relative;
-      background: radial-gradient(circle at 50% 0%, rgba(245, 184, 46, 0.06) 0%, transparent 60%);
+      background: radial-gradient(circle at 50% 0%, rgba(var(--accent-rgb), 0.06) 0%, transparent 60%);
       border-top: 1px solid var(--ink-line);
       scroll-margin-top: calc(var(--header-h, 72px) + 20px);
     }
@@ -3075,13 +3105,13 @@
     .t-btn-playpause {
       background: var(--gold);
       color: #0b0f17;
-      box-shadow: 0 4px 18px rgba(245, 184, 46, 0.35);
+      box-shadow: 0 4px 18px rgba(var(--accent-rgb), 0.35);
     }
 
     .t-btn-playpause:hover {
       transform: translateY(-2px);
       background: var(--gold-hi);
-      box-shadow: 0 8px 26px rgba(245, 184, 46, 0.55);
+      box-shadow: 0 8px 26px rgba(var(--accent-rgb), 0.55);
     }
 
     .t-btn-playpause svg {
@@ -3093,7 +3123,7 @@
     .t-btn-fs {
       background: var(--ink-3);
       color: #ffffff;
-      border: 1.5px solid rgba(245, 184, 46, 0.55);
+      border: 1.5px solid rgba(var(--accent-rgb), 0.55);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
 
@@ -3102,7 +3132,7 @@
       background: #252b36;
       border-color: var(--gold);
       color: var(--gold);
-      box-shadow: 0 6px 22px rgba(245, 184, 46, 0.3);
+      box-shadow: 0 6px 22px rgba(var(--accent-rgb), 0.3);
     }
 
     .t-btn-fs svg {
@@ -3267,15 +3297,15 @@
 
     .chapter-card:hover {
       transform: translateY(-2px);
-      border-color: rgba(245, 184, 46, 0.65);
+      border-color: rgba(var(--accent-rgb), 0.65);
       background: #171d28;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     }
 
     .chapter-card.is-active {
       border-color: var(--gold);
-      background: rgba(245, 184, 46, 0.08);
-      box-shadow: 0 0 0 1px var(--gold), 0 8px 24px rgba(245, 184, 46, 0.2);
+      background: rgba(var(--accent-rgb), 0.08);
+      box-shadow: 0 0 0 1px var(--gold), 0 8px 24px rgba(var(--accent-rgb), 0.2);
     }
 
     .chapter-badge {
@@ -3295,7 +3325,7 @@
 
     .chapter-card.is-active .chapter-badge {
       background: var(--gold-hi);
-      box-shadow: 0 0 10px rgba(245, 184, 46, 0.5);
+      box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
     }
 
     .chapter-info {
@@ -3317,11 +3347,75 @@
       font-weight: 600;
     }
 
+  
+    /* ============================================================
+       DARK PASTEL ENHANCEMENTS FOR LOCAL PREVIEW
+       ============================================================ */
+    body {
+      background-color: var(--ink);
+      color: var(--paper);
+    }
+
+    
+      50% { opacity: 0.55; transform: scale(0.85); }
+    }
+
+    /* Soft Pastel Marquee Ticker */
+    .ticker-band {
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-hi) 45%, var(--pastel-lavender) 100%) !important;
+      color: #0e121a !important;
+      border-block: 3px solid #0e121a !important;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+    }
+    .ticker-item {
+      color: #0e121a !important;
+      font-weight: 800 !important;
+    }
+
+    /* Buttons with soft dark pastel glow */
+    .btn-gold {
+      background: var(--gold) !important;
+      color: #0e121a !important;
+      font-weight: 800 !important;
+      border: 2px solid #0e121a !important;
+      box-shadow: 4px 4px 0 var(--btn-shadow), 0 4px 16px rgba(var(--accent-rgb), 0.25) !important;
+    }
+    .btn-gold:hover {
+      background: var(--gold-hi) !important;
+      box-shadow: 6px 6px 0 var(--btn-shadow), 0 8px 24px rgba(var(--accent-rgb), 0.4) !important;
+    }
+
+    /* Cards softly elevated */
+    .price-card, .shot-card, .principle-card, .rel-item, .update-card {
+      background: var(--ink-2) !important;
+      border-color: var(--ink-line) !important;
+    }
+    .price-card:hover, .shot-card:hover, .principle-card:hover {
+      border-color: var(--gold) !important;
+      box-shadow: 0 12px 32px rgba(var(--accent-rgb), 0.18), 6px 6px 0 rgba(14, 18, 26, 0.9) !important;
+    }
+    .price-card.featured-plan {
+      background: var(--ink-3) !important;
+      border-color: var(--gold) !important;
+      box-shadow: 0 14px 40px rgba(var(--accent-rgb), 0.22), 8px 8px 0 rgba(14, 18, 26, 0.9) !important;
+    }
+
+    /* Workstation & Tutorial Video Frames */
+    .video-workstation, .tutorial-workstation {
+      background: var(--ink-2) !important;
+      border: 3px solid rgba(var(--accent-rgb), 0.3) !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(var(--accent-rgb), 0.15) !important;
+    }
+    .video-workstation:hover, .tutorial-workstation:hover {
+      border-color: var(--gold) !important;
+      box-shadow: 0 30px 75px rgba(0, 0, 0, 0.7), 0 0 45px rgba(var(--accent-rgb), 0.25) !important;
+    }
+
   </style>
 </head>
 <body>
   <!-- Top Promotional Banner -->
-  <aside class="promo-bar" style="background: linear-gradient(90deg, #d9990c 0%, #f5b82e 50%, #19c3ff 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
+  <aside class="promo-bar" style="background: linear-gradient(90deg, var(--gold) 0%, var(--gold-hi) 45%, var(--pastel-lavender) 100%); color: #0b0b0b; padding: 10px 16px; text-align: center; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; z-index: 100; position: relative;">
     🎁 <strong>LIMITED PROMOTION:</strong> 7-Day Pro Free Trial included with Windows Installer! Enjoy 4K 60FPS, Playlists &amp; Turbo Speed on your PC (No Credit Card Required).
     <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; margin-left: 8px; font-weight: 800; color: #000;">Download Setup &rarr;</a>
   </aside>
@@ -3370,9 +3464,9 @@
       <div class="header-actions">
         <!-- Live Color Palette Switcher -->
         <div class="theme-picker" role="group" aria-label="Color Palette">
-          <button class="theme-dot is-active" data-t="gold" title="Campus Gold" aria-label="Campus Gold"></button>
-          <button class="theme-dot" data-t="red" title="Poster Red" aria-label="Poster Red"></button>
-          <button class="theme-dot" data-t="cyan" title="Cyber Cyan" aria-label="Cyber Cyan"></button>
+          <button class="theme-dot is-active" data-t="gold" title="Pastel Honey & Lavender" aria-label="Pastel Honey & Lavender"></button>
+          <button class="theme-dot" data-t="red" title="Pastel Rose & Blush" aria-label="Pastel Rose & Blush"></button>
+          <button class="theme-dot" data-t="cyan" title="Pastel Mint & Ice Sky" aria-label="Pastel Mint & Ice Sky"></button>
         </div>
 
         <a href="https://github.com/chathufer/Web-11-05-2026/releases/download/v1.0.1/MediaDownloaderPro_Setup.exe" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-sm">
@@ -3411,7 +3505,7 @@
 
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <p class="tag reveal" style="border-color: rgba(245, 184, 46, 0.4); background: rgba(245, 184, 46, 0.12);">
+        <p class="tag reveal" style="border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.12);">
           <span>🎁 SPECIAL PROMO: Includes 7-Day Pro Free Trial on 1 PC &middot; Windows 10 &amp; 11</span>
         </p>
 
@@ -3637,9 +3731,9 @@
       </div>
 
             <!-- 7-Day Free Trial Promotion Banner -->
-      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(245, 184, 46, 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+      <div class="trial-promo-card reveal" style="background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.12), rgba(25, 195, 255, 0.12)); border: 1px solid rgba(25, 195, 255, 0.4); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="max-width: 680px;">
-          <span style="background: #19c3ff; color: #0b0b0b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
+          <span style="background: var(--pastel-sky); color: #0e121a; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">🔥 SPECIAL LAUNCH PROMOTION</span>
           <h3 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">7-Day Pro Free Trial Included With Every Download</h3>
           <p style="color: var(--muted-d); font-size: 0.95rem; margin: 0;">Test drive 100% of Pro features on your PC for 7 days: <strong>Ultra HD 4K 60FPS video</strong>, <strong>unlimited batch playlists</strong>, and <strong>studio 320kbps MP3s</strong>. No credit card required — activates instantly in 1 click.</p>
         </div>
@@ -3668,7 +3762,7 @@
               <li><svg class="ic"><use href="#i-check"></use></svg><span><strong>Max 720p @ 30fps</strong> video downloads (Strict cap)</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Standard single-item downloads</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>192kbps Standard MP3 audio</span></li>
-              <li><svg class="ic" style="color: #19c3ff;"><use href="#i-check"></use></svg><span style="color: #19c3ff; font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
+              <li><svg class="ic" style="color: var(--pastel-sky);"><use href="#i-check"></use></svg><span style="color: var(--pastel-sky); font-weight: 700;">🎁 Includes 7-Day Pro Free Trial (1 PC)</span></li>
               <li><svg class="ic"><use href="#i-check"></use></svg><span>Windows 10/11 standalone setup</span></li>
             </ul>
           </div>
@@ -3820,7 +3914,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div>
-          <p class="sticker reveal" style="border-color: rgba(245, 184, 46, 0.4); background: rgba(245, 184, 46, 0.12); color: var(--gold);">
+          <p class="sticker reveal" style="border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.12); color: var(--gold);">
             <svg class="ic" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             <span>Official Step-by-Step Tutorial</span>
           </p>
@@ -4330,7 +4424,7 @@
           <span>Download Setup v1.0</span>
           <svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>
         </a>
-        <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="background:#0b0b0b; color:var(--gold); border-color:#0b0b0b;">
+        <button class="btn btn-gold trigger-checkout" data-plan="pro_lifetime" style="background:#0e121a; color:var(--gold); border-color:#0e121a;">
           <span>Unlock Lifetime Pass ($24.99)</span>
           <svg class="ic" aria-hidden="true"><use href="#i-arrow-ne"></use></svg>
         </button>
@@ -4812,6 +4906,9 @@
         modalCloseBtn.addEventListener('click', () => checkoutModal.close());
         checkoutModal.addEventListener('click', (e) => { if (e.target === checkoutModal) checkoutModal.close(); });
       }
+    
+      
+
     })();
   
     // ============================================================
@@ -5089,5 +5186,8 @@
       }
 
   </script>
+
+  
+
 </body>
 </html>

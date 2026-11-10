@@ -38,3 +38,6 @@ deploy_vercel/Videos/Tutorial*.mp4
 deploy_vercel/Videos/tutorial*.mp4
 deploy_vercel/public/Videos/Tutorial*.mp4
 deploy_vercel/public/Videos/tutorial*.mp4
+
+# Local preview file
+index-preview.html
