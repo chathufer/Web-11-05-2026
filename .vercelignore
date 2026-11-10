@@ -1,0 +1,14 @@
+# Ignore local build directories and non-essential caches from Vercel
+deploy_vercel/
+Setup/
+dist/
+build/
+scratch/
+*.exe
+*.bak
+
+# Large tutorial videos (streamed via GitHub Pages Edge CDN)
+Videos/Tutorial*.mp4
+Videos/tutorial*.mp4
+public/Videos/Tutorial*.mp4
+public/Videos/tutorial*.mp4
