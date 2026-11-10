@@ -29,9 +29,17 @@ env/
 *.bak
 scratch/
 
+# Large raw tutorial video sources
+Videos/Tutorial final.mp4
+Videos/Tutorial-final.mp4
+Videos/Tutorial-opt.mp4
+public/Videos/Tutorial final.mp4
+public/Videos/Tutorial-final.mp4
+deploy_vercel/Videos/Tutorial final.mp4
+deploy_vercel/Videos/Tutorial-final.mp4
 
-# Large tutorial videos (hosted via GitHub Releases CDN)
-Videos/Tutorial*.mp4
-public/Videos/Tutorial*.mp4
-deploy_vercel/Videos/Tutorial*.mp4
-deploy_vercel/public/Videos/Tutorial*.mp4
+# Whitelist web-optimized inline tutorial video (12 MB with faststart)
+!Videos/tutorial.mp4
+!public/Videos/tutorial.mp4
+!deploy_vercel/Videos/tutorial.mp4
+!deploy_vercel/public/Videos/tutorial.mp4
