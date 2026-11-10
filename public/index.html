@@ -3016,7 +3016,308 @@
       .fab-wa { padding: 14px; border-radius: 50%; left: 16px; bottom: 16px; }
     }
 
-</style>
+
+    /* ============================================================
+       TUTORIAL SECTION & VIDEO PLAYER ENHANCEMENTS
+       ============================================================ */
+    .tutorial-sec {
+      padding-block: clamp(70px, 9vw, 120px);
+      position: relative;
+      background: radial-gradient(circle at 50% 0%, rgba(245, 184, 46, 0.06) 0%, transparent 60%);
+      border-top: 1px solid var(--ink-line);
+      scroll-margin-top: calc(var(--header-h, 72px) + 20px);
+    }
+
+    .tutorial-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Dedicated Prominent Toolbar */
+    .tutorial-quick-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 18px 26px;
+      background: var(--ink-2);
+      border: 2px solid var(--ink-line);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .t-toolbar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .t-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 13px 26px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      user-select: none;
+      border: none;
+      text-decoration: none;
+      line-height: 1;
+    }
+
+    .t-btn-playpause {
+      background: var(--gold);
+      color: #0b0f17;
+      box-shadow: 0 4px 18px rgba(245, 184, 46, 0.35);
+    }
+
+    .t-btn-playpause:hover {
+      transform: translateY(-2px);
+      background: var(--gold-hi);
+      box-shadow: 0 8px 26px rgba(245, 184, 46, 0.55);
+    }
+
+    .t-btn-playpause svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .t-btn-fs {
+      background: var(--ink-3);
+      color: #ffffff;
+      border: 1.5px solid rgba(245, 184, 46, 0.55);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .t-btn-fs:hover {
+      transform: translateY(-2px);
+      background: #252b36;
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 6px 22px rgba(245, 184, 46, 0.3);
+    }
+
+    .t-btn-fs svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .t-btn-restart {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted-d);
+      border: 1px solid var(--ink-line);
+      padding: 13px 20px;
+    }
+
+    .t-btn-restart:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    .t-btn-restart svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .t-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .t-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted-d);
+      background: rgba(0, 0, 0, 0.45);
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--ink-line);
+    }
+
+    .t-status-badge .t-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+      animation: pulse-dot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    /* Video Workstation Container for Tutorial */
+    .tutorial-workstation {
+      position: relative;
+      width: 100%;
+      background: var(--ink-2);
+      border: 3px solid var(--ink);
+      border-radius: 22px;
+      box-shadow: 10px 10px 0 var(--ink), 0 24px 60px rgba(0, 0, 0, 0.65);
+      outline: 2px solid var(--gold);
+      overflow: hidden;
+      transition: transform .4s var(--ease), box-shadow .4s var(--ease), outline-color .3s var(--ease);
+    }
+
+    .tutorial-workstation:hover {
+      transform: translateY(-3px);
+      box-shadow: 12px 14px 0 var(--ink), 0 30px 70px rgba(0, 0, 0, 0.75);
+    }
+
+    .tutorial-workstation video {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #000;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    /* Interactive Chapter Markers Below Video */
+    .tutorial-chapters-wrap {
+      margin-top: 36px;
+    }
+
+    .tutorial-chapters-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .tutorial-chapters-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .tutorial-chapters-hint {
+      font-size: 13px;
+      color: var(--muted-d);
+    }
+
+    .tutorial-chapters-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .tutorial-chapters-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .tutorial-chapters-grid {
+        grid-template-columns: 1fr;
+      }
+      .tutorial-quick-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .t-toolbar-left {
+        flex-direction: column;
+        width: 100%;
+      }
+      .t-action-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .t-toolbar-right {
+        justify-content: center;
+      }
+    }
+
+    .chapter-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--ink-2);
+      border: 1.5px solid var(--ink-line);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: left;
+      user-select: none;
+    }
+
+    .chapter-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(245, 184, 46, 0.65);
+      background: #171d28;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .chapter-card.is-active {
+      border-color: var(--gold);
+      background: rgba(245, 184, 46, 0.08);
+      box-shadow: 0 0 0 1px var(--gold), 0 8px 24px rgba(245, 184, 46, 0.2);
+    }
+
+    .chapter-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: var(--gold);
+      color: #0b0f17;
+      line-height: 1;
+    }
+
+    .chapter-card.is-active .chapter-badge {
+      background: var(--gold-hi);
+      box-shadow: 0 0 10px rgba(245, 184, 46, 0.5);
+    }
+
+    .chapter-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chapter-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .chapter-time {
+      font-size: 11.5px;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+  </style>
 </head>
 <body>
   <!-- Top Promotional Banner -->
@@ -3059,6 +3360,7 @@
 
       <nav class="nav" aria-label="Main Navigation">
         <a href="#pricing">Pricing</a>
+        <a href="#tutorial">Tutorial</a>
         <a href="#workstation">Workstation</a>
         <a href="#principles">Architecture</a>
         <a href="#older-versions">Older Versions</a>
@@ -3089,6 +3391,7 @@
   <!-- Mobile Flyout Menu -->
   <div class="mobile-menu" id="mobileMenu">
     <a href="#pricing">License Passes</a>
+    <a href="#tutorial">Tutorial Video Guide</a>
     <a href="#workstation">Workstation Showcase</a>
     <a href="#principles">Architecture Principles</a>
     <a href="#older-versions">Older Versions Archive</a>
@@ -3511,6 +3814,221 @@
   </section>
 
   <!-- ============================================================
+       TUTORIAL & FULL VIDEO GUIDE (LAST SCROLLING PAGE)
+       ============================================================ -->
+  <section class="section tutorial-sec" id="tutorial" aria-labelledby="tutorial-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="sticker reveal" style="border-color: rgba(245, 184, 46, 0.4); background: rgba(245, 184, 46, 0.12); color: var(--gold);">
+            <svg class="ic" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span>Official Step-by-Step Tutorial</span>
+          </p>
+          <h2 class="reveal" id="tutorial-title">
+            <span>Watch How Easy It Is To</span>
+            <mark>Get Started.</mark>
+          </h2>
+        </div>
+        <p class="sec-note reveal">
+          Watch the complete walkthrough video with synchronized voiceover. Learn how to download the setup file, bypass Windows SmartScreen, complete installation, and start downloading 4K 60FPS videos in seconds.
+        </p>
+      </div>
+
+      <div class="tutorial-container reveal">
+        <!-- Prominent Quick Action Toolbar with Clear Fullscreen and Pause/Play Buttons -->
+        <div class="tutorial-quick-toolbar">
+          <div class="t-toolbar-left">
+            <!-- Dedicated Pause / Play Button -->
+            <button class="t-action-btn t-btn-playpause" id="tutorialToolbarPlayPauseBtn" type="button" aria-label="Pause or Play Tutorial Video" title="Click to Pause / Play Video (Space)">
+              <svg class="t-icon-pause" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+              <svg class="t-icon-play" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <span class="t-playpause-text">Pause Video</span>
+            </button>
+
+            <!-- Dedicated Full Screen Window Button -->
+            <button class="t-action-btn t-btn-fs" id="tutorialToolbarFsBtn" type="button" aria-label="Toggle Fullscreen Window" title="Toggle Full Screen Window (F)">
+              <svg class="t-icon-fs-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+              <svg class="t-icon-fs-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+              </svg>
+              <span class="t-fs-text">Full Screen Window</span>
+            </button>
+
+            <!-- Restart Button -->
+            <button class="t-action-btn t-btn-restart" id="tutorialToolbarRestartBtn" type="button" aria-label="Restart Video from Beginning" title="Restart from 0:00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Restart</span>
+            </button>
+          </div>
+
+          <div class="t-toolbar-right">
+            <div class="t-status-badge">
+              <span class="t-dot"></span>
+              <span id="tutorialStatusText">Playing · 1080p 60FPS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Workstation Frame -->
+        <div class="tutorial-workstation" id="tutorialWorkstation">
+          <!-- Window Header Titlebar -->
+          <div class="video-frame-header">
+            <div class="mock-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="video-frame-title">
+              <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px; height:13px; color:var(--gold);"><path d="M8 5v14l11-7z"/></svg>
+              <span>MEDIA DOWNLOADER PRO &middot; OFFICIAL STEP-BY-STEP TUTORIAL</span>
+            </div>
+            <div class="video-frame-badge">
+              <span>1080P 60FPS</span>
+            </div>
+          </div>
+
+          <!-- Video Body Viewport -->
+          <div class="video-frame-body" id="tutorialVideoBody" title="Click to Pause / Play">
+            <video id="tutorialVideo"
+                   playsinline
+                   preload="metadata"
+                   poster="Videos/tutorial-poster.jpg"
+                   title="Media Downloader Pro Official Tutorial">
+              <source src="Videos/Tutorial final.mp4" type="video/mp4">
+              <source src="Videos/Tutorial-final.mp4" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+
+            <!-- Center Big Play/Pause Button -->
+            <button class="video-center-btn" id="tutorialCenterBtn" type="button" aria-label="Play or Pause Video" title="Click to Pause / Play">
+              <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+            </button>
+
+            <!-- Bottom Floating Control Bar -->
+            <div class="video-control-bar" id="tutorialControlBar">
+              <!-- Play / Pause Button -->
+              <button class="v-btn v-btn-playpause" id="tutorialPlayPauseBtn" type="button" aria-label="Pause Video" title="Pause / Play (Space)">
+                <svg class="ic-v-pause" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                <svg class="ic-v-play" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+
+              <!-- Timeline / Progress Scrubber -->
+              <div class="video-timeline-wrap" id="tutorialTimelineWrap" title="Seek video position">
+                <div class="video-timeline-track">
+                  <div class="video-timeline-buffer" id="tutorialTimelineBuffer"></div>
+                  <div class="video-timeline-prog" id="tutorialTimelineProg"></div>
+                </div>
+              </div>
+
+              <!-- Time Display -->
+              <span class="video-time-lbl" id="tutorialTimeLbl">00:00 / 02:11</span>
+
+              <!-- Sound Toggle Button -->
+              <button class="v-btn v-btn-sound" id="tutorialSoundBtn" type="button" aria-label="Mute / Unmute Audio" title="Mute / Unmute (M)">
+                <svg class="ic-v-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg class="ic-v-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+              </button>
+
+              <!-- Fullscreen Button -->
+              <button class="v-btn v-btn-fs" id="tutorialFsBtn" type="button" aria-label="Toggle Fullscreen" title="Full Screen Window (F)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Chapter Markers Grid -->
+        <div class="tutorial-chapters-wrap">
+          <div class="tutorial-chapters-head">
+            <span class="tutorial-chapters-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; color:var(--gold);">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Video Chapters &amp; Direct Timestamps
+            </span>
+            <span class="tutorial-chapters-hint">Click any step to jump directly to that section</span>
+          </div>
+
+          <div class="tutorial-chapters-grid">
+            <div class="chapter-card is-active" data-time="1">
+              <span class="chapter-badge">STEP 1</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Download Setup File</span>
+                <span class="chapter-time">0:01 &middot; Website Navigation</span>
+              </div>
+            </div>
+
+            <div class="chapter-card" data-time="16.2">
+              <span class="chapter-badge">STEP 2</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Run Installer &amp; SmartScreen</span>
+                <span class="chapter-time">0:16 &middot; Click More info &amp; Run</span>
+              </div>
+            </div>
+
+            <div class="chapter-card" data-time="27">
+              <span class="chapter-badge">STEP 3</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Complete Installation</span>
+                <span class="chapter-time">0:27 &middot; Extraction &amp; Setup</span>
+              </div>
+            </div>
+
+            <div class="chapter-card" data-time="59.5">
+              <span class="chapter-badge">STEP 4</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Copy a YouTube Link</span>
+                <span class="chapter-time">1:00 &middot; Copy Link Address</span>
+              </div>
+            </div>
+
+            <div class="chapter-card" data-time="72">
+              <span class="chapter-badge">STEP 5</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Paste Link into App</span>
+                <span class="chapter-time">1:12 &middot; Click Paste &amp; Analyze</span>
+              </div>
+            </div>
+
+            <div class="chapter-card" data-time="113">
+              <span class="chapter-badge">STEP 6</span>
+              <div class="chapter-info">
+                <span class="chapter-title">Choose Quality &amp; Download</span>
+                <span class="chapter-time">1:53 &middot; Format, Res &amp; Download</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
        WORKSTATION SHOWCASE / GALLERY
        ============================================================ -->
   <section class="section classrooms" id="workstation" aria-labelledby="ws-title">
@@ -3820,7 +4338,8 @@
     </div>
   </section>
 
-  <!-- ============================================================
+
+    <!-- ============================================================
        SITE FOOTER
        ============================================================ -->
   <footer class="site-footer">
@@ -3835,11 +4354,13 @@
       <nav class="footer-col" aria-label="Explore Links">
         <p class="footer-h">Explore</p>
         <a href="#pricing">License Passes</a>
+        <a href="#tutorial">Tutorial Video Guide</a>
+    <a href="#tutorial">Tutorial Video Guide</a>
         <a href="#workstation">Workstation Modules</a>
         <a href="#principles">Architecture Guarantees</a>
         <a href="#older-versions">Older Versions</a>
         <a href="#contact">Contact &amp; Buy Plan</a>
-      </nav>
+          </nav>
 
       <div class="footer-col">
         <p class="footer-h">Downloads</p>
@@ -4389,6 +4910,184 @@
         }
       })
       .catch(() => {});
-</script>
+
+
+      // ---------- Tutorial Final Video Controller ----------
+      const tVideo = document.getElementById('tutorialVideo');
+      const tWorkstation = document.getElementById('tutorialWorkstation');
+      const tCenterBtn = document.getElementById('tutorialCenterBtn');
+      const tPlayPauseBtn = document.getElementById('tutorialPlayPauseBtn');
+      const tToolbarPlayPauseBtn = document.getElementById('tutorialToolbarPlayPauseBtn');
+      const tFsBtn = document.getElementById('tutorialFsBtn');
+      const tToolbarFsBtn = document.getElementById('tutorialToolbarFsBtn');
+      const tRestartBtn = document.getElementById('tutorialToolbarRestartBtn');
+      const tSoundBtn = document.getElementById('tutorialSoundBtn');
+      const tProgEl = document.getElementById('tutorialTimelineProg');
+      const tBufferEl = document.getElementById('tutorialTimelineBuffer');
+      const tTimeLbl = document.getElementById('tutorialTimeLbl');
+      const tTimelineWrap = document.getElementById('tutorialTimelineWrap');
+      const tStatusText = document.getElementById('tutorialStatusText');
+      const tChapterCards = document.querySelectorAll('.chapter-card');
+
+      if (tVideo && tWorkstation) {
+        const formatTTime = (sec) => {
+          if (isNaN(sec)) return '00:00';
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        };
+
+        const updatePlayStateUI = (isPlaying) => {
+          tWorkstation.classList.toggle('is-paused', !isPlaying);
+          
+          if (tToolbarPlayPauseBtn) {
+            const iconPause = tToolbarPlayPauseBtn.querySelector('.t-icon-pause');
+            const iconPlay = tToolbarPlayPauseBtn.querySelector('.t-icon-play');
+            const txt = tToolbarPlayPauseBtn.querySelector('.t-playpause-text');
+            if (iconPause) iconPause.style.display = isPlaying ? 'inline-block' : 'none';
+            if (iconPlay) iconPlay.style.display = isPlaying ? 'none' : 'inline-block';
+            if (txt) txt.textContent = isPlaying ? 'Pause Video' : 'Play Video';
+          }
+          
+          if (tStatusText) {
+            tStatusText.textContent = isPlaying ? 'Playing · 1080p 60FPS' : 'Paused · Click to Resume';
+          }
+        };
+
+        const toggleTPlay = (e) => {
+          if (e) e.stopPropagation();
+          if (tVideo.paused || tVideo.ended) {
+            tVideo.play();
+            updatePlayStateUI(true);
+          } else {
+            tVideo.pause();
+            updatePlayStateUI(false);
+          }
+        };
+
+        const toggleTFullscreen = (e) => {
+          if (e) e.stopPropagation();
+          const elem = tWorkstation;
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+              elem.webkitRequestFullscreen();
+            } else if (tVideo.requestFullscreen) {
+              tVideo.requestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+        };
+
+        const updateFsUI = () => {
+          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+          tWorkstation.classList.toggle('is-fullscreen', isFs);
+          if (tToolbarFsBtn) {
+            const iconEnter = tToolbarFsBtn.querySelector('.t-icon-fs-enter');
+            const iconExit = tToolbarFsBtn.querySelector('.t-icon-fs-exit');
+            const txt = tToolbarFsBtn.querySelector('.t-fs-text');
+            if (iconEnter) iconEnter.style.display = isFs ? 'none' : 'inline-block';
+            if (iconExit) iconExit.style.display = isFs ? 'inline-block' : 'none';
+            if (txt) txt.textContent = isFs ? 'Exit Full Screen' : 'Full Screen Window';
+          }
+        };
+
+        document.addEventListener('fullscreenchange', updateFsUI);
+        document.addEventListener('webkitfullscreenchange', updateFsUI);
+
+        if (tCenterBtn) tCenterBtn.addEventListener('click', toggleTPlay);
+        if (tPlayPauseBtn) tPlayPauseBtn.addEventListener('click', toggleTPlay);
+        if (tToolbarPlayPauseBtn) tToolbarPlayPauseBtn.addEventListener('click', toggleTPlay);
+        if (tFsBtn) tFsBtn.addEventListener('click', toggleTFullscreen);
+        if (tToolbarFsBtn) tToolbarFsBtn.addEventListener('click', toggleTFullscreen);
+
+        if (tRestartBtn) {
+          tRestartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tVideo.currentTime = 0;
+            tVideo.play();
+            updatePlayStateUI(true);
+          });
+        }
+
+        const tBodyEl = document.getElementById('tutorialVideoBody');
+        if (tBodyEl) {
+          tBodyEl.addEventListener('click', (e) => {
+            if (e.target.closest('#tutorialControlBar')) return;
+            toggleTPlay(e);
+          });
+        }
+
+        if (tSoundBtn) {
+          tSoundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tVideo.muted = !tVideo.muted;
+            tWorkstation.classList.toggle('is-unmuted', !tVideo.muted);
+          });
+        }
+
+        tVideo.addEventListener('play', () => updatePlayStateUI(true));
+        tVideo.addEventListener('pause', () => updatePlayStateUI(false));
+
+        tVideo.addEventListener('timeupdate', () => {
+          if (!tVideo.duration) return;
+          const ct = tVideo.currentTime;
+          const dur = tVideo.duration;
+          const pct = (ct / dur) * 100;
+          if (tProgEl) tProgEl.style.width = pct + '%';
+          if (tTimeLbl) tTimeLbl.textContent = formatTTime(ct) + ' / ' + formatTTime(dur);
+
+          // Update active chapter card based on timestamps
+          let activeIndex = 0;
+          if (ct >= 113) activeIndex = 5;
+          else if (ct >= 72) activeIndex = 4;
+          else if (ct >= 59.5) activeIndex = 3;
+          else if (ct >= 27) activeIndex = 2;
+          else if (ct >= 16) activeIndex = 1;
+          else activeIndex = 0;
+
+          tChapterCards.forEach((card, idx) => {
+            card.classList.toggle('is-active', idx === activeIndex);
+          });
+        });
+
+        tVideo.addEventListener('progress', () => {
+          if (tVideo.buffered.length > 0 && tVideo.duration) {
+            const bufEnd = tVideo.buffered.end(tVideo.buffered.length - 1);
+            if (tBufferEl) tBufferEl.style.width = (bufEnd / tVideo.duration * 100) + '%';
+          }
+        });
+
+        if (tTimelineWrap) {
+          const seek = (e) => {
+            const rect = tTimelineWrap.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            if (tVideo.duration) {
+              tVideo.currentTime = pos * tVideo.duration;
+            }
+          };
+          tTimelineWrap.addEventListener('click', seek);
+        }
+
+        // Chapter cards click to seek
+        tChapterCards.forEach(card => {
+          card.addEventListener('click', () => {
+            const t = parseFloat(card.getAttribute('data-time'));
+            if (!isNaN(t)) {
+              tVideo.currentTime = t;
+              tVideo.play();
+              updatePlayStateUI(true);
+            }
+          });
+        });
+      }
+
+  </script>
 </body>
 </html>

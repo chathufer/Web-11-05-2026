@@ -29,3 +29,9 @@ env/
 *.bak
 scratch/
 
+
+# Large tutorial videos (hosted via GitHub Releases CDN)
+Videos/Tutorial*.mp4
+public/Videos/Tutorial*.mp4
+deploy_vercel/Videos/Tutorial*.mp4
+deploy_vercel/public/Videos/Tutorial*.mp4
